@@ -2488,6 +2488,8 @@ version = "0.1.0"
 dependencies = [
  "ckb-lib-secp256k1",
  "ckb-std",
+ "molecule",
+ "schemas",
 ]
 
 [[package]]
