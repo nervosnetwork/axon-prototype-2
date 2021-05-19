@@ -214,6 +214,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "checker-bonding-lock"
+version = "0.1.0"
+dependencies = [
+ "ckb-lib-secp256k1",
+ "ckb-std",
+]
+
+[[package]]
 name = "cipher"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
