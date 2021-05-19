@@ -2322,6 +2322,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "schemas"
+version = "0.1.0"
+dependencies = [
+ "cfg-if 1.0.0",
+ "molecule",
+]
+
+[[package]]
 name = "scopeguard"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2633,6 +2641,8 @@ dependencies = [
  "ckb-system-scripts",
  "ckb-testtool",
  "ckb-tool",
+ "molecule",
+ "schemas",
 ]
 
 [[package]]
