@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 ckb-tool = "0.3"
 ckb-testtool = "0.3"
+ckb-system-scripts = "0.5.1"

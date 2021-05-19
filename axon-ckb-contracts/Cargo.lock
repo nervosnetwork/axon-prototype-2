@@ -441,6 +441,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ckb-lib-secp256k1"
+version = "0.1.0"
+dependencies = [
+ "blake2b-rs",
+ "ckb-std",
+]
+
+[[package]]
 name = "ckb-librocksdb-sys"
 version = "6.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2622,6 +2630,7 @@ dependencies = [
 name = "tests"
 version = "0.1.0"
 dependencies = [
+ "ckb-system-scripts",
  "ckb-testtool",
  "ckb-tool",
 ]
