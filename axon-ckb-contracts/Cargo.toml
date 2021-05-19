@@ -1,5 +1,5 @@
 [workspace]
-members = ["tests", "contracts/always-success"]
+members = ["tests", "contracts/always-success", "contracts/sidechain-bonding-lock"]
 
 [profile.release]
 overflow-checks = true
