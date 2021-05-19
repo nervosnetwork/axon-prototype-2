@@ -9,6 +9,7 @@ pub enum Error {
     Encoding,
     InvalidArgument,
     Secp256k1Error,
+    BusyChecker,
 }
 
 impl From<SysError> for Error {
