@@ -13,3 +13,7 @@ deployment = "deployment.toml"
 [[contracts]]
 name = "always-success"
 template_type = "Rust"
+
+[[contracts]]
+name = "sidechain-state-lock"
+template_type = "Rust"
