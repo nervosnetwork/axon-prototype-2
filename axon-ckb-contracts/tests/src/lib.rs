@@ -12,6 +12,8 @@ mod common;
 mod secp256k1;
 #[cfg(test)]
 mod test_always_success;
+#[cfg(test)]
+mod test_sidechain_fee_lock;
 
 const TEST_ENV_VAR: &str = "CAPSULE_TEST_ENV";
 
