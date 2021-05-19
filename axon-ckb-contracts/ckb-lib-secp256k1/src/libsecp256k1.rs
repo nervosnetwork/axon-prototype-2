@@ -26,6 +26,8 @@ const VALIDATE_BLAKE2B_SIGHASH_ALL: &[u8; 38] = b"validate_secp256k1_blake2b_sig
 const VALIDATE_SIGNATURE: &[u8; 18] = b"validate_signature";
 const LOAD_PREFILLED_DATA: &[u8; 19] = b"load_prefilled_data";
 
+const ERROR_WRONG_SIGNATURE: i32 = 1;
+
 const SECP256K1_DATA_SIZE: usize = 1048576;
 pub struct PrefilledData(Box<[u8; SECP256K1_DATA_SIZE]>);
 pub struct Pubkey([u8; 33]);
@@ -73,6 +75,17 @@ impl LibSecp256k1 {
             load_prefilled_data,
             validate_signature,
         }
+    }
+
+    pub fn check_signature(&self, expected_pubkey_hash: &[u8]) -> Result<(), i32> {
+        let mut pubkey_hash = [0u8; 20];
+        self.validate_blake2b_sighash_all(&mut pubkey_hash)?;
+
+        // compare with expected pubkey_hash
+        if &pubkey_hash[..] != expected_pubkey_hash {
+            return Err(ERROR_WRONG_SIGNATURE);
+        }
+        Ok(())
     }
 
     pub fn validate_blake2b_sighash_all(&self, pubkey_hash: &mut [u8; 20]) -> Result<(), i32> {
