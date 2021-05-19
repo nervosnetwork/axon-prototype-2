@@ -19,6 +19,10 @@ name = "checker-bonding-lock"
 template_type = "Rust"
 
 [[contracts]]
+name = "sidechain-bonding-lock"
+template_type = "Rust"
+
+[[contracts]]
 name = "sidechain-fee-lock"
 template_type = "Rust"
 
