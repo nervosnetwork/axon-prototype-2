@@ -1,4 +1,5 @@
-use super::*;
+use super::Loader;
+use crate::common::*;
 use ckb_testtool::context::Context;
 use ckb_tool::ckb_types::{bytes::Bytes, core::TransactionBuilder, packed::*, prelude::*};
 
@@ -12,13 +13,20 @@ fn test_success() {
     let out_point = context.deploy_cell(contract_bin);
 
     // prepare scripts
-    context
+    let lock_script = context
         .build_script(&out_point, Bytes::from(vec![]))
         .expect("script");
     let lock_script_dep = CellDep::new_builder().out_point(out_point).build();
 
+    // prepare cells
+    let input_outpoint = context.create_cell(new_cell_output(1000, &lock_script), Bytes::new());
+    let input = CellInput::new_builder()
+        .previous_output(input_outpoint)
+        .build();
+
     // build transaction
     let tx = TransactionBuilder::default()
+        .input(input)
         .cell_dep(lock_script_dep)
         .build();
     let tx = context.complete_tx(tx);

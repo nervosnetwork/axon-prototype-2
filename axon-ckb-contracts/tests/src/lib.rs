@@ -5,6 +5,12 @@ use std::path::PathBuf;
 use std::str::FromStr;
 
 #[cfg(test)]
+#[allow(dead_code)]
+mod common;
+#[cfg(test)]
+#[allow(dead_code)]
+mod secp256k1;
+#[cfg(test)]
 mod test_always_success;
 
 const TEST_ENV_VAR: &str = "CAPSULE_TEST_ENV";
