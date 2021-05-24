@@ -1,8 +1,0 @@
-import common/basic_types;
-
-table CIC {
-    chain_id: Uint8,
-    checker_id: Uint16,
-    unpaid_income: Uint128,
-    server_url: String,
-}

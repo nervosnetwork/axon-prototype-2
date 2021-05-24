@@ -29,3 +29,7 @@ template_type = "Rust"
 [[contracts]]
 name = "sidechain-state-lock"
 template_type = "Rust"
+
+[[contracts]]
+name = "sidechain-config-cell"
+template_type = "Rust"

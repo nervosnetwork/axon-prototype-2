@@ -7,7 +7,4 @@ edition = "2018"
 
 [dependencies]
 ckb-std = "0.7.1"
-molecule = { version = "0.6.0", default-features = false }
-
 ckb-lib-secp256k1 = { path = "../../ckb-lib-secp256k1" }
-schemas = { path = "../../schemas" }
