@@ -8,3 +8,6 @@ cfg_if::cfg_if! {
 }
 
 pub mod common;
+
+pub mod checker_info_cell;
+pub mod sidechain_fee_cell;
