@@ -15,6 +15,8 @@ mod test_always_success;
 #[cfg(test)]
 mod test_checker_bonding_lock;
 #[cfg(test)]
+mod test_sidechain_bonding_lock;
+#[cfg(test)]
 mod test_sidechain_fee_lock;
 #[cfg(test)]
 mod test_sidechain_state_lock;
