@@ -1,23 +1,17 @@
-use ckb_std::error::SysError;
+use ckb_std::{debug, error::SysError};
 
 #[repr(i8)]
-#[derive(Debug)]
-pub enum CommonError {
+pub enum Error {
     IndexOutOfBound = 1,
     ItemMissing,
     LengthNotEnough,
     Encoding,
-    MissingTypeScript = 5,
-    MissingCell,
-    CodeHashMismatch,
-    HashTypeMismatch,
-    UnknownCellType,
-    CellNumberMismatch = 10,
-    LoadTypeHashError,
-    GlobalConfigCellDepError,
+    InvalidArgument,
+    MoleculeError,
+    NotBalancedAmount,
 }
 
-impl From<SysError> for CommonError {
+impl From<SysError> for Error {
     fn from(err: SysError) -> Self {
         use SysError::*;
         match err {

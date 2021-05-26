@@ -19,7 +19,7 @@ fn load_script(
     mut pubkey_hash: Vec<u8>,
     chain_bitmap: Vec<u8>,
 ) -> (TransactionBuilder, Script) {
-    let (builder, out_point) = load_contract(context, builder, "checker-bonding-lock");
+    let (builder, out_point) = load_contract(context, builder, "checker-bond-cell-lockscript");
 
     pubkey_hash.extend(chain_bitmap);
     let lock_script = context

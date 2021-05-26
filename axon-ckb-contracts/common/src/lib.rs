@@ -7,15 +7,19 @@ pub use blake2b_ref;
 pub use ckb_std;
 use ckb_std::error::SysError;
 
-mod cell;
+pub mod cell;
 pub mod error;
 pub mod hash;
+pub mod pattern;
+
+pub const SUDT_CODEHASH: [u8; 32] = [0; 32];
+pub const SUDT_HASHTYPE: u8 = 1u8;
+pub const SUDT_MUSE_ARGS: &[u8] = &[1u8];
 
 #[macro_export]
 macro_rules! get_cell_type_hash {
     ($index: expr, $source: expr) => {
-        common::ckb_std::high_level::load_cell_type_hash($index, $source)?
-            .ok_or_else(|| common::error::HelperError::MissingTypeScript)?
+        common::ckb_std::high_level::load_cell_type_hash($index, $source)?.ok_or_else(|| common::error::HelperError::MissingTypeScript)?
     };
 }
 

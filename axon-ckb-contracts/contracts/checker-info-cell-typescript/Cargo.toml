@@ -1,10 +1,11 @@
 [package]
-name = "sidechain-state-lock"
+name = "checker-info-cell-typescript"
 version = "0.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ckb-std = "0.7.1"
+ckb-std = "0.7.4"
 ckb-lib-secp256k1 = { path = "../../ckb-lib-secp256k1" }
+common = {path = "../../common"}

@@ -1,5 +1,5 @@
 use common::ckb_std::error::SysError;
-use common::error::HelperError;
+use common::error::CommonError;
 
 /// Error
 #[repr(i8)]
@@ -25,10 +25,11 @@ impl From<SysError> for Error {
     }
 }
 
-impl From<HelperError> for Error {
-    fn from(err: HelperError) -> Self {
+impl From<CommonError> for Error {
+    fn from(err: CommonError) -> Self {
         match err {
-            HelperError::MissingTypeScript => Self::MissingTypeScript,
+            CommonError::MissingTypeScript => Self::MissingTypeScript,
+            _ => Self::MissingTypeScript,
         }
     }
 }

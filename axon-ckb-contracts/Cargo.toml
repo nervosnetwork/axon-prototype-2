@@ -1,12 +1,14 @@
 [workspace]
 members = [
-    "tests",
+    #"tests",
     "contracts/always-success",
-    "contracts/checker-bonding-lock",
-    "contracts/sidechain-bonding-lock",
-    "contracts/sidechain-fee-lock",
-    "contracts/sidechain-state-lock",
-    "contracts/sidechain-config-cell",
+    "contracts/checker-bond-cell-lockscript",
+    "contracts/checker-info-cell-typescript",
+    "contracts/task-cell-typescript",
+    "contracts/sidechain-bond-cell-lockscript",
+    "contracts/sidechain-fee-cell-lockscript",
+    "contracts/sidechain-state-cell-typescript",
+    "contracts/sidechain-config-cell-typescript",
     "common"
 ]
 

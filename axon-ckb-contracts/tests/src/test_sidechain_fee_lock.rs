@@ -12,7 +12,8 @@ fn bootstrap(
     context: &mut Context,
     builder: TransactionBuilder,
 ) -> (TransactionBuilder, OutPoint, Script) {
-    let (builder, lock_out_point) = load_contract(context, builder, "sidechain-fee-lock");
+    let (builder, lock_out_point) =
+        load_contract(context, builder, "sidechain-fee-cell-lockscript");
     let (builder, always_success_out_point) = load_contract(context, builder, "always-success");
 
     let always_success_script = context
