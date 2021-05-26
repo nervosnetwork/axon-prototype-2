@@ -15,17 +15,29 @@ name = "always-success"
 template_type = "Rust"
 
 [[contracts]]
-name = "checker-bonding-lock"
+name = "checker-bond-cell-lockscript"
 template_type = "Rust"
 
 [[contracts]]
-name = "sidechain-bonding-lock"
+name = "checker-info-cell-typescript"
 template_type = "Rust"
 
 [[contracts]]
-name = "sidechain-fee-lock"
+name = "sidechain-bond-cell-lockscript"
 template_type = "Rust"
 
 [[contracts]]
-name = "sidechain-state-lock"
+name = "sidechain-config-cell-typescript"
+template_type = "Rust"
+
+[[contracts]]
+name = "sidechain-fee-cell-lockscript"
+template_type = "Rust"
+
+[[contracts]]
+name = "sidechain-state-cell-typescript"
+template_type = "Rust"
+
+[[contracts]]
+name = "task-cell-typescript"
 template_type = "Rust"

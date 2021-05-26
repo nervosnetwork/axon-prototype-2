@@ -1,5 +1,0 @@
-import common/basic_types;
-
-struct SFC {
-    amount: Uint128,
-}

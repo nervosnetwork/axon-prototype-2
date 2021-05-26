@@ -24,7 +24,7 @@ fn load_script(
     chain_id: Vec<u8>,
     unlock_sidechain_height: Vec<u8>,
 ) -> (TransactionBuilder, Script) {
-    let (builder, out_point) = load_contract(context, builder, "sidechain-bonding-lock");
+    let (builder, out_point) = load_contract(context, builder, "sidechain-bond-cell-lockscript");
 
     pubkey_hash.extend(chain_id);
     pubkey_hash.extend(unlock_sidechain_height);

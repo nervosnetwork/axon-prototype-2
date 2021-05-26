@@ -1,5 +1,5 @@
 [package]
-name = "always-success"
+name = "task-cell-typescript"
 version = "0.1.0"
 edition = "2018"
 
@@ -7,3 +7,5 @@ edition = "2018"
 
 [dependencies]
 ckb-std = "0.7.4"
+ckb-lib-secp256k1 = { path = "../../ckb-lib-secp256k1" }
+common = {path = "../../common"}

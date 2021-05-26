@@ -17,7 +17,7 @@ fn load_script(
     context: &mut Context,
     pubkey_hash: Vec<u8>,
 ) -> (TransactionBuilder, Script) {
-    let (builder, out_point) = load_contract(context, builder, "sidechain-state-lock");
+    let (builder, out_point) = load_contract(context, builder, "sidechain-state-cell-typescript");
 
     let lock_script = context
         .build_script(&out_point, pubkey_hash.into())
