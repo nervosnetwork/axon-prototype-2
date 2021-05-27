@@ -7,4 +7,5 @@ edition = "2018"
 
 [dependencies]
 ckb-std = "0.7.4"
+ckb-standalone-types = {version = "0.0.1-pre.1", default-features = false }
 blake2b-ref = "0.3"

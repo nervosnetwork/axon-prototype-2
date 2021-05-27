@@ -1,6 +1,6 @@
 use crate::cell::{CellType, FromRaw, GlobalConfigCellData, SidechainConfigCellData};
 use crate::error::CommonError;
-use crate::{SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
+use crate::{get_input_cell_count, get_output_cell_count, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
 use ckb_std::high_level::load_cell_type;
 use ckb_std::{
     ckb_constants::Source,
@@ -57,7 +57,7 @@ impl From<u8> for Pattern {
     }
 }
 
-pub fn is_checker_bond_deposit(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_bond_deposit() -> Result<(), CommonError> {
     /*
     CheckerBondDeposit,
 
@@ -67,14 +67,14 @@ pub fn is_checker_bond_deposit(global_config_cell_type_hash: [u8; 32]) -> Result
     Ok(())
 }
 
-pub fn is_checker_bond_withdraw(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_bond_withdraw() -> Result<(), CommonError> {
     /*
     CheckerBondWithdraw,
 
     Checker Bond Cell           ->         Muse Token Cell
 
      */
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -90,7 +90,7 @@ pub fn is_checker_bond_withdraw(global_config_cell_type_hash: [u8; 32]) -> Resul
     Ok(())
 }
 
-pub fn is_checker_join_sidechain(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_join_sidechain() -> Result<(), CommonError> {
     /*
     CheckerJoinSidechain,
 
@@ -102,7 +102,7 @@ pub fn is_checker_join_sidechain(global_config_cell_type_hash: [u8; 32]) -> Resu
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -121,7 +121,7 @@ pub fn is_checker_join_sidechain(global_config_cell_type_hash: [u8; 32]) -> Resu
     Ok(())
 }
 
-pub fn is_checker_quit_sidechain(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_quit_sidechain() -> Result<(), CommonError> {
     /*
     CheckerQuitSidechain
 
@@ -132,7 +132,7 @@ pub fn is_checker_quit_sidechain(global_config_cell_type_hash: [u8; 32]) -> Resu
     Checker Info Cell           ->          Null
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -151,7 +151,7 @@ pub fn is_checker_quit_sidechain(global_config_cell_type_hash: [u8; 32]) -> Resu
     Ok(())
 }
 
-pub fn is_checker_submit_task(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_submit_task() -> Result<(), CommonError> {
     /*
     CheckerSubmitTask,
 
@@ -163,7 +163,7 @@ pub fn is_checker_submit_task(global_config_cell_type_hash: [u8; 32]) -> Result<
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -180,7 +180,7 @@ pub fn is_checker_submit_task(global_config_cell_type_hash: [u8; 32]) -> Result<
     Ok(())
 }
 
-pub fn is_checker_publish_challenge(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_publish_challenge() -> Result<(), CommonError> {
     /*
     CheckerPublishChallenge,
 
@@ -192,7 +192,7 @@ pub fn is_checker_publish_challenge(global_config_cell_type_hash: [u8; 32]) -> R
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -213,7 +213,7 @@ pub fn is_checker_publish_challenge(global_config_cell_type_hash: [u8; 32]) -> R
     Ok(())
 }
 
-pub fn is_checker_submit_challenge(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_submit_challenge() -> Result<(), CommonError> {
     /*
     CheckerSubmitChallenge,
 
@@ -225,7 +225,7 @@ pub fn is_checker_submit_challenge(global_config_cell_type_hash: [u8; 32]) -> Re
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -242,7 +242,7 @@ pub fn is_checker_submit_challenge(global_config_cell_type_hash: [u8; 32]) -> Re
     Ok(())
 }
 
-pub fn is_checker_take_beneficiary(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_checker_take_beneficiary() -> Result<(), CommonError> {
     /*
     CheckerTakeBeneficiary,
 
@@ -253,7 +253,7 @@ pub fn is_checker_take_beneficiary(global_config_cell_type_hash: [u8; 32]) -> Re
     Muse Token Cell             ->          Muse Token Cell
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -272,7 +272,7 @@ pub fn is_checker_take_beneficiary(global_config_cell_type_hash: [u8; 32]) -> Re
 
     Ok(())
 }
-pub fn is_admin_create_sidechain(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_admin_create_sidechain() -> Result<(), CommonError> {
     /*
     AdminCreateSidechain,
 
@@ -283,7 +283,7 @@ pub fn is_admin_create_sidechain(global_config_cell_type_hash: [u8; 32]) -> Resu
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -298,7 +298,7 @@ pub fn is_admin_create_sidechain(global_config_cell_type_hash: [u8; 32]) -> Resu
     Ok(())
 }
 
-pub fn is_collator_publish_task(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_collator_publish_task() -> Result<(), CommonError> {
     /*
     CollatorPublishTask,
 
@@ -311,7 +311,7 @@ pub fn is_collator_publish_task(global_config_cell_type_hash: [u8; 32]) -> Resul
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -332,7 +332,7 @@ pub fn is_collator_publish_task(global_config_cell_type_hash: [u8; 32]) -> Resul
 
     Ok(())
 }
-pub fn is_collator_submit_task(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_collator_submit_task() -> Result<(), CommonError> {
     /*
     CollatorSubmitTask,
 
@@ -345,7 +345,7 @@ pub fn is_collator_submit_task(global_config_cell_type_hash: [u8; 32]) -> Result
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -371,7 +371,7 @@ pub fn is_collator_submit_task(global_config_cell_type_hash: [u8; 32]) -> Result
     Ok(())
 }
 
-pub fn is_collator_submit_challenge(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_collator_submit_challenge() -> Result<(), CommonError> {
     /*
     CollatorSubmitChallenge,
 
@@ -384,7 +384,7 @@ pub fn is_collator_submit_challenge(global_config_cell_type_hash: [u8; 32]) -> R
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -412,7 +412,7 @@ pub fn is_collator_submit_challenge(global_config_cell_type_hash: [u8; 32]) -> R
     Ok(())
 }
 
-pub fn is_collator_refresh_task(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_collator_refresh_task() -> Result<(), CommonError> {
     /*
     CollatorRefreshTask,
 
@@ -422,7 +422,7 @@ pub fn is_collator_refresh_task(global_config_cell_type_hash: [u8; 32]) -> Resul
 
     */
 
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -442,7 +442,7 @@ pub fn is_collator_refresh_task(global_config_cell_type_hash: [u8; 32]) -> Resul
     Ok(())
 }
 
-pub fn is_collator_unlock_bond(global_config_cell_type_hash: [u8; 32]) -> Result<(), CommonError> {
+pub fn is_collator_unlock_bond() -> Result<(), CommonError> {
     /*
     CollatorUnlockBond,
 
@@ -452,7 +452,7 @@ pub fn is_collator_unlock_bond(global_config_cell_type_hash: [u8; 32]) -> Result
     Sidechain Bond Cell         ->          Muse Token Cell
 
     */
-    let global = check_global_cell(global_config_cell_type_hash)?;
+    let global = check_global_cell()?;
 
     let input_count = get_input_cell_count();
     let output_count = get_output_cell_count();
@@ -468,19 +468,11 @@ pub fn is_collator_unlock_bond(global_config_cell_type_hash: [u8; 32]) -> Result
     Ok(())
 }
 
-pub fn get_input_cell_count() -> usize {
-    QueryIter::new(load_cell, Source::Input).count()
-}
-
-pub fn get_output_cell_count() -> usize {
-    QueryIter::new(load_cell, Source::Output).count()
-}
-
-pub fn check_global_cell(global_config_cell_type_hash: [u8; 32]) -> Result<GlobalConfigCellData, CommonError> {
+pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
     let global_config_data = load_cell_data(0, Source::CellDep)?;
     let global_config_data = GlobalConfigCellData::from_raw(&global_config_data)?;
 
-    if load_cell_type_hash(0, Source::CellDep)?.ok_or(CommonError::LoadTypeHashError)? != global_config_cell_type_hash {
+    if load_cell_type_hash(0, Source::CellDep)?.ok_or(CommonError::LoadTypeHashError)? != GLOBAL_CONFIG_TYPE_HASH {
         return Err(CommonError::GlobalConfigCellDepError);
     }
     Ok(global_config_data)

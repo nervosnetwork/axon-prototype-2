@@ -1,8 +1,6 @@
 use alloc::vec::Vec;
 use core::result::Result;
 
-// Import CKB syscalls and structures
-// https://nervosnetwork.github.io/ckb-std/riscv64imac-unknown-none-elf/doc/ckb_std/index.html
 use common::{
     blake2b,
     ckb_std::{

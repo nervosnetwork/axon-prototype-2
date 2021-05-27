@@ -7,14 +7,29 @@ use crate::{check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, deco
 
 // in byte
 const SUDT_DATA_LEN: usize = 16; // u128
-const GLOBAL_CONFIG_CELL_LEN: usize = 263;
-const CHECKER_BOND_CELL_LOCK_ARGS_LEN: usize = 64;
-const SIDECHAIN_CONFIG_CELL_LEN: usize = 153;
-const SIDECHAIN_STATE_CELL_LEN: usize = 164;
-const CHECKER_INFO_CELL_LEN: usize = 595;
-const TASK_CELL_LEN: usize = 101;
-const SIDECHAIN_BOND_CELL_ARGS_LEN: usize = 49;
+
+const GLOBAL_CONFIG_DATA_LEN: usize = 263;
+
+const CHECKER_BOND_LOCK_ARGS_LEN: usize = 64;
+const CHECKER_BOND_LOCK_WITNESS_LEN: usize = 33;
+
+const SIDECHAIN_CONFIG_DATA_LEN: usize = 153;
+const SIDECHAIN_CONFIG_TYPE_WITNESS_LEN: usize = 1;
+
+const SIDECHAIN_STATE_DATA_LEN: usize = 164;
+const SIDECHAIN_STATE_TYPE_WITNESS_LEN: usize = 1;
+
+const CHECKER_INFO_DATA_LEN: usize = 595;
+const CHECKER_INFO_TYPE_WITNESS_LEN: usize = 1;
+
+const TASK_DATA_LEN: usize = 101;
+const TASK_TYPE_WITNESS_LEN: usize = 1;
+
+const SIDECHAIN_BOND_LOCK_ARGS_LEN: usize = 49;
+const SIDECHAIN_BOND_WITNESS_LEN: usize = 33;
+
 const SIDECHAIN_FEE_LOCK_ARGS_LEN: usize = 1;
+const SIDECHAIN_FEE_WITNESS_LEN: usize = 33;
 
 pub trait FromRaw {
     fn from_raw(cell_raw_data: &[u8]) -> Result<Self, SysError>
@@ -94,7 +109,7 @@ pub struct GlobalConfigCellData {
 
 impl FromRaw for GlobalConfigCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Result<GlobalConfigCellData, SysError> {
-        check_args_len(cell_raw_data.len(), GLOBAL_CONFIG_CELL_LEN)?;
+        check_args_len(cell_raw_data.len(), GLOBAL_CONFIG_DATA_LEN)?;
 
         let mut admin_public_key = [0u8; 32];
         admin_public_key.copy_from_slice(&cell_raw_data[0..32]);
@@ -176,7 +191,7 @@ impl FromRaw for CheckerBondCellData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct CheckerBondCellLockArgs {
     pub checker_public_key: [u8; 32],
     pub chain_id_bitmap:    [u8; 32],
@@ -184,7 +199,7 @@ pub struct CheckerBondCellLockArgs {
 
 impl FromRaw for CheckerBondCellLockArgs {
     fn from_raw(cell_raw_data: &[u8]) -> Result<CheckerBondCellLockArgs, SysError> {
-        check_args_len(cell_raw_data.len(), CHECKER_BOND_CELL_LOCK_ARGS_LEN)?;
+        check_args_len(cell_raw_data.len(), CHECKER_BOND_LOCK_ARGS_LEN)?;
 
         let mut checker_address = [0u8; 32];
         checker_address.copy_from_slice(&cell_raw_data[0..32]);
@@ -196,6 +211,25 @@ impl FromRaw for CheckerBondCellLockArgs {
             checker_public_key: checker_address,
             chain_id_bitmap,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct CheckerBondLockWitness {
+    pub pattern:   u8,
+    pub signature: [u8; 32],
+}
+
+impl FromRaw for CheckerBondLockWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<CheckerBondLockWitness, SysError> {
+        check_args_len(witness_raw_data.len(), CHECKER_BOND_LOCK_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        let mut signature = [0u8; 32];
+        signature.copy_from_slice(&witness_raw_data[1..33]);
+
+        Ok(CheckerBondLockWitness { pattern, signature })
     }
 }
 
@@ -233,7 +267,7 @@ pub struct SidechainConfigCellData {
 
 impl FromRaw for SidechainConfigCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Result<SidechainConfigCellData, SysError> {
-        check_args_len(cell_raw_data.len(), SIDECHAIN_CONFIG_CELL_LEN)?;
+        check_args_len(cell_raw_data.len(), SIDECHAIN_CONFIG_DATA_LEN)?;
 
         let chain_id = decode_u8(&cell_raw_data[0..1])?;
         let checker_total_count = decode_u8(&cell_raw_data[1..2])?;
@@ -274,6 +308,20 @@ impl FromRaw for SidechainConfigCellData {
     }
 }
 
+#[derive(Debug)]
+pub struct SidechainConfigTypeWitness {
+    pub pattern: u8,
+}
+
+impl FromRaw for SidechainConfigTypeWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainConfigTypeWitness, SysError> {
+        check_args_len(witness_raw_data.len(), SIDECHAIN_CONFIG_TYPE_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        Ok(SidechainConfigTypeWitness { pattern })
+    }
+}
 /**
     Sidechain State Cell
     Data:
@@ -301,7 +349,7 @@ pub struct SidechainStateCellData {
 
 impl FromRaw for SidechainStateCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Result<SidechainStateCellData, SysError> {
-        check_args_len(cell_raw_data.len(), SIDECHAIN_STATE_CELL_LEN)?;
+        check_args_len(cell_raw_data.len(), SIDECHAIN_STATE_DATA_LEN)?;
 
         let chain_id = decode_u8(&cell_raw_data[0..1])?;
         let version = decode_u8(&cell_raw_data[1..2])?;
@@ -330,6 +378,21 @@ impl FromRaw for SidechainStateCellData {
             collator_public_key,
             global_config_cell_type_hash,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct SidechainStateTypeWitness {
+    pub pattern: u8,
+}
+
+impl FromRaw for SidechainStateTypeWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainStateTypeWitness, SysError> {
+        check_args_len(witness_raw_data.len(), SIDECHAIN_STATE_TYPE_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        Ok(SidechainStateTypeWitness { pattern })
     }
 }
 
@@ -382,7 +445,7 @@ pub struct CheckerInfoCellData {
 
 impl FromRaw for CheckerInfoCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Result<CheckerInfoCellData, SysError> {
-        check_args_len(cell_raw_data.len(), CHECKER_INFO_CELL_LEN)?;
+        check_args_len(cell_raw_data.len(), CHECKER_INFO_DATA_LEN)?;
 
         let chain_id = decode_u8(&cell_raw_data[0..1])?;
         let checker_id = decode_u8(&cell_raw_data[1..2])?;
@@ -409,6 +472,21 @@ impl FromRaw for CheckerInfoCellData {
             mode,
             global_config_cell_type_hash,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct CheckerInfoTypeWitness {
+    pub pattern: u8,
+}
+
+impl FromRaw for CheckerInfoTypeWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<CheckerInfoTypeWitness, SysError> {
+        check_args_len(witness_raw_data.len(), CHECKER_INFO_TYPE_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        Ok(CheckerInfoTypeWitness { pattern })
     }
 }
 
@@ -459,7 +537,7 @@ pub struct TaskCellData {
 
 impl FromRaw for TaskCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Result<TaskCellData, SysError> {
-        check_args_len(cell_raw_data.len(), TASK_CELL_LEN)?;
+        check_args_len(cell_raw_data.len(), TASK_DATA_LEN)?;
 
         let chain_id = decode_u8(&cell_raw_data[0..1])?;
         let version = decode_u8(&cell_raw_data[1..2])?;
@@ -486,6 +564,21 @@ impl FromRaw for TaskCellData {
             mode,
             global_config_cell_type_hash,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct TaskCellTypeWitness {
+    pub pattern: u8,
+}
+
+impl FromRaw for TaskCellTypeWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<TaskCellTypeWitness, SysError> {
+        check_args_len(witness_raw_data.len(), TASK_TYPE_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        Ok(TaskCellTypeWitness { pattern })
     }
 }
 
@@ -517,7 +610,7 @@ pub struct SidechainBondCellLockArgs {
 
 impl FromRaw for SidechainBondCellLockArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Result<SidechainBondCellLockArgs, SysError> {
-        check_args_len(arg_raw_data.len(), SIDECHAIN_BOND_CELL_ARGS_LEN)?;
+        check_args_len(arg_raw_data.len(), SIDECHAIN_BOND_LOCK_ARGS_LEN)?;
 
         let chain_id = decode_u8(&arg_raw_data[0..1])?;
 
@@ -531,6 +624,25 @@ impl FromRaw for SidechainBondCellLockArgs {
             collator_public_key,
             unlock_sidechain_height,
         })
+    }
+}
+
+#[derive(Debug)]
+pub struct SidechainBondLockWitness {
+    pub pattern:   u8,
+    pub signature: [u8; 32],
+}
+
+impl FromRaw for SidechainBondLockWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainBondLockWitness, SysError> {
+        check_args_len(witness_raw_data.len(), SIDECHAIN_BOND_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        let mut signature = [0u8; 32];
+        signature.copy_from_slice(&witness_raw_data[1..33]);
+
+        Ok(SidechainBondLockWitness { pattern, signature })
     }
 }
 
@@ -565,5 +677,24 @@ impl FromRaw for SidechainFeeCellLockArgs {
         let chain_id = decode_u8(&arg_raw_data[0..1])?;
 
         Ok(SidechainFeeCellLockArgs { chain_id })
+    }
+}
+
+#[derive(Debug)]
+pub struct SidechainFeeLockWitness {
+    pub pattern:   u8,
+    pub signature: [u8; 32],
+}
+
+impl FromRaw for SidechainFeeLockWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainFeeLockWitness, SysError> {
+        check_args_len(witness_raw_data.len(), SIDECHAIN_FEE_WITNESS_LEN)?;
+
+        let pattern = decode_u8(witness_raw_data)?;
+
+        let mut signature = [0u8; 32];
+        signature.copy_from_slice(&witness_raw_data[1..33]);
+
+        Ok(SidechainFeeLockWitness { pattern, signature })
     }
 }
