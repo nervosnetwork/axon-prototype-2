@@ -9,15 +9,15 @@ use ckb_std::{
 
 use crate::error::Error;
 
-use common::pattern::{is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_quit_sidechain};
+use common::pattern::{is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_quit_sidechain, Pattern};
 
 use alloc::vec::Vec;
 use ckb_lib_secp256k1::LibSecp256k1;
 use ckb_std::ckb_constants::Source;
-use ckb_std::high_level::{load_cell, load_cell_data, load_cell_lock, load_witness_args};
+use ckb_std::high_level::{load_cell, load_cell_data, load_cell_lock, load_witness_args, QueryIter};
 use ckb_std::syscalls::load_witness;
-use common::cell::{CheckerBondCellLockArgs, FromRaw, SidechainConfigCellData};
-use common::{bit_check, bit_or, get_input_cell_count, get_output_cell_count, EMPTY_BIT_MAP, GLOBAL_CONFIG_TYPE_HASH};
+use common::cell::{CheckerBondCellLockArgs, CheckerBondLockWitness, FromRaw, SidechainConfigCellData};
+use common::{bit_check, bit_op, get_input_cell_count, get_output_cell_count, EMPTY_BIT_MAP, GLOBAL_CONFIG_TYPE_HASH};
 
 pub fn main() -> Result<(), Error> {
     /*
@@ -29,62 +29,75 @@ pub fn main() -> Result<(), Error> {
     4. CheckerQuitSidechain
      */
 
-    let script = load_script()?;
+    let mut pattern = Pattern::Unrecognised;
 
-    let args: Vec<u8> = script.args().unpack();
+    for witness_args in QueryIter::new(load_witness_args, Source::GroupInput) {
+        let input_type_witness = witness_args.input_type().to_opt().ok_or(Error::MissingWitness)?;
+        let witness = CheckerBondLockWitness::from_raw(input_type_witness.as_slice())?;
+        let p: Pattern = witness.pattern.into();
 
-    let args = CheckerBondCellLockArgs::from_raw(&args)?;
+        if p == Pattern::Unrecognised {
+            return Err(Error::UnknownPattern);
+        }
 
-    /*
-    CheckerBondDeposit,
-
-    Muse Token Cell             ->        Checker Bond Cell
-
-     */
-
-    // won't be triggered!!!
-
-    /*
-    Dep:    1 Global Config Cell
-
-    CheckerBondWithdraw,
-
-    Checker Bond Cell           ->         Muse Token Cell
-
-     */
-    if is_checker_bond_withdraw().is_ok() {
-        checker_bond_withdraw(args)?;
-        return Ok(());
+        if pattern == Pattern::Unrecognised {
+            pattern = p
+        } else if p != pattern {
+            return Err(Error::PatternCollision);
+        }
     }
 
-    /*
-    CheckerJoinSidechain,
+    match pattern {
+        /*
+        CheckerBondDeposit,
 
-    Dep:    1 Global Config Cell
+        Muse Token Cell             ->        Checker Bond Cell
 
-    Sidechain Config Cell       ->          Sidechain Config Cell
-    Checker Bond Cell           ->          Checker Bond Cell
-    Null                        ->          Checker Info Cell
+         */
+        // won't be triggered!!!
+        Pattern::CheckerBondDeposit => (),
 
-    */
-    if is_checker_join_sidechain().is_ok() {
-        checker_bond_join(args)?;
-        return Ok(());
-    }
+        /*
+        Dep:    1 Global Config Cell
 
-    /*
-    CheckerQuitSidechain
+        CheckerBondWithdraw,
 
-    Dep:    1 Global Config Cell
+        Checker Bond Cell           ->         Muse Token Cell
 
-    Sidechain Config Cell       ->          Sidechain Config Cell
-    Checker Bond Cell           ->          Checker Bond Cell
-    Checker Info Cell           ->          Null
+         */
+        Pattern::CheckerBondWithdraw => {
+            is_checker_bond_withdraw()?;
+            checker_bond_withdraw()?
+        }
+        /*
+        CheckerJoinSidechain,
 
-    */
-    if is_checker_quit_sidechain().is_ok() {
-        checker_bond_quit(args)?;
-        return Ok(());
+        Dep:    1 Global Config Cell
+
+        Sidechain Config Cell       ->          Sidechain Config Cell
+        Checker Bond Cell           ->          Checker Bond Cell
+                                    ->          Checker Info Cell
+
+        */
+        Pattern::CheckerJoinSidechain => {
+            is_checker_join_sidechain()?;
+            checker_bond_join()?;
+        }
+        /*
+        CheckerQuitSidechain
+
+        Dep:    1 Global Config Cell
+
+        Sidechain Config Cell       ->          Sidechain Config Cell
+        Checker Bond Cell           ->          Checker Bond Cell
+        Checker Info Cell           ->          Null
+
+        */
+        Pattern::CheckerQuitSidechain => {
+            is_checker_quit_sidechain()?;
+            checker_bond_quit()?;
+        }
+        _ => return Err(Error::PatternInvalid),
     }
 
     /*// Load dynamic library for checking signature
@@ -106,7 +119,7 @@ pub fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_bond_withdraw(args: CheckerBondCellLockArgs) -> Result<(), Error> {
+fn checker_bond_withdraw() -> Result<(), Error> {
     /*
     Dep:    1 Global Config Cell
 
@@ -123,6 +136,11 @@ fn checker_bond_withdraw(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     2. secp256k1 check
 
      */
+    let script = load_script()?;
+
+    let args: Vec<u8> = script.args().unpack();
+
+    let args = CheckerBondCellLockArgs::from_raw(&args)?;
 
     if args.chain_id_bitmap != EMPTY_BIT_MAP {
         return Err(Error::ChainIdBitMapNotZero);
@@ -140,7 +158,7 @@ fn checker_bond_withdraw(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_bond_join(args: CheckerBondCellLockArgs) -> Result<(), Error> {
+fn checker_bond_join() -> Result<(), Error> {
     /*
     CheckerJoinSidechain,
 
@@ -159,12 +177,17 @@ fn checker_bond_join(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     2. secp256k1 check
 
      */
+    let script = load_script()?;
+
+    let args: Vec<u8> = script.args().unpack();
+
+    let args = CheckerBondCellLockArgs::from_raw(&args)?;
 
     let config_data = load_cell_data(0, Source::Input)?;
     let config = SidechainConfigCellData::from_raw(&config_data)?;
 
     // input must not cover
-    if !bit_check(args.chain_id_bitmap, config.chain_id) {
+    if bit_check(args.chain_id_bitmap, config.chain_id, false) {
         return Err(Error::ChainIdBitMapMismatch);
     }
 
@@ -172,7 +195,14 @@ fn checker_bond_join(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     let output = load_cell_lock(1, Source::Output)?;
     let output_args = CheckerBondCellLockArgs::from_raw(output.args().as_slice())?;
 
-    if bit_or(args.chain_id_bitmap, config.chain_id) != output_args.chain_id_bitmap {
+    if bit_check(output_args.chain_id_bitmap, config.chain_id, true) {
+        return Err(Error::ChainIdBitMapMismatch);
+    }
+
+    let mut add_chain_id = args.chain_id_bitmap.clone();
+    bit_op(&mut add_chain_id, config.chain_id, true);
+
+    if add_chain_id != output_args.chain_id_bitmap.clone() {
         return Err(Error::ChainIdBitMapMistransfer);
     }
 
@@ -188,7 +218,7 @@ fn checker_bond_join(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_bond_quit(args: CheckerBondCellLockArgs) -> Result<(), Error> {
+fn checker_bond_quit() -> Result<(), Error> {
     /*
     CheckerQuitSidechain
 
@@ -207,12 +237,17 @@ fn checker_bond_quit(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     2. secp256k1 check
 
      */
+    let script = load_script()?;
+
+    let args: Vec<u8> = script.args().unpack();
+
+    let args = CheckerBondCellLockArgs::from_raw(&args)?;
 
     let config_data = load_cell_data(0, Source::Input)?;
     let config = SidechainConfigCellData::from_raw(&config_data)?;
 
     // input must cover
-    if bit_check(args.chain_id_bitmap, config.chain_id) {
+    if bit_check(args.chain_id_bitmap, config.chain_id, true) {
         return Err(Error::ChainIdBitMapMismatch);
     }
 
@@ -221,12 +256,15 @@ fn checker_bond_quit(args: CheckerBondCellLockArgs) -> Result<(), Error> {
     let output_args = CheckerBondCellLockArgs::from_raw(output.args().as_slice())?;
 
     //1 output must not cover
-    if !bit_check(output_args.chain_id_bitmap, config.chain_id) {
+    if !bit_check(output_args.chain_id_bitmap, config.chain_id, false) {
         return Err(Error::ChainIdBitMapMismatch);
     }
 
+    let mut remove_chain_id = args.chain_id_bitmap.clone();
+    bit_op(&mut remove_chain_id, config.chain_id, false);
+
     //2 output | chain_id = input
-    if bit_or(output_args.chain_id_bitmap, config.chain_id) != args.chain_id_bitmap {
+    if remove_chain_id != args.chain_id_bitmap {
         return Err(Error::ChainIdBitMapMismatch);
     }
 

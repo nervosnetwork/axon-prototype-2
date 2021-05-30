@@ -13,6 +13,7 @@ use ckb_std::{
 };
 
 #[repr(u8)]
+#[derive(PartialOrd, PartialEq)]
 pub enum Pattern {
     Unrecognised = 0u8,
 

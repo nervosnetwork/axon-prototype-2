@@ -20,7 +20,7 @@ const SIDECHAIN_STATE_DATA_LEN: usize = 164;
 const SIDECHAIN_STATE_TYPE_WITNESS_LEN: usize = 1;
 
 const CHECKER_INFO_DATA_LEN: usize = 595;
-const CHECKER_INFO_TYPE_WITNESS_LEN: usize = 1;
+const CHECKER_INFO_TYPE_WITNESS_LEN: usize = 33;
 
 const TASK_DATA_LEN: usize = 101;
 const TASK_TYPE_WITNESS_LEN: usize = 1;
@@ -477,7 +477,8 @@ impl FromRaw for CheckerInfoCellData {
 
 #[derive(Debug)]
 pub struct CheckerInfoTypeWitness {
-    pub pattern: u8,
+    pub pattern:   u8,
+    pub signature: [u8; 32],
 }
 
 impl FromRaw for CheckerInfoTypeWitness {
@@ -486,7 +487,10 @@ impl FromRaw for CheckerInfoTypeWitness {
 
         let pattern = decode_u8(witness_raw_data)?;
 
-        Ok(CheckerInfoTypeWitness { pattern })
+        let mut signature = [0u8; 32];
+        signature.copy_from_slice(&witness_raw_data[1..33]);
+
+        Ok(CheckerInfoTypeWitness { pattern, signature })
     }
 }
 

@@ -11,6 +11,7 @@ use ckb_std::ckb_constants::{CellField, Source};
 use ckb_std::error::SysError;
 use ckb_std::high_level::{load_cell, load_cell_type, load_cell_type_hash, load_script, load_script_hash, QueryIter};
 use ckb_std::syscalls::load_cell_by_field;
+use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign};
 
 pub mod cell;
 pub mod error;
@@ -132,7 +133,7 @@ pub fn get_running_script_location(script: &Script) -> Vec<CellLocation> {
 }*/
 
 // check if the corresponding bit is marked
-pub fn bit_check(bit_map: [u8; 32], chain_id: u8) -> bool {
+pub fn bit_check(bit_map: [u8; 32], chain_id: u8, masked: bool) -> bool {
     let byte_offset = chain_id / 8;
 
     let target = bit_map[byte_offset as usize];
@@ -151,16 +152,46 @@ pub fn bit_check(bit_map: [u8; 32], chain_id: u8) -> bool {
         _ => return false,
     };
 
-    (target & mask) != 0u8
+    if masked {
+        (target & mask) == 1u8
+    } else {
+        (target & mask) == 0u8
+    }
 }
 
-pub fn bit_or(mut bit_map: [u8; 32], chain_id: u8) -> [u8; 32] {
+pub fn bit_op(bit_map: &mut [u8; 32], chain_id: u8, set: bool) {
     let byte_offset = chain_id / 8;
 
-    let mut target = bit_map[byte_offset as usize];
+    let mut target = &mut bit_map[byte_offset as usize];
 
     let bit_offset = chain_id - byte_offset * 8;
 
-    target = target | bit_offset;
-    bit_map
+    if set {
+        let mask: u8 = match bit_offset {
+            0u8 => 0b10000000,
+            1u8 => 0b01000000,
+            2u8 => 0b00100000,
+            3u8 => 0b00010000,
+            4u8 => 0b00001000,
+            5u8 => 0b00000100,
+            6u8 => 0b00000010,
+            7u8 => 0b00000001,
+            _ => 0b00000000,
+        };
+
+        target.bitor_assign(mask);
+    } else {
+        let mask: u8 = match bit_offset {
+            0u8 => 0b01111111,
+            1u8 => 0b10111111,
+            2u8 => 0b11011111,
+            3u8 => 0b11101111,
+            4u8 => 0b11110111,
+            5u8 => 0b11111011,
+            6u8 => 0b11111101,
+            7u8 => 0b11111110,
+            _ => 0b00000000,
+        };
+        target.bitand_assign(mask);
+    }
 }
