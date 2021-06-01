@@ -5,7 +5,6 @@
 
 use crate::error::CommonError;
 pub use blake2b_ref;
-use ckb_standalone_types::packed::Script;
 pub use ckb_std;
 use ckb_std::ckb_constants::{CellField, Source};
 use ckb_std::error::SysError;
@@ -25,6 +24,9 @@ pub const SUDT_MUSE_ARGS: &[u8] = &[1u8];
 pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
 
 pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = [0; 32];
+
+#[macro_use]
+extern crate alloc;
 
 #[macro_export]
 macro_rules! get_cell_type_hash {
@@ -99,38 +101,13 @@ pub fn get_output_cell_count() -> usize {
     QueryIter::new(load_cell, Source::Output).count()
 }
 
-pub struct CellLocation {
-    pub source: Source,
-    pub index:  usize,
-    pub field:  CellField,
+pub fn get_group_input_cell_count() -> usize {
+    QueryIter::new(load_cell, Source::GroupInput).count()
 }
-/*
-pub fn get_running_script_location(script: &Script) -> Vec<CellLocation> {
-    // try input
-    let a = QueryIter::new(load_cell_type, Source::Input)
-        .enumerate()
-        .filter(|input| {
-            if input.1.is_none() {
-                return false;
-            }
-            if let Some(s) = &input.1 {
-                if s.code_hash() == script.code_hash() && s.hash_type() == script.hash_type() && s.args() == script.args() {
-                    return true;
-                }
-            }
-            false
-        })
-        .map(|input| {
-            return CellLocation {
-                source: Source::Input,
-                index:  input.0,
-                field:  CellField::Type,
-            };
-        })
-        .collect::<Vec<CellLocation>>();
 
-    vec![]
-}*/
+pub fn get_group_output_cell_count() -> usize {
+    QueryIter::new(load_cell, Source::GroupOutput).count()
+}
 
 // check if the corresponding bit is marked
 pub fn bit_check(bit_map: [u8; 32], chain_id: u8, masked: bool) -> bool {

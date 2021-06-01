@@ -1,6 +1,7 @@
 [workspace]
 members = [
     #"tests",
+    "contracts/code-cell",
     "contracts/always-success",
     "contracts/checker-bond-cell-lockscript",
     "contracts/checker-info-cell-typescript",
@@ -9,7 +10,7 @@ members = [
     "contracts/sidechain-fee-cell-lockscript",
     "contracts/sidechain-state-cell-typescript",
     "contracts/sidechain-config-cell-typescript",
-    "common"
+    "common",
 ]
 
 [profile.release]

@@ -9,17 +9,6 @@ pub enum Error {
     LengthNotEnough,
     Encoding,
     InvalidArgument = 5,
-    Secp256k1Error,
-    BusyChecker,
-    ChainIdBitMapNotZero,
-    MissingSignature,
-    SignatureMismatch,
-    ChainIdBitMapMismatch,
-    ChainIdBitMapMistransfer,
-    MissingWitness,
-    UnknownPattern,
-    PatternCollision,
-    PatternInvalid,
 }
 
 impl From<SysError> for Error {

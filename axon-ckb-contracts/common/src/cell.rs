@@ -3,33 +3,42 @@ use core::result::Result;
 
 use ckb_std::error::SysError;
 
-use crate::{check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8};
+use crate::error::CommonError;
+use crate::{
+    check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE,
+    SUDT_MUSE_ARGS,
+};
+use alloc::vec::Vec;
+use ckb_standalone_types::prelude::{Entity, Unpack};
+use ckb_std::ckb_constants::Source;
+use ckb_std::high_level::{load_cell, load_cell_data, load_cell_type_hash};
 
 // in byte
 const SUDT_DATA_LEN: usize = 16; // u128
 
-const GLOBAL_CONFIG_DATA_LEN: usize = 263;
+const GLOBAL_CONFIG_DATA_LEN: usize = 296;
+
+const CODE_TYPE_ARGS_LEN: usize = 33;
+const CODE_TYPE_WITNESS_LEN_MIN: usize = 1;
+const CODE_LOCK_WITNESS_LEN: usize = 33;
 
 const CHECKER_BOND_LOCK_ARGS_LEN: usize = 64;
-const CHECKER_BOND_LOCK_WITNESS_LEN: usize = 33;
 
-const SIDECHAIN_CONFIG_DATA_LEN: usize = 153;
-const SIDECHAIN_CONFIG_TYPE_WITNESS_LEN: usize = 1;
+const SIDECHAIN_CONFIG_DATA_LEN: usize = 185;
+const SIDECHAIN_CONFIG_TYPE_ARGS_LEN: usize = 1;
 
-const SIDECHAIN_STATE_DATA_LEN: usize = 164;
-const SIDECHAIN_STATE_TYPE_WITNESS_LEN: usize = 1;
+const SIDECHAIN_STATE_DATA_LEN: usize = 98;
+const SIDECHAIN_STATE_TYPE_ARGS_LEN: usize = 1;
 
-const CHECKER_INFO_DATA_LEN: usize = 595;
-const CHECKER_INFO_TYPE_WITNESS_LEN: usize = 33;
+const CHECKER_INFO_DATA_LEN: usize = 563;
+const CHECKER_INFO_TYPE_ARGS_LEN: usize = 33;
 
-const TASK_DATA_LEN: usize = 101;
-const TASK_TYPE_WITNESS_LEN: usize = 1;
+const TASK_DATA_LEN: usize = 69;
+const TASK_TYPE_ARGS_LEN: usize = 1;
 
 const SIDECHAIN_BOND_LOCK_ARGS_LEN: usize = 49;
-const SIDECHAIN_BOND_WITNESS_LEN: usize = 33;
 
 const SIDECHAIN_FEE_LOCK_ARGS_LEN: usize = 1;
-const SIDECHAIN_FEE_WITNESS_LEN: usize = 33;
 
 pub trait FromRaw {
     fn from_raw(cell_raw_data: &[u8]) -> Result<Self, SysError>
@@ -37,6 +46,7 @@ pub trait FromRaw {
         Self: Sized;
 }
 
+#[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub enum CellType {
     Unknown,
     Sudt,
@@ -48,6 +58,7 @@ pub enum CellType {
     Task,
     SidechainFee,
     SidechainBond,
+    Code,
 }
 
 // which is standard sudt
@@ -67,8 +78,8 @@ impl FromRaw for MuseTokenData {
 }
 
 /**
-    Any other cells refers to Global Config Cell via its type script hash.
-    If in test, the type script could be an Always-Success and blank args
+
+    Global config cell only contains data
 
     Global Config Cell
     Data:
@@ -83,8 +94,11 @@ impl FromRaw for MuseTokenData {
 
 #[derive(Debug)]
 pub struct GlobalConfigCellData {
-    pub admin_public_key:                    [u8; 32], /* this is the authenticated admin for
-                                                        * sidechain config cell */
+    pub admin_public_key:        [u8; 32], /* this is the authenticated admin for
+                                            * sidechain config cell */
+    pub code_cell_type_codehash: [u8; 32],
+    pub code_cell_type_hashtype: u8,
+
     pub sidechain_config_cell_type_codehash: [u8; 32],
     pub sidechain_config_cell_type_hashtype: u8,
 
@@ -114,36 +128,42 @@ impl FromRaw for GlobalConfigCellData {
         let mut admin_public_key = [0u8; 32];
         admin_public_key.copy_from_slice(&cell_raw_data[0..32]);
 
+        let mut code_cell_type_codehash = [0u8; 32];
+        code_cell_type_codehash.copy_from_slice(&cell_raw_data[32..64]);
+        let code_cell_type_hashtype = decode_u8(&cell_raw_data[64..65])?;
+
         let mut sidechain_config_cell_type_codehash = [0u8; 32];
-        sidechain_config_cell_type_codehash.copy_from_slice(&cell_raw_data[32..64]);
-        let sidechain_config_cell_type_hashtype = decode_u8(&cell_raw_data[64..65])?;
+        sidechain_config_cell_type_codehash.copy_from_slice(&cell_raw_data[65..97]);
+        let sidechain_config_cell_type_hashtype = decode_u8(&cell_raw_data[97..98])?;
 
         let mut sidechain_state_cell_type_codehash = [0u8; 32];
-        sidechain_state_cell_type_codehash.copy_from_slice(&cell_raw_data[65..97]);
-        let sidechain_state_cell_type_hashtype = decode_u8(&cell_raw_data[97..98])?;
+        sidechain_state_cell_type_codehash.copy_from_slice(&cell_raw_data[98..130]);
+        let sidechain_state_cell_type_hashtype = decode_u8(&cell_raw_data[130..131])?;
 
         let mut checker_info_cell_type_codehash = [0u8; 32];
-        checker_info_cell_type_codehash.copy_from_slice(&cell_raw_data[98..130]);
-        let checker_info_cell_type_hashtype = decode_u8(&cell_raw_data[130..131])?;
+        checker_info_cell_type_codehash.copy_from_slice(&cell_raw_data[131..163]);
+        let checker_info_cell_type_hashtype = decode_u8(&cell_raw_data[163..164])?;
 
         let mut checker_bond_cell_lock_codehash = [0u8; 32];
-        checker_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[131..163]);
-        let checker_bond_cell_lock_hashtype = decode_u8(&cell_raw_data[163..164])?;
+        checker_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[164..196]);
+        let checker_bond_cell_lock_hashtype = decode_u8(&cell_raw_data[196..197])?;
 
         let mut task_cell_type_codehash = [0u8; 32];
-        task_cell_type_codehash.copy_from_slice(&cell_raw_data[164..196]);
-        let task_cell_type_hashtype = decode_u8(&cell_raw_data[196..197])?;
+        task_cell_type_codehash.copy_from_slice(&cell_raw_data[197..229]);
+        let task_cell_type_hashtype = decode_u8(&cell_raw_data[229..230])?;
 
         let mut sidechain_fee_cell_lock_codehash = [0u8; 32];
-        sidechain_fee_cell_lock_codehash.copy_from_slice(&cell_raw_data[197..229]);
-        let sidechain_fee_cell_lock_hashtype = decode_u8(&cell_raw_data[229..230])?;
+        sidechain_fee_cell_lock_codehash.copy_from_slice(&cell_raw_data[230..262]);
+        let sidechain_fee_cell_lock_hashtype = decode_u8(&cell_raw_data[262..263])?;
 
         let mut sidechain_bond_cell_lock_codehash = [0u8; 32];
-        sidechain_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[230..262]);
-        let sidechain_bond_cell_lock_hashtype = decode_u8(&cell_raw_data[262..263])?;
+        sidechain_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[263..295]);
+        let sidechain_bond_cell_lock_hashtype = decode_u8(&cell_raw_data[295..296])?;
 
         Ok(GlobalConfigCellData {
             admin_public_key,
+            code_cell_type_codehash,
+            code_cell_type_hashtype,
             sidechain_config_cell_type_codehash,
             sidechain_config_cell_type_hashtype,
             sidechain_state_cell_type_codehash,
@@ -162,16 +182,82 @@ impl FromRaw for GlobalConfigCellData {
     }
 }
 
+/*
+
+    Code Cell
+    Data: null
+    Type:
+        codehash: typeId
+        hashtype: type
+        args: chain_id | checker_public_key
+    Lock:
+        codehash: secp256k1
+        hashtype: type
+        args: public-key
+*/
+
+#[derive(Debug, Copy, Clone)]
+pub struct CodeCellTypeArgs {
+    pub chain_id:       u8,
+    pub who_public_key: [u8; 32],
+}
+
+impl FromRaw for CodeCellTypeArgs {
+    fn from_raw(cell_raw_data: &[u8]) -> Result<CodeCellTypeArgs, SysError> {
+        check_args_len(cell_raw_data.len(), CODE_TYPE_ARGS_LEN)?;
+
+        let chain_id = decode_u8(&cell_raw_data[0..1])?;
+
+        let mut who_public_key = [0u8; 32];
+        who_public_key.copy_from_slice(&cell_raw_data[1..33]);
+
+        Ok(CodeCellTypeArgs { chain_id, who_public_key })
+    }
+}
+
+#[derive(Debug)]
+pub struct CodeCellTypeWitness {
+    pub pattern: u8,
+}
+
+impl FromRaw for CodeCellTypeWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Result<CodeCellTypeWitness, SysError> {
+        if witness_raw_data.len() < CODE_TYPE_WITNESS_LEN_MIN {
+            return Err(SysError::Encoding);
+        }
+
+        let pattern = decode_u8(&witness_raw_data[0..1])?;
+
+        Ok(CodeCellTypeWitness { pattern })
+    }
+}
+
+#[derive(Debug)]
+pub struct CodeCellLockArgs {
+    pub public_key_hash: [u8; 20],
+}
+
+impl FromRaw for CodeCellLockArgs {
+    fn from_raw(arg_raw_data: &[u8]) -> Result<CodeCellLockArgs, SysError> {
+        check_args_len(arg_raw_data.len(), CODE_LOCK_WITNESS_LEN)?;
+
+        let mut public_key_hash = [0u8; 20];
+        public_key_hash.copy_from_slice(&arg_raw_data[0..20]);
+
+        Ok(CodeCellLockArgs { public_key_hash })
+    }
+}
+
 /**
     Checker Bond Cell
     Data:
     Type:
         codehash: sudt
         hashtype: type
-        args: unique_id
+        args: muse_token_admin
     Lock:
         codehash: checker bond cell lockscript
-        hashtype: type // data
+        hashtype: type
         args: checker public key | chain id bitmap
 */
 
@@ -198,14 +284,14 @@ pub struct CheckerBondCellLockArgs {
 }
 
 impl FromRaw for CheckerBondCellLockArgs {
-    fn from_raw(cell_raw_data: &[u8]) -> Result<CheckerBondCellLockArgs, SysError> {
-        check_args_len(cell_raw_data.len(), CHECKER_BOND_LOCK_ARGS_LEN)?;
+    fn from_raw(arg_raw_data: &[u8]) -> Result<CheckerBondCellLockArgs, SysError> {
+        check_args_len(arg_raw_data.len(), CHECKER_BOND_LOCK_ARGS_LEN)?;
 
         let mut checker_address = [0u8; 32];
-        checker_address.copy_from_slice(&cell_raw_data[0..32]);
+        checker_address.copy_from_slice(&arg_raw_data[0..32]);
 
         let mut chain_id_bitmap = [0u8; 32];
-        chain_id_bitmap.copy_from_slice(&cell_raw_data[32..64]);
+        chain_id_bitmap.copy_from_slice(&arg_raw_data[32..64]);
 
         Ok(CheckerBondCellLockArgs {
             checker_public_key: checker_address,
@@ -214,32 +300,13 @@ impl FromRaw for CheckerBondCellLockArgs {
     }
 }
 
-#[derive(Debug)]
-pub struct CheckerBondLockWitness {
-    pub pattern:   u8,
-    pub signature: [u8; 32],
-}
-
-impl FromRaw for CheckerBondLockWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<CheckerBondLockWitness, SysError> {
-        check_args_len(witness_raw_data.len(), CHECKER_BOND_LOCK_WITNESS_LEN)?;
-
-        let pattern = decode_u8(witness_raw_data)?;
-
-        let mut signature = [0u8; 32];
-        signature.copy_from_slice(&witness_raw_data[1..33]);
-
-        Ok(CheckerBondLockWitness { pattern, signature })
-    }
-}
-
 /**
     Sidechain Config Cell
     Data:
     Type:
-        codehash: sidechain config typescript   // sidechain config typescript
-        hashtype: type                          // data
-        args: null                              // null
+        codehash: typeId
+        hashtype: type
+        args: chain_id(for lumos)
     Lock:
         codehash: A.S
         hashtype: data
@@ -248,21 +315,22 @@ impl FromRaw for CheckerBondLockWitness {
 
 #[derive(Debug)]
 pub struct SidechainConfigCellData {
-    pub chain_id:                     u8,
-    pub checker_total_count:          u8,
+    pub chain_id:                u8,
+    pub checker_total_count:     u8,
     // 2**8 = 256
-    pub checker_bitmap:               [u8; 32],
+    pub checker_bitmap:          [u8; 32],
     // 256
-    pub checker_threshold:            u8,
-    pub update_interval:              u16,
-    pub minimal_bond:                 u128,
-    pub checker_data_size_limit:      u128,
-    pub checker_price:                u128,
-    pub refresh_interval:             u16,
-    pub commit_threshold:             u8,
-    pub challenge_threshold:          u8,
-    pub admin_public_key:             [u8; 32], //maybe going to args is better for runtime
-    pub global_config_cell_type_hash: [u8; 32],
+    pub checker_threshold:       u8,
+    pub update_interval:         u16,
+    pub minimal_bond:            u128,
+    pub checker_data_size_limit: u128,
+    pub checker_price:           u128,
+    pub refresh_interval:        u16,
+    pub commit_threshold:        u8,
+    pub challenge_threshold:     u8,
+    pub admin_public_key:        [u8; 32],
+    pub collator_public_key:     [u8; 32],
+    pub bond_sudt_type_hash:     [u8; 32],
 }
 
 impl FromRaw for SidechainConfigCellData {
@@ -287,8 +355,11 @@ impl FromRaw for SidechainConfigCellData {
         let mut admin_public_key = [0u8; 32];
         admin_public_key.copy_from_slice(&cell_raw_data[89..121]);
 
-        let mut global_config_cell_type_hash = [0u8; 32];
-        global_config_cell_type_hash.copy_from_slice(&cell_raw_data[121..153]);
+        let mut collator_public_key = [0u8; 32];
+        collator_public_key.copy_from_slice(&cell_raw_data[121..153]);
+
+        let mut bond_sudt_type_hash = [0u8; 32];
+        bond_sudt_type_hash.copy_from_slice(&cell_raw_data[153..185]);
 
         Ok(SidechainConfigCellData {
             chain_id,
@@ -303,32 +374,33 @@ impl FromRaw for SidechainConfigCellData {
             commit_threshold,
             challenge_threshold,
             admin_public_key,
-            global_config_cell_type_hash,
+            collator_public_key,
+            bond_sudt_type_hash,
         })
     }
 }
-
-#[derive(Debug)]
-pub struct SidechainConfigTypeWitness {
-    pub pattern: u8,
+#[derive(Debug, Copy, Clone)]
+pub struct SidechainConfigCellTypeArgs {
+    pub chain_id: u8,
 }
 
-impl FromRaw for SidechainConfigTypeWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainConfigTypeWitness, SysError> {
-        check_args_len(witness_raw_data.len(), SIDECHAIN_CONFIG_TYPE_WITNESS_LEN)?;
+impl FromRaw for SidechainConfigCellTypeArgs {
+    fn from_raw(arg_raw_data: &[u8]) -> Result<SidechainConfigCellTypeArgs, SysError> {
+        check_args_len(arg_raw_data.len(), SIDECHAIN_CONFIG_TYPE_ARGS_LEN)?;
 
-        let pattern = decode_u8(witness_raw_data)?;
+        let chain_id = decode_u8(&arg_raw_data[0..1])?;
 
-        Ok(SidechainConfigTypeWitness { pattern })
+        Ok(SidechainConfigCellTypeArgs { chain_id })
     }
 }
+
 /**
     Sidechain State Cell
     Data:
     Type:
-        codehash: sidechain state typescript    // sidechain state typescript
-        hashtype: type                          // data
-        args: null                              // null
+        codehash: typeId
+        hashtype: type
+        args: chain_id
     Lock:
         codehash: A.S.
         hashtype: type
@@ -337,14 +409,12 @@ impl FromRaw for SidechainConfigTypeWitness {
 
 #[derive(Debug)]
 pub struct SidechainStateCellData {
-    pub chain_id: u8,
-    pub version: u8,
-    pub latest_block_height: u128,
-    pub latest_block_hash: [u8; 32],
+    pub chain_id:               u8,
+    pub version:                u8,
+    pub latest_block_height:    u128,
+    pub latest_block_hash:      [u8; 32],
     pub committed_block_height: u128,
-    pub committed_block_hash: [u8; 32],
-    pub collator_public_key: [u8; 32],
-    pub global_config_cell_type_hash: [u8; 32],
+    pub committed_block_hash:   [u8; 32],
 }
 
 impl FromRaw for SidechainStateCellData {
@@ -362,12 +432,6 @@ impl FromRaw for SidechainStateCellData {
         let mut committed_block_hash = [0u8; 32];
         committed_block_hash.copy_from_slice(&cell_raw_data[66..98]);
 
-        let mut collator_public_key = [0u8; 32];
-        collator_public_key.copy_from_slice(&cell_raw_data[98..130]);
-
-        let mut global_config_cell_type_hash = [0u8; 32];
-        global_config_cell_type_hash.copy_from_slice(&cell_raw_data[130..164]);
-
         Ok(SidechainStateCellData {
             chain_id,
             version,
@@ -375,24 +439,22 @@ impl FromRaw for SidechainStateCellData {
             latest_block_hash,
             committed_block_height,
             committed_block_hash,
-            collator_public_key,
-            global_config_cell_type_hash,
         })
     }
 }
 
-#[derive(Debug)]
-pub struct SidechainStateTypeWitness {
-    pub pattern: u8,
+#[derive(Debug, Copy, Clone)]
+pub struct SidechainStateCellTypeArgs {
+    pub chain_id: u8,
 }
 
-impl FromRaw for SidechainStateTypeWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainStateTypeWitness, SysError> {
-        check_args_len(witness_raw_data.len(), SIDECHAIN_STATE_TYPE_WITNESS_LEN)?;
+impl FromRaw for SidechainStateCellTypeArgs {
+    fn from_raw(arg_raw_data: &[u8]) -> Result<SidechainStateCellTypeArgs, SysError> {
+        check_args_len(arg_raw_data.len(), SIDECHAIN_STATE_TYPE_ARGS_LEN)?;
 
-        let pattern = decode_u8(witness_raw_data)?;
+        let chain_id = decode_u8(&arg_raw_data[0..1])?;
 
-        Ok(SidechainStateTypeWitness { pattern })
+        Ok(SidechainStateCellTypeArgs { chain_id })
     }
 }
 
@@ -400,9 +462,9 @@ impl FromRaw for SidechainStateTypeWitness {
     Checker Info Cell
     Data:
     Type:
-        codehash: checker info typescript       // checker info typescript
-        hashtype: type                          // data
-        args: null                              // null
+        codehash: typeId
+        hashtype: type
+        args: chain_id | public_key
     Lock:
         codehash: A.S.
         hashtype: type
@@ -434,13 +496,12 @@ impl TryFrom<u8> for CheckerInfoCellMode {
 
 #[derive(Debug)]
 pub struct CheckerInfoCellData {
-    pub chain_id: u8,
-    pub checker_id: u8,
-    pub unpaid_fee: u128,
-    pub rpc_url: [u8; 512],
+    pub chain_id:           u8,
+    pub checker_id:         u8,
+    pub unpaid_fee:         u128,
+    pub rpc_url:            [u8; 512],
     pub checker_public_key: [u8; 32],
-    pub mode: CheckerInfoCellMode,
-    pub global_config_cell_type_hash: [u8; 32],
+    pub mode:               CheckerInfoCellMode,
 }
 
 impl FromRaw for CheckerInfoCellData {
@@ -460,9 +521,6 @@ impl FromRaw for CheckerInfoCellData {
         let mode_u8 = decode_u8(&cell_raw_data[562..563])?;
         let mode: CheckerInfoCellMode = mode_u8.try_into()?;
 
-        let mut global_config_cell_type_hash = [0u8; 32];
-        global_config_cell_type_hash.copy_from_slice(&cell_raw_data[563..595]);
-
         Ok(CheckerInfoCellData {
             chain_id,
             checker_id,
@@ -470,27 +528,29 @@ impl FromRaw for CheckerInfoCellData {
             rpc_url,
             checker_public_key,
             mode,
-            global_config_cell_type_hash,
         })
     }
 }
 
-#[derive(Debug)]
-pub struct CheckerInfoTypeWitness {
-    pub pattern:   u8,
-    pub signature: [u8; 32],
+#[derive(Debug, Copy, Clone)]
+pub struct CheckerInfoCellTypeArgs {
+    pub chain_id:           u8,
+    pub checker_public_key: [u8; 32],
 }
 
-impl FromRaw for CheckerInfoTypeWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<CheckerInfoTypeWitness, SysError> {
-        check_args_len(witness_raw_data.len(), CHECKER_INFO_TYPE_WITNESS_LEN)?;
+impl FromRaw for CheckerInfoCellTypeArgs {
+    fn from_raw(arg_raw_data: &[u8]) -> Result<CheckerInfoCellTypeArgs, SysError> {
+        check_args_len(arg_raw_data.len(), CHECKER_INFO_TYPE_ARGS_LEN)?;
 
-        let pattern = decode_u8(witness_raw_data)?;
+        let chain_id = decode_u8(&arg_raw_data[0..1])?;
 
-        let mut signature = [0u8; 32];
-        signature.copy_from_slice(&witness_raw_data[1..33]);
+        let mut checker_public_key = [0u8; 32];
+        checker_public_key.copy_from_slice(&arg_raw_data[1..33]);
 
-        Ok(CheckerInfoTypeWitness { pattern, signature })
+        Ok(CheckerInfoCellTypeArgs {
+            chain_id,
+            checker_public_key,
+        })
     }
 }
 
@@ -517,9 +577,9 @@ impl TryFrom<u8> for TaskCellMode {
     Task Cell
     Data:
     Type:
-        codehash: task cell typescript          // task typescript
-        hashtype: type                          // data
-        args: null                              // null
+        codehash: typeId
+        hashtype: type
+        args: chain_id
     Lock:
         codehash: A.S.
         hashtype: type
@@ -528,15 +588,14 @@ impl TryFrom<u8> for TaskCellMode {
 
 #[derive(Debug)]
 pub struct TaskCellData {
-    pub chain_id: u8,
-    pub version: u8,
+    pub chain_id:                u8,
+    pub version:                 u8,
     pub check_block_height_from: u128, // 应该为ssc committed_height + 1
-    pub check_block_height_to: u128,   // inclusive 应该为latest_height
-    pub check_block_hash_to: u128,
-    pub check_data_size: u128,
-    pub refresh_interval: u16,
-    pub mode: TaskCellMode,
-    pub global_config_cell_type_hash: [u8; 32],
+    pub check_block_height_to:   u128, // inclusive 应该为latest_height
+    pub check_block_hash_to:     u128,
+    pub check_data_size:         u128,
+    pub refresh_interval:        u16,
+    pub mode:                    TaskCellMode,
 }
 
 impl FromRaw for TaskCellData {
@@ -554,9 +613,6 @@ impl FromRaw for TaskCellData {
         let mode_u8 = decode_u8(&cell_raw_data[68..69])?;
         let mode: TaskCellMode = mode_u8.try_into()?;
 
-        let mut global_config_cell_type_hash = [0u8; 32];
-        global_config_cell_type_hash.copy_from_slice(&cell_raw_data[69..101]);
-
         Ok(TaskCellData {
             chain_id,
             version,
@@ -566,23 +622,22 @@ impl FromRaw for TaskCellData {
             check_data_size,
             refresh_interval,
             mode,
-            global_config_cell_type_hash,
         })
     }
 }
 
-#[derive(Debug)]
-pub struct TaskCellTypeWitness {
-    pub pattern: u8,
+#[derive(Debug, Copy, Clone)]
+pub struct TaskCellTypeArgs {
+    pub chain_id: u8,
 }
 
-impl FromRaw for TaskCellTypeWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<TaskCellTypeWitness, SysError> {
-        check_args_len(witness_raw_data.len(), TASK_TYPE_WITNESS_LEN)?;
+impl FromRaw for TaskCellTypeArgs {
+    fn from_raw(arg_raw_data: &[u8]) -> Result<TaskCellTypeArgs, SysError> {
+        check_args_len(arg_raw_data.len(), TASK_TYPE_ARGS_LEN)?;
 
-        let pattern = decode_u8(witness_raw_data)?;
+        let chain_id = decode_u8(&arg_raw_data[0..1])?;
 
-        Ok(TaskCellTypeWitness { pattern })
+        Ok(TaskCellTypeArgs { chain_id })
     }
 }
 
@@ -592,17 +647,27 @@ impl FromRaw for TaskCellTypeWitness {
     Type:
         codehash: sudt
         hashtype: type
-        args: null
+        args: custom sudt admin
     Lock:
-        codehash: sidechain bond cell lockscript    // sidechain bond cell typescript
-        hashtype: type                              // data
+        codehash: sidechain bond cell lockscript
+        hashtype: type
         args: chain_id | collator_public_key | unlock_sidechain_height
 */
 
 // which is standard sudt
 #[derive(Debug)]
 pub struct SidechainBondCellData {
-    amount: u128,
+    pub amount: u128,
+}
+
+impl FromRaw for SidechainBondCellData {
+    fn from_raw(cell_raw_data: &[u8]) -> Result<SidechainBondCellData, SysError> {
+        check_args_len(cell_raw_data.len(), SUDT_DATA_LEN)?;
+
+        let sudt_amount = decode_u128(&cell_raw_data[0..16])?;
+
+        Ok(SidechainBondCellData { amount: sudt_amount })
+    }
 }
 
 #[derive(Debug)]
@@ -631,35 +696,16 @@ impl FromRaw for SidechainBondCellLockArgs {
     }
 }
 
-#[derive(Debug)]
-pub struct SidechainBondLockWitness {
-    pub pattern:   u8,
-    pub signature: [u8; 32],
-}
-
-impl FromRaw for SidechainBondLockWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainBondLockWitness, SysError> {
-        check_args_len(witness_raw_data.len(), SIDECHAIN_BOND_WITNESS_LEN)?;
-
-        let pattern = decode_u8(witness_raw_data)?;
-
-        let mut signature = [0u8; 32];
-        signature.copy_from_slice(&witness_raw_data[1..33]);
-
-        Ok(SidechainBondLockWitness { pattern, signature })
-    }
-}
-
 /**
     Sidechain Fee Cell
     Data:
     Type:
         codehash: sudt
         hashtype: type
-        args: null
+        args: muse_token_admin
     Lock:
-        codehash: sidechain fee cell lockscript     // sidechain fee cell typescript
-        hashtype: type                              // data
+        codehash: sidechain fee cell lockscript
+        hashtype: type
         args: chain_id
 */
 
@@ -667,6 +713,16 @@ impl FromRaw for SidechainBondLockWitness {
 #[derive(Debug)]
 pub struct SidechainFeeCellData {
     amount: u128,
+}
+
+impl FromRaw for SidechainFeeCellData {
+    fn from_raw(cell_raw_data: &[u8]) -> Result<SidechainFeeCellData, SysError> {
+        check_args_len(cell_raw_data.len(), SUDT_DATA_LEN)?;
+
+        let sudt_amount = decode_u128(&cell_raw_data[0..16])?;
+
+        Ok(SidechainFeeCellData { amount: sudt_amount })
+    }
 }
 
 #[derive(Debug)]
@@ -684,21 +740,163 @@ impl FromRaw for SidechainFeeCellLockArgs {
     }
 }
 
-#[derive(Debug)]
-pub struct SidechainFeeLockWitness {
-    pub pattern:   u8,
-    pub signature: [u8; 32],
+//the dep0 must be global cell
+pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
+    if load_cell_type_hash(0, Source::CellDep)?.ok_or(CommonError::LoadTypeHashError)? != GLOBAL_CONFIG_TYPE_HASH {
+        return Err(CommonError::GlobalConfigCellDepError);
+    }
+
+    let global_config_data = load_cell_data(0, Source::CellDep)?;
+    let global_config_data = GlobalConfigCellData::from_raw(&global_config_data)?;
+
+    Ok(global_config_data)
 }
 
-impl FromRaw for SidechainFeeLockWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Result<SidechainFeeLockWitness, SysError> {
-        check_args_len(witness_raw_data.len(), SIDECHAIN_FEE_WITNESS_LEN)?;
+pub fn check_cells(requests: Vec<(CellType, usize, Source)>, global: &GlobalConfigCellData) -> Result<(), CommonError> {
+    for (cell_type, index, source) in requests {
+        check_cell(cell_type, index, source, global)?;
+    }
 
-        let pattern = decode_u8(witness_raw_data)?;
+    Ok(())
+}
 
-        let mut signature = [0u8; 32];
-        signature.copy_from_slice(&witness_raw_data[1..33]);
+pub fn check_cell(cell_type: CellType, index: usize, source: Source, global: &GlobalConfigCellData) -> Result<(), CommonError> {
+    let cell = load_cell(index, source)?;
+    let script = cell.type_().to_opt().ok_or(CommonError::MissingTypeScript)?;
+    let codehash = script.code_hash().unpack();
+    let hashtype = script.hash_type().as_slice()[0];
 
-        Ok(SidechainFeeLockWitness { pattern, signature })
+    match cell_type {
+        CellType::Unknown => return Err(CommonError::UnknownCellType),
+        CellType::Code => {
+            if codehash != global.code_cell_type_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+            if hashtype != global.code_cell_type_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::Sudt => {
+            if codehash != SUDT_CODEHASH {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::MuseToken => {
+            if codehash != SUDT_CODEHASH {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::SidechainBond => {
+            if codehash != SUDT_CODEHASH {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+                return Err(CommonError::HashTypeMismatch);
+            }
+
+            let lock_script = cell.lock();
+            let lock_codehash = lock_script.code_hash().unpack();
+            let lock_hashtype = lock_script.hash_type().as_slice()[0];
+            if lock_codehash != global.sidechain_bond_cell_lock_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if lock_hashtype != global.sidechain_bond_cell_lock_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+
+            Ok(())
+        }
+        CellType::CheckerBond => {
+            if codehash != SUDT_CODEHASH {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+                return Err(CommonError::HashTypeMismatch);
+            }
+
+            let lock_script = cell.lock();
+            let lock_codehash = lock_script.code_hash().unpack();
+            let lock_hashtype = lock_script.hash_type().as_slice()[0];
+            if lock_codehash != global.checker_bond_cell_lock_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if lock_hashtype != global.checker_bond_cell_lock_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+
+            Ok(())
+        }
+        CellType::CheckerInfo => {
+            if codehash != global.checker_info_cell_type_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+            if hashtype != global.checker_info_cell_type_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::SidechainConfig => {
+            if codehash != global.sidechain_config_cell_type_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+            if hashtype != global.sidechain_config_cell_type_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::SidechainState => {
+            if codehash != global.sidechain_state_cell_type_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+            if hashtype != global.sidechain_state_cell_type_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::Task => {
+            if codehash != global.task_cell_type_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+            if hashtype != global.task_cell_type_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
+        CellType::SidechainFee => {
+            if codehash != SUDT_CODEHASH {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+                return Err(CommonError::HashTypeMismatch);
+            }
+
+            let lock_script = cell.lock();
+            let lock_codehash = lock_script.code_hash().unpack();
+            let lock_hashtype = lock_script.hash_type().as_slice()[0];
+            if lock_codehash != global.sidechain_fee_cell_lock_codehash {
+                return Err(CommonError::CodeHashMismatch);
+            }
+
+            if lock_hashtype != global.sidechain_fee_cell_lock_hashtype {
+                return Err(CommonError::HashTypeMismatch);
+            }
+            Ok(())
+        }
     }
 }

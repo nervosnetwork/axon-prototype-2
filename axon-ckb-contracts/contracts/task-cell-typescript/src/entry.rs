@@ -10,6 +10,7 @@ use ckb_std::{
 use crate::error::Error;
 
 use ckb_lib_secp256k1::LibSecp256k1;
+use common::pattern::check_code_cell;
 
 pub fn main() -> Result<(), Error> {
     /*
@@ -24,42 +25,7 @@ pub fn main() -> Result<(), Error> {
     7. CheckerSubmitChallenge
     */
 
-    /*
-    CollatorRefreshTask,
+    check_code_cell()?;
 
-    Dep:    1 Global Config Cell
-    Dep:    2 Sidechain Config Cell
-
-    Task Cell                   ->          Task Cell
-
-    */
-    let script = load_script()?;
-    let args: Bytes = script.args().unpack();
-
-    /*// Owner lock arg | Chain bitmap
-        //    20 Bytes    |   2 Bytes
-        if args.len() != 22 {
-            return Err(Error::InvalidArgument);
-        }
-
-        let lock_arg = args.slice(0..20);
-        let chain_bitmap = args.slice(20..22);
-
-        // Load dynamic library for checking signature
-        let mut context = unsafe { CKBDLContext::<[u8; 128 * 1024]>::new() };
-        let lib = LibSecp256k1::load(&mut context);
-
-        lib.check_signature(&lock_arg).map_err(|_err_code| {
-            debug!("secp256k1 error {}", _err_code);
-            Error::Secp256k1Error
-        })?;
-
-        // TODO: Skip checking bitmap if SCC exists (Joining or leaving sidechain)
-        for bitmap in chain_bitmap.into_iter() {
-            if *bitmap != 0 {
-                return Err(Error::BusyChecker);
-            }
-        }
-    */
     Ok(())
 }

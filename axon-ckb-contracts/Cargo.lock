@@ -88,6 +88,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "code-cell"
+version = "0.1.0"
+dependencies = [
+ "ckb-lib-secp256k1",
+ "ckb-std",
+ "common",
+]
+
+[[package]]
 name = "common"
 version = "0.1.0"
 dependencies = [

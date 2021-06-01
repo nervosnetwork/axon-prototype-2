@@ -8,7 +8,19 @@ pub enum Error {
     ItemMissing,
     LengthNotEnough,
     Encoding,
-    InvalidArgument,
+    PatternWitnessTypeMissing,
+    PatternRecognitionFailure,
+    Secp256k1Error,
+    BusyChecker,
+    MissingSignature,
+    SignatureMismatch,
+    MissingWitness,
+    UnknownPattern,
+    PatternCollision,
+    PatternInvalid,
+    ChainIdBitMapNotZero,
+    ChainIdBitMapMismatch,
+    ChainIdBitMapMistransfer,
 }
 
 impl From<SysError> for Error {

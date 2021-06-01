@@ -7,6 +7,8 @@
 
 # capsule version
 version = "0.4.5"
+#version = "0.4.4 87bd895"
+
 # path of deployment config file
 deployment = "deployment.toml"
 
@@ -40,4 +42,8 @@ template_type = "Rust"
 
 [[contracts]]
 name = "task-cell-typescript"
+template_type = "Rust"
+
+[[contracts]]
+name = "code-cell"
 template_type = "Rust"
