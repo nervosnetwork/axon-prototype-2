@@ -13,8 +13,9 @@ pub enum CommonError {
     HashTypeMismatch,
     UnknownCellType,
     CellNumberMismatch = 10,
-    LoadTypeHashError,
-    GlobalConfigCellDepError,
+    LoadTypeHash,
+    GlobalConfigCellDep,
+    BitOperator,
 }
 
 impl From<SysError> for CommonError {

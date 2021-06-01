@@ -27,10 +27,15 @@ now all other scripts have been deployed with their own typeIds
 
 all script except code cell shall check if Global Config Cell of CellDeps[0] matches typeId hardcoded
 
+read code cell's codehash and hashtype from Global Config Cell and determine whether trust input[0] or not
+
+if trust, all business logic shall goes into code cell
+
+
 
 the input[0] code cell checks Global Config Cell of CellDeps[0] matches typeId hardcoded
 
 the input[0] code cell checks if all other cell's script matches typeId from Global Config Cell
 
-code cell do business logic
+code cell do pattern recognition and business logic
 

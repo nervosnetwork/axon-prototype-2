@@ -1,15 +1,10 @@
-use crate::cell::{check_cell, check_cells, check_global_cell, CellType, FromRaw, GlobalConfigCellData, SidechainConfigCellData};
+use crate::cell::{check_cell, check_cells, check_global_cell, CellType};
 use crate::error::CommonError;
-use crate::{get_input_cell_count, get_output_cell_count, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
-use alloc::vec::Vec;
-use ckb_std::high_level::load_cell_type;
+use crate::{get_input_cell_count, get_output_cell_count};
+
+
 use ckb_std::{
     ckb_constants::Source,
-    ckb_types::{
-        packed::{Byte, CellOutput},
-        prelude::*,
-    },
-    high_level::{load_cell, load_cell_data, load_cell_lock_hash, load_cell_type_hash, load_script, load_witness_args, QueryIter},
 };
 
 #[repr(u8)]

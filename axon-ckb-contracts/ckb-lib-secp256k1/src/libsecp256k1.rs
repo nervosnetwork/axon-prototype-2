@@ -52,8 +52,8 @@ impl Into<[u8; 33]> for Pubkey {
 }
 pub struct LibSecp256k1 {
     validate_blake2b_sighash_all: Symbol<ValidateBlake2bSighashAll>,
-    validate_signature: Symbol<ValidateSignature>,
-    load_prefilled_data: Symbol<LoadPrefilledData>,
+    validate_signature:           Symbol<ValidateSignature>,
+    load_prefilled_data:          Symbol<LoadPrefilledData>,
 }
 
 impl LibSecp256k1 {
@@ -62,14 +62,10 @@ impl LibSecp256k1 {
         let lib = context.load(&CODE_HASH_SECP256K1).expect("load secp256k1");
 
         // find symbols
-        let validate_blake2b_sighash_all: Symbol<ValidateBlake2bSighashAll> = unsafe {
-            lib.get(VALIDATE_BLAKE2B_SIGHASH_ALL)
-                .expect("load function")
-        };
-        let validate_signature: Symbol<ValidateSignature> =
-            unsafe { lib.get(VALIDATE_SIGNATURE).expect("load function") };
-        let load_prefilled_data: Symbol<LoadPrefilledData> =
-            unsafe { lib.get(LOAD_PREFILLED_DATA).expect("load function") };
+        let validate_blake2b_sighash_all: Symbol<ValidateBlake2bSighashAll> =
+            unsafe { lib.get(VALIDATE_BLAKE2B_SIGHASH_ALL).expect("load function") };
+        let validate_signature: Symbol<ValidateSignature> = unsafe { lib.get(VALIDATE_SIGNATURE).expect("load function") };
+        let load_prefilled_data: Symbol<LoadPrefilledData> = unsafe { lib.get(LOAD_PREFILLED_DATA).expect("load function") };
         LibSecp256k1 {
             validate_blake2b_sighash_all,
             load_prefilled_data,
@@ -113,12 +109,7 @@ impl LibSecp256k1 {
         Ok(PrefilledData(data))
     }
 
-    pub fn recover_pubkey(
-        &self,
-        prefilled_data: &PrefilledData,
-        signature: &[u8],
-        message: &[u8],
-    ) -> Result<Pubkey, i32> {
+    pub fn recover_pubkey(&self, prefilled_data: &PrefilledData, signature: &[u8], message: &[u8]) -> Result<Pubkey, i32> {
         let mut pubkey = Pubkey::default();
         let mut len: u64 = pubkey.0.len() as u64;
 

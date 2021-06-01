@@ -9,7 +9,6 @@
 #![feature(lang_items, alloc_error_handler, panic_info_message)]
 
 use ckb_std::default_alloc;
-use common::ckb_std;
 
 mod entry;
 mod error;

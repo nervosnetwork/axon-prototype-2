@@ -3,23 +3,25 @@
 #![feature(alloc_error_handler)]
 #![feature(panic_info_message)]
 
+use ckb_std::ckb_constants::Source;
+
 use crate::error::CommonError;
-pub use blake2b_ref;
-pub use ckb_std;
-use ckb_std::ckb_constants::{CellField, Source};
+use bit_vec::*;
 use ckb_std::error::SysError;
-use ckb_std::high_level::{load_cell, load_cell_type, load_cell_type_hash, load_script, load_script_hash, QueryIter};
-use ckb_std::syscalls::load_cell_by_field;
+use ckb_std::high_level::{load_cell, QueryIter};
+use core::fmt::Error;
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign};
 
 pub mod cell;
 pub mod error;
 pub mod hash;
 pub mod pattern;
+pub mod witness;
 
 pub const SUDT_CODEHASH: [u8; 32] = [0; 32];
 pub const SUDT_HASHTYPE: u8 = 1u8;
 pub const SUDT_MUSE_ARGS: &[u8] = &[1u8];
+pub const SUDT_DATA_LEN: usize = 16; // u128
 
 pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
 
@@ -33,6 +35,12 @@ macro_rules! get_cell_type_hash {
     ($index: expr, $source: expr) => {
         common::ckb_std::high_level::load_cell_type_hash($index, $source)?.ok_or_else(|| common::error::HelperError::MissingTypeScript)?
     };
+}
+
+pub trait FromRaw {
+    fn from_raw(cell_raw_data: &[u8]) -> Result<Self, SysError>
+    where
+        Self: Sized;
 }
 
 pub fn check_args_len(expected: usize, actual: usize) -> Result<(), SysError> {
@@ -109,66 +117,41 @@ pub fn get_group_output_cell_count() -> usize {
     QueryIter::new(load_cell, Source::GroupOutput).count()
 }
 
-// check if the corresponding bit is marked
-pub fn bit_check(bit_map: [u8; 32], chain_id: u8, masked: bool) -> bool {
-    let byte_offset = chain_id / 8;
+pub fn bit_map_add(input: [u8; 32], checker_id: u8) -> Result<[u8; 32], CommonError> {
+    let mut input = BitVec::from_bytes(&input[..]);
 
-    let target = bit_map[byte_offset as usize];
-
-    let bit_offset = chain_id - byte_offset * 8;
-
-    let mask: u8 = match bit_offset {
-        0u8 => 0b10000000,
-        1u8 => 0b01000000,
-        2u8 => 0b00100000,
-        3u8 => 0b00010000,
-        4u8 => 0b00001000,
-        5u8 => 0b00000100,
-        6u8 => 0b00000010,
-        7u8 => 0b00000001,
-        _ => return false,
-    };
-
-    if masked {
-        (target & mask) == 1u8
-    } else {
-        (target & mask) == 0u8
+    //should be false
+    if input.get(checker_id as usize).ok_or(CommonError::BitOperator)? {
+        return Err(CommonError::BitOperator);
     }
+
+    input.set(checker_id as usize, true);
+
+    let mut ret = [0u8; 32];
+    ret.copy_from_slice(&input.to_bytes().as_slice()[0..32]);
+
+    Ok(ret)
 }
 
-pub fn bit_op(bit_map: &mut [u8; 32], chain_id: u8, set: bool) {
-    let byte_offset = chain_id / 8;
+pub fn bit_map_remove(input: [u8; 32], checker_id: u8) -> Result<[u8; 32], CommonError> {
+    let mut input = BitVec::from_bytes(&input[..]);
 
-    let mut target = &mut bit_map[byte_offset as usize];
-
-    let bit_offset = chain_id - byte_offset * 8;
-
-    if set {
-        let mask: u8 = match bit_offset {
-            0u8 => 0b10000000,
-            1u8 => 0b01000000,
-            2u8 => 0b00100000,
-            3u8 => 0b00010000,
-            4u8 => 0b00001000,
-            5u8 => 0b00000100,
-            6u8 => 0b00000010,
-            7u8 => 0b00000001,
-            _ => 0b00000000,
-        };
-
-        target.bitor_assign(mask);
-    } else {
-        let mask: u8 = match bit_offset {
-            0u8 => 0b01111111,
-            1u8 => 0b10111111,
-            2u8 => 0b11011111,
-            3u8 => 0b11101111,
-            4u8 => 0b11110111,
-            5u8 => 0b11111011,
-            6u8 => 0b11111101,
-            7u8 => 0b11111110,
-            _ => 0b00000000,
-        };
-        target.bitand_assign(mask);
+    //should be true
+    if !input.get(checker_id as usize).ok_or(CommonError::BitOperator)? {
+        return Err(CommonError::BitOperator);
     }
+
+    input.set(checker_id as usize, false);
+
+    let mut ret = [0u8; 32];
+    ret.copy_from_slice(&input.to_bytes().as_slice()[0..32]);
+
+    Ok(ret)
+}
+
+//check if given number is bit-marked in input array
+pub fn bit_map_marked(input: [u8; 32], checker_id: u8) -> Result<bool, CommonError> {
+    let mut input = BitVec::from_bytes(&input[..]);
+
+    Ok(input.get(checker_id as usize).ok_or(CommonError::BitOperator)?)
 }

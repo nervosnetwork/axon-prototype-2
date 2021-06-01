@@ -20,7 +20,10 @@ pub enum Error {
     PatternInvalid,
     ChainIdBitMapNotZero,
     ChainIdBitMapMismatch,
-    ChainIdBitMapMistransfer,
+    ChainIdMismatch,
+    CheckerInfoMode,
+    CheckerUnpaidFee,
+    Wrong,
 }
 
 impl From<SysError> for Error {

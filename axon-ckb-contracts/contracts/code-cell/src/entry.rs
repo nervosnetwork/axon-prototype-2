@@ -3,38 +3,64 @@ use core::result::Result;
 
 // Import heap related library from `alloc`
 // https://doc.rust-lang.org/alloc/index.html
-use alloc::{vec, vec::Vec};
+use alloc::vec::Vec;
+use bit_vec::*;
 
 // Import CKB syscalls and structures
 // https://nervosnetwork.github.io/ckb-std/riscv64imac-unknown-none-elf/doc/ckb_std/index.html
+use crate::error::Error;
+use ckb_std::ckb_constants::Source;
 use ckb_std::{
     ckb_types::{bytes::Bytes, prelude::*},
     debug,
-    high_level::{load_script, load_tx_hash},
+    high_level::{load_cell_data, load_cell_lock, load_script, load_tx_hash, load_witness_args},
 };
+use common::cell::CellType::CheckerInfo;
 
-use crate::error::Error;
-use ckb_std::ckb_constants::Source;
-use ckb_std::high_level::{load_cell_data, load_cell_lock, load_witness_args};
-use ckb_std::syscalls::load_witness;
-use common::cell::{CheckerBondCellLockArgs, CodeCellLockArgs, CodeCellTypeWitness, FromRaw, SidechainConfigCellData};
+use crate::error::Error::CheckerInfoMode;
+use ckb_std::high_level::QueryIter;
+use common::cell::checker_bond::CheckerBondCellLockArgs;
+use common::cell::checker_info::{CheckerInfoCellData, CheckerInfoCellMode};
+use common::cell::code::{CodeCellLockArgs, CodeCellTypeWitness};
+use common::cell::muse_token::MuseTokenData;
+use common::cell::sidechain_bond::SidechainBondCellData;
+use common::cell::sidechain_config::SidechainConfigCellData;
+use common::cell::sidechain_fee::SidechainFeeCellData;
+use common::cell::sidechain_state::SidechainStateCellData;
+use common::cell::sudt_token::SudtTokenData;
+use common::cell::task::{TaskCellData, TaskCellMode};
+use common::pattern::Pattern::AdminCreateSidechain;
 use common::pattern::{
     is_admin_create_sidechain, is_checker_bond_deposit, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
     is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond, Pattern,
 };
-use common::{bit_check, bit_op, get_group_input_cell_count, get_group_output_cell_count, EMPTY_BIT_MAP};
+use common::witness::admin_create_sidechain::AdminCreateSidechainWitness;
+use common::witness::checker_join_sidechain::CheckerJoinSidechainWitness;
+use common::witness::checker_publish_challenge::CheckerPublishChallengeWitness;
+use common::witness::checker_quit_sidechain::CheckerQuitSidechainWitness;
+use common::witness::checker_submit_challenge::CheckerSubmitChallengeWitness;
+use common::witness::checker_take_beneficiary::CheckerTakeBeneficiaryWitness;
+use common::witness::collator_publish_task::CollatorPublishTaskWitness;
+use common::witness::collator_refresh_task::CollatorRefreshTaskWitness;
+use common::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
+use common::witness::collator_submit_task::CollatorSubmitTaskWitness;
+use common::witness::collator_unlock_bond::CollatorUnlockBondWitness;
+use common::{bit_map_add, bit_map_marked, bit_map_remove, FromRaw, EMPTY_BIT_MAP};
 
 pub fn main() -> Result<(), Error> {
+    /*
+    the unlocker of code cell is the owner/signer of code cell
+    thus code cell's lock script must be secp256k1
+     */
     // of cause, the signer is correct
     let lock_args = load_cell_lock(0, Source::Input)?;
     let signer = CodeCellLockArgs::from_raw(lock_args.args().as_slice())?.public_key_hash;
 
-    let mut witness_payload = [0u8; 128];
-    let witness_len = load_witness(&mut witness_payload[..], 0, 0, Source::GroupInput)?;
-    let witness_payload = &witness_payload[..witness_len];
+    let witness_args = load_witness_args(0, Source::GroupInput)?;
+    let witness_args_input_type = witness_args.input_type().to_opt().ok_or(Error::MissingWitness)?;
 
-    let pattern = CodeCellTypeWitness::from_raw(witness_payload)?;
+    let pattern = CodeCellTypeWitness::from_raw(witness_args_input_type.as_slice())?;
 
     match pattern.pattern.into() {
         /*
@@ -47,7 +73,7 @@ pub fn main() -> Result<(), Error> {
          */
         Pattern::CheckerBondDeposit => {
             is_checker_bond_deposit()?;
-            checker_bond_deposit()?
+            checker_bond_deposit(signer)?
         }
 
         /*
@@ -61,7 +87,7 @@ pub fn main() -> Result<(), Error> {
          */
         Pattern::CheckerBondWithdraw => {
             is_checker_bond_withdraw()?;
-            checker_bond_withdraw()?
+            checker_bond_withdraw(signer)?
         }
 
         /*
@@ -77,7 +103,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerJoinSidechain => {
             is_checker_join_sidechain()?;
-            checker_join_sidechain()?
+            checker_join_sidechain(signer)?
         }
         /*
         CheckerQuitSidechain
@@ -91,7 +117,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerQuitSidechain => {
             is_checker_quit_sidechain()?;
-            checker_quit_sidechain()?
+            checker_quit_sidechain(signer)?
         }
 
         /*
@@ -107,7 +133,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerSubmitTask => {
             is_checker_submit_task()?;
-            checker_submit_task()?
+            checker_submit_task(signer)?
         }
         /*
         CheckerPublishChallenge,
@@ -122,7 +148,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerPublishChallenge => {
             is_checker_publish_challenge()?;
-            checker_publish_challenge()?
+            checker_publish_challenge(signer)?
         }
 
         /*
@@ -138,7 +164,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerSubmitChallenge => {
             is_checker_submit_challenge()?;
-            checker_submit_challenge()?
+            checker_submit_challenge(signer)?
         }
         /*
         CheckerTakeBeneficiary,
@@ -153,7 +179,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerTakeBeneficiary => {
             is_checker_take_beneficiary()?;
-            checker_take_beneficiary()?
+            checker_take_beneficiary(signer)?
         }
 
         /*
@@ -168,7 +194,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::AdminCreateSidechain => {
             is_admin_create_sidechain()?;
-            admin_create_sidechain()?
+            admin_create_sidechain(signer)?
         }
 
         /*
@@ -185,7 +211,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorPublishTask => {
             is_collator_publish_task()?;
-            collator_publish_task()?
+            collator_publish_task(signer)?
         }
 
         /*
@@ -202,7 +228,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorSubmitTask => {
             is_collator_submit_task()?;
-            collator_submit_task()?
+            collator_submit_task(signer)?
         }
 
         /*
@@ -219,7 +245,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorSubmitChallenge => {
             is_collator_submit_challenge()?;
-            collator_submit_challenge()?
+            collator_submit_challenge(signer)?
         }
 
         /*
@@ -229,12 +255,12 @@ pub fn main() -> Result<(), Error> {
         Dep:    1 Sidechain Config Cell
 
         Code Cell                   ->          Code Cell
-        Task Cell                   ->          Task Cell
+        [Task Cell]                 ->          [Task Cell]
 
         */
         Pattern::CollatorRefreshTask => {
             is_collator_refresh_task()?;
-            collator_refresh_task()?
+            collator_refresh_task(signer)?
         }
 
         /*
@@ -250,7 +276,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorUnlockBond => {
             is_collator_unlock_bond()?;
-            collator_unlock_bond()?
+            collator_unlock_bond(signer)?
         }
 
         _ => return Err(Error::PatternRecognitionFailure),
@@ -259,110 +285,108 @@ pub fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_bond_deposit() -> Result<(), Error> {
+fn checker_bond_deposit(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CheckerBondDeposit
+
+    Muse Token Cell             ->          Check Bond Cell
+
+    No way to monitor this pattern, regard all check bond cell trustless
+
+     */
     Ok(())
 }
 
-fn checker_bond_withdraw() -> Result<(), Error> {
+fn checker_bond_withdraw(signer: [u8; 20]) -> Result<(), Error> {
     /*
+    CheckerBondWithdraw
+
     Dep:    0 Global Config Cell
 
-    CheckerBondWithdraw,
-
+    Code Cell                   ->         Code Cell
     Checker Bond Cell           ->         Muse Token Cell
 
-    */
+     */
 
     /*
     Job:
 
     1. chain_id_bitmap is 0x00
-    2. secp256k1 check
 
      */
-    let script = load_script()?;
 
-    let args: Vec<u8> = script.args().unpack();
+    let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
+    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice())?;
 
-    let args = CheckerBondCellLockArgs::from_raw(&args)?;
-
-    if args.chain_id_bitmap != EMPTY_BIT_MAP {
+    if checker_bond_input.chain_id_bitmap != EMPTY_BIT_MAP {
         return Err(Error::ChainIdBitMapNotZero);
     }
 
-    // todo check secp256k1
-    let witness = load_witness_args(0, Source::Input)?;
-    let signature = witness.input_type().to_opt().ok_or(Error::MissingSignature)?;
-
-    let signature = signature.as_slice();
-    if signature != &[0u8] {
+    //check owner
+    if signer != &checker_bond_input.checker_public_key[..] {
         return Err(Error::SignatureMismatch);
     }
 
     Ok(())
 }
 
-fn checker_join_sidechain() -> Result<(), Error> {
+fn checker_join_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerJoinSidechain,
 
     Dep:    0 Global Config Cell
 
+    Code Cell                   ->          Code Cell
     Sidechain Config Cell       ->          Sidechain Config Cell
     Checker Bond Cell           ->          Checker Bond Cell
-                                ->          Checker Info Cell
+    Null                        ->          Checker Info Cell
 
     */
 
-    /*
-    Job:
-
-    1. chain_id_bitmap mask cover's current chain id
-    2. secp256k1 check
-
-     */
-    let script = load_script()?;
-
-    let args: Vec<u8> = script.args().unpack();
-
-    let args = CheckerBondCellLockArgs::from_raw(&args)?;
-
-    let config_data = load_cell_data(0, Source::Input)?;
-    let config = SidechainConfigCellData::from_raw(&config_data)?;
-
-    // input must not cover
-    if bit_check(args.chain_id_bitmap, config.chain_id, false) {
-        return Err(Error::ChainIdBitMapMismatch);
-    }
-
-    //output must cover, and others should not change
-    let output = load_cell_lock(1, Source::Output)?;
-    let output_args = CheckerBondCellLockArgs::from_raw(output.args().as_slice())?;
-
-    if bit_check(output_args.chain_id_bitmap, config.chain_id, true) {
-        return Err(Error::ChainIdBitMapMismatch);
-    }
-
-    let mut add_chain_id = args.chain_id_bitmap.clone();
-    bit_op(&mut add_chain_id, config.chain_id, true);
-
-    if add_chain_id != output_args.chain_id_bitmap.clone() {
-        return Err(Error::ChainIdBitMapMistransfer);
-    }
-
-    // todo check secp256k1
     let witness = load_witness_args(0, Source::Input)?;
-    let signature = witness.input_type().to_opt().ok_or(Error::MissingSignature)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CheckerJoinSidechainWitness::from_raw(&witness.as_slice()[..])?;
 
-    let signature = signature.as_slice();
-    if signature != &[0u8] {
-        return Err(Error::SignatureMismatch);
+    let config_cell_data_input = load_cell_data(1, Source::Input)?;
+    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input)?;
+
+    let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
+    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice())?;
+
+    let config_cell_data_output = load_cell_data(1, Source::Output)?;
+    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output)?;
+
+    let checker_bond_cell_lock_args_output = load_cell_lock(2, Source::Output)?.args();
+    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice())?;
+
+    let checker_info_cell_data_output = load_cell_data(3, Source::Output)?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+
+    let mut config_res = config_input.clone();
+
+    config_res.chain_id = witness.chain_id;
+    config_res.checker_total_count += 1;
+    config_res.checker_bitmap = bit_map_add(config_res.checker_bitmap, witness.checker_id)?;
+
+    let mut checker_bond_res = checker_bond_input.clone();
+    checker_bond_res.chain_id_bitmap = bit_map_add(checker_bond_res.chain_id_bitmap, witness.chain_id)?;
+
+    let mut checker_info_res = CheckerInfoCellData::default();
+    checker_info_res.chain_id = witness.chain_id;
+    checker_info_res.checker_id = witness.checker_id;
+    checker_info_res.unpaid_fee = 0;
+    checker_info_res.rpc_url = checker_info_output.rpc_url;
+    checker_info_res.checker_public_key_hash = signer;
+    checker_info_res.mode = CheckerInfoCellMode::Idle;
+
+    if config_res != config_output || checker_bond_res != checker_bond_output || checker_info_res != checker_info_output {
+        return Err(Error::Wrong);
     }
 
     Ok(())
 }
 
-fn checker_quit_sidechain() -> Result<(), Error> {
+fn checker_quit_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerQuitSidechain
 
@@ -370,96 +394,556 @@ fn checker_quit_sidechain() -> Result<(), Error> {
 
     Sidechain Config Cell       ->          Sidechain Config Cell
     Checker Bond Cell           ->          Checker Bond Cell
-    Checker Info Cell           ->
+    Checker Info Cell           ->          Null
 
     */
 
-    /*
-    Job:
-
-    1. chain_id_bitmap mask cover's current chain id
-    2. secp256k1 check
-
-     */
-    let script = load_script()?;
-
-    let args: Vec<u8> = script.args().unpack();
-
-    let args = CheckerBondCellLockArgs::from_raw(&args)?;
-
-    let config_data = load_cell_data(0, Source::Input)?;
-    let config = SidechainConfigCellData::from_raw(&config_data)?;
-
-    // input must cover
-    if bit_check(args.chain_id_bitmap, config.chain_id, true) {
-        return Err(Error::ChainIdBitMapMismatch);
-    }
-
-    //output must not cover, and others should not change
-    let output = load_cell_lock(1, Source::Output)?;
-    let output_args = CheckerBondCellLockArgs::from_raw(output.args().as_slice())?;
-
-    //1 output must not cover
-    if !bit_check(output_args.chain_id_bitmap, config.chain_id, false) {
-        return Err(Error::ChainIdBitMapMismatch);
-    }
-
-    let mut remove_chain_id = args.chain_id_bitmap.clone();
-    bit_op(&mut remove_chain_id, config.chain_id, false);
-
-    //2 output | chain_id = input
-    if remove_chain_id != args.chain_id_bitmap {
-        return Err(Error::ChainIdBitMapMismatch);
-    }
-
-    // todo check secp256k1
     let witness = load_witness_args(0, Source::Input)?;
-    let signature = witness.input_type().to_opt().ok_or(Error::MissingSignature)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..])?;
 
-    let signature = signature.as_slice();
-    if signature != &[0u8] {
-        return Err(Error::SignatureMismatch);
+    let config_cell_data_input = load_cell_data(1, Source::Input)?;
+    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input)?;
+
+    let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
+    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice())?;
+
+    let checker_info_cell_data_input = load_cell_data(3, Source::Input)?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+
+    let config_cell_data_output = load_cell_data(1, Source::Output)?;
+    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output)?;
+
+    let checker_bond_cell_lock_args_output = load_cell_lock(2, Source::Output)?.args();
+    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice())?;
+
+    let mut config_res = config_input.clone();
+    config_res.chain_id = witness.chain_id;
+    config_res.checker_total_count -= 1;
+    config_res.checker_bitmap = bit_map_remove(config_res.checker_bitmap, witness.checker_id)?;
+
+    let mut checker_bond_res = checker_bond_input.clone();
+    checker_bond_res.chain_id_bitmap = bit_map_remove(checker_bond_res.chain_id_bitmap, witness.chain_id)?;
+
+    if config_res != config_output || checker_bond_res != checker_bond_output {
+        return Err(Error::Wrong);
+    }
+
+    if checker_info_input.chain_id != witness.chain_id
+        || checker_info_input.checker_id != witness.checker_id
+        || checker_info_input.mode != CheckerInfoCellMode::Idle
+    {
+        return Err(Error::Wrong);
     }
 
     Ok(())
 }
 
-fn checker_submit_task() -> Result<(), Error> {
+fn checker_submit_task(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CheckerSubmitTask,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+
+    Code Cell                   ->         Code Cell
+    Checker Info Cell           ->          Checker Info Cell
+    Task Cell                   ->          Null
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..])?;
+
+    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+
+    let task_cell_data_input = load_cell_data(2, Source::Input)?;
+    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice())?;
+
+    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+
+    let mut checker_info_res = checker_info_input.clone();
+    checker_info_res.chain_id = witness.chain_id;
+    checker_info_res.checker_id = witness.checker_id;
+    checker_info_res.mode = CheckerInfoCellMode::TaskPassed;
+
+    if checker_info_res != checker_info_output {
+        return Err(Error::Wrong);
+    }
+
+    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Task {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn checker_publish_challenge() -> Result<(), Error> {
+fn checker_publish_challenge(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CheckerPublishChallenge,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+
+    Code Cell                   ->         Code Cell
+    Checker Info Cell           ->          Checker Info Cell
+    Task Cell                   ->          [Task Cell]
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CheckerPublishChallengeWitness::from_raw(&witness.as_slice()[..])?;
+
+    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+
+    let task_cell_data_input = load_cell_data(2, Source::Input)?;
+    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice())?;
+
+    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+
+    let mut checker_info_res = checker_info_input.clone();
+
+    checker_info_res.chain_id = witness.chain_id;
+    checker_info_res.checker_id = witness.checker_id;
+    checker_info_res.mode = CheckerInfoCellMode::ChallengeRejected;
+
+    let mut task_cell_res = task_cell_input.clone();
+
+    if checker_info_res != checker_info_output {
+        return Err(Error::Wrong);
+    }
+
+    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Task {
+        return Err(Error::Wrong);
+    }
+
+    task_cell_res.chain_id = witness.chain_id;
+    task_cell_res.mode = TaskCellMode::Challenge;
+
+    if !QueryIter::new(load_cell_data, Source::Output).skip(2).all(|task_cell_data_input| {
+        let task_cell_output = TaskCellData::from_raw(task_cell_data_input.as_slice());
+        if let Ok(task_cell_output) = task_cell_output {
+            task_cell_output == task_cell_res
+        } else {
+            false
+        }
+    }) {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn checker_submit_challenge() -> Result<(), Error> {
+fn checker_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CheckerSubmitChallenge,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+
+    Code Cell                   ->         Code Cell
+    Checker Info Cell           ->          Checker Info Cell
+    Task Cell                   ->          Null
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CheckerSubmitChallengeWitness::from_raw(&witness.as_slice()[..])?;
+
+    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+
+    let task_cell_data_input = load_cell_data(2, Source::Input)?;
+    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice())?;
+
+    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+
+    let mut checker_info_res = checker_info_input.clone();
+    checker_info_res.chain_id = witness.chain_id;
+    checker_info_res.checker_id = witness.checker_id;
+    checker_info_res.mode = CheckerInfoCellMode::ChallengeRejected;
+
+    if checker_info_res != checker_info_output {
+        return Err(Error::Wrong);
+    }
+
+    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Challenge {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn checker_take_beneficiary() -> Result<(), Error> {
+fn checker_take_beneficiary(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CheckerTakeBeneficiary,
+
+    Dep:    0 Global Config Cell
+
+    Code Cell                   ->         Code Cell
+    Checker Info Cell           ->          Checker Info Cell
+    Sidechain Fee Cell          ->          Sidechain Fee Cell
+    Muse Token Cell             ->          Muse Token Cell
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CheckerTakeBeneficiaryWitness::from_raw(&witness.as_slice()[..])?;
+
+    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+
+    let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
+    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice())?;
+
+    let muse_token_data_input = load_cell_data(3, Source::Input)?;
+    let muse_token_input = MuseTokenData::from_raw(muse_token_data_input.as_slice())?;
+
+    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+
+    let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
+    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice())?;
+
+    let muse_token_data_output = load_cell_data(3, Source::Output)?;
+    let muse_token_output = MuseTokenData::from_raw(muse_token_data_output.as_slice())?;
+
+    let mut checker_info_res = checker_info_input.clone();
+    checker_info_res.chain_id = witness.chain_id;
+    checker_info_res.checker_id = witness.checker_id;
+    checker_info_res.unpaid_fee -= witness.fee;
+
+    let mut sidechain_fee_res = sidechain_fee_input.clone();
+    sidechain_fee_res.amount -= witness.fee;
+
+    let mut muse_token_res = muse_token_input.clone();
+    muse_token_res.amount -= witness.fee;
+
+    if checker_info_res != checker_info_output || sidechain_fee_res != sidechain_fee_output || muse_token_res != muse_token_output {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn admin_create_sidechain() -> Result<(), Error> {
+fn admin_create_sidechain(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    AdminCreateSidechain,
+
+    Dep:    0 Global Config Cell
+
+    Code Cell                   ->          Code Cell
+    CKB Cell                    ->          Sidechain Config Cell
+    Null                        ->          Sidechain State Cell
+
+    */
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = AdminCreateSidechainWitness::from_raw(&witness.as_slice()[..])?;
+
+    let sidechain_config_cell_data_output = load_cell_data(1, Source::Output)?;
+    let sidechain_config_output = SidechainConfigCellData::from_raw(sidechain_config_cell_data_output.as_slice())?;
+
+    let sidechain_state_cell_data_output = load_cell_data(2, Source::Output)?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_output.as_slice())?;
+
+    if sidechain_config_output.chain_id != witness.chain_id {
+        return Err(Error::Wrong);
+    }
+
+    if sidechain_state_output.chain_id != witness.chain_id {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn collator_publish_task() -> Result<(), Error> {
+fn collator_publish_task(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CollatorPublishTask,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+
+    Code Cell                   ->          Code Cell
+    Sidechain State Cell        ->          Sidechain State Cell
+    Sidechain Bond Cell/Sudt    ->          Sidechain Bond Cell
+    Null                        ->          [Task Cell]
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CollatorPublishTaskWitness::from_raw(&witness.as_slice()[..])?;
+
+    let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
+    let sidechain_config_celldep = SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice())?;
+
+    let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
+    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice())?;
+
+    let sudt_cell_data_input = load_cell_data(2, Source::Input)?;
+    let sudt_input = SudtTokenData::from_raw(sudt_cell_data_input.as_slice())?;
+
+    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice())?;
+
+    let sidechain_bond_data_output = load_cell_data(2, Source::Output)?;
+    let sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice())?;
+
+    let mut sidechain_state_res = sidechain_state_input;
+    //currently always true
+    sidechain_state_res.chain_id = witness.chain_id;
+
+    let mut task_cell_res = TaskCellData::default();
+    task_cell_res.chain_id = witness.chain_id;
+    task_cell_res.mode = TaskCellMode::Challenge;
+    //todo calc heights and block hashs from sidechain state cell
+
+    if !QueryIter::new(load_cell_data, Source::Output).skip(3).all(|task_cell_data_output| {
+        let task_cell_output = TaskCellData::from_raw(task_cell_data_output.as_slice());
+        if let Ok(task_cell_output) = task_cell_output {
+            task_cell_output == task_cell_res
+        } else {
+            false
+        }
+    }) {
+        return Err(Error::Wrong);
+    }
+
+    if sidechain_state_res != sidechain_state_output {
+        return Err(Error::Wrong);
+    }
+
+    if sudt_input.amount < sidechain_config_celldep.minimal_bond {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn collator_submit_task() -> Result<(), Error> {
+fn collator_submit_task(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CollatorSubmitTask,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+
+    Code Cell                   ->          Code Cell
+    Sidechain State Cell        ->          Sidechain State Cell
+    Sidechain Fee Cell          ->          Sidechain Fee Cell
+    [Checker Info Cell]         ->          [Checker Info Cell]
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CollatorSubmitTaskWitness::from_raw(&witness.as_slice()[..])?;
+
+    let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
+    let sidechain_config_celldep = SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice())?;
+
+    //==========
+
+    let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
+    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice())?;
+
+    let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
+    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice())?;
+
+    let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
+        .skip(3)
+        .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice())?;
+
+    let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
+    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice())?;
+
+    let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
+        .skip(3)
+        .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let mut sidechain_state_res = sidechain_state_input;
+    //currently always true
+    sidechain_state_res.chain_id = witness.chain_id;
+
+    let mut sidechain_fee_res = sidechain_fee_input;
+    sidechain_fee_res.amount -= witness.fee;
+
+    if sidechain_state_res != sidechain_state_output {
+        return Err(Error::Wrong);
+    }
+
+    if sidechain_fee_res != sidechain_fee_output {
+        return Err(Error::Wrong);
+    }
+
+    if !checker_info_inputs.into_iter().zip(checker_info_outputs).all(|(input, output)| {
+        let mut res = input;
+        res.chain_id = witness.chain_id;
+        res.unpaid_fee += witness.fee_per_checker;
+        res.mode = CheckerInfoCellMode::Idle;
+
+        res == output
+    }) {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn collator_submit_challenge() -> Result<(), Error> {
+fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CollatorSubmitChallenge,
+
+    Dep:    0 Global Config Cell
+
+    Code Cell                   ->          Code Cell
+    Sidechain Config Cell       ->          Sidechain Config Cell
+    Sidechain State Cell        ->          Sidechain State Cell
+    Sidechain Fee Cell          ->          Sidechain Fee Cell
+    [Checker Info Cell]         ->          [Checker Info Cell]
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CollatorSubmitChallengeWitness::from_raw(&witness.as_slice()[..])?;
+
+    let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
+    let sidechain_config_celldep = SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice())?;
+
+    //==============
+
+    let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
+    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice())?;
+
+    let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
+    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice())?;
+
+    let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
+        .skip(3)
+        .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice())?;
+
+    let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
+    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice())?;
+
+    let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
+        .skip(3)
+        .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
+
+    let mut sidechain_state_res = sidechain_state_input;
+    //currently always true
+    sidechain_state_res.chain_id = witness.chain_id;
+
+    let mut sidechain_fee_res = sidechain_fee_input;
+    sidechain_fee_res.amount -= witness.fee;
+
+    if sidechain_state_res != sidechain_state_output {
+        return Err(Error::Wrong);
+    }
+
+    if sidechain_fee_res != sidechain_fee_output {
+        return Err(Error::Wrong);
+    }
+
+    let checker_info_res = checker_info_inputs
+        .into_iter()
+        .filter_map(|checker_info_input| {
+            let result = bit_map_marked(witness.punish_checker_bitmap, checker_info_input.checker_id);
+
+            if let Ok(res) = result {
+                Some(checker_info_input)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    if !checker_info_res.into_iter().zip(checker_info_outputs).all(|(mut res, output)| {
+        res.chain_id = witness.chain_id;
+        res.unpaid_fee += witness.fee_per_checker;
+        res.mode = CheckerInfoCellMode::Idle;
+
+        res == output
+    }) {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn collator_refresh_task() -> Result<(), Error> {
+fn collator_refresh_task(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CollatorRefreshTask,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+
+    Code Cell                   ->          Code Cell
+    [Task Cell]                 ->          [Task Cell]
+
+    */
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CollatorRefreshTaskWitness::from_raw(&witness.as_slice()[..])?;
+
+    let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
+        .skip(1)
+        .map(|task_cell_data_input| TaskCellData::from_raw(task_cell_data_input.as_slice()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
+        .skip(1)
+        .map(|task_cell_data_output| TaskCellData::from_raw(task_cell_data_output.as_slice()))
+        .collect::<Result<Vec<_>, _>>()?;
+
+    if !checker_info_inputs.into_iter().zip(checker_info_outputs).all(|(input, output)| {
+        let res = input;
+        res == output
+    }) {
+        return Err(Error::Wrong);
+    }
+
     Ok(())
 }
 
-fn collator_unlock_bond() -> Result<(), Error> {
+fn collator_unlock_bond(signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CollatorUnlockBond,
+
+    Dep:    0 Global Config Cell
+    Dep:    1 Sidechain Config Cell
+    Dep:    2 Sidechain State Cell
+
+    Code Cell                   ->          Code Cell
+    Sidechain Bond Cell         ->          Sudt Cell
+
+    */
+
+    let witness = load_witness_args(0, Source::Input)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = CollatorUnlockBondWitness::from_raw(&witness.as_slice()[..])?;
+
     Ok(())
 }

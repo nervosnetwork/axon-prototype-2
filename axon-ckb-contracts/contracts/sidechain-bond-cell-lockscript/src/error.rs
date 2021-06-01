@@ -1,4 +1,4 @@
-use ckb_std::{debug, error::SysError};
+use ckb_std::{error::SysError};
 use common::error::CommonError;
 
 /// Error

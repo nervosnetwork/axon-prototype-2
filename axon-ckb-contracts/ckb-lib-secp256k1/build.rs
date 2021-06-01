@@ -37,16 +37,9 @@ fn main() {
     let mut hash = [0u8; 32];
     blake2b.finalize(&mut hash);
 
-    write!(
-        &mut out_file,
-        "pub const CODE_HASH_SECP256K1: [u8; 32] = {:?};\n",
-        hash
-    )
-    .expect("write to code_hashes.rs");
+    write!(&mut out_file, "pub const CODE_HASH_SECP256K1: [u8; 32] = {:?};\n", hash).expect("write to code_hashes.rs");
 }
 
 pub fn new_blake2b() -> Blake2b {
-    Blake2bBuilder::new(32)
-        .personal(CKB_HASH_PERSONALIZATION)
-        .build()
+    Blake2bBuilder::new(32).personal(CKB_HASH_PERSONALIZATION).build()
 }
