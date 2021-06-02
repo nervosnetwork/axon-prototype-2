@@ -5,22 +5,20 @@ name = "always-success"
 version = "0.1.0"
 dependencies = [
  "ckb-std",
+ "common",
 ]
+
+[[package]]
+name = "bit-vec"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "349f9b6a179ed607305526ca489b34ad0a41aed5f7980fa90eb03160b69598fb"
 
 [[package]]
 name = "blake2b-ref"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "88756126a7634ad9c13ed0a6da9aa3376a6b7000eb5fcdbb89d153196326bbcd"
-
-[[package]]
-name = "blake2b-rs"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e35e362830ef90ecea16f09b21b75d22d33a8562a679c74ab4f4fa49b4fcb87"
-dependencies = [
- "cc",
-]
 
 [[package]]
 name = "buddy-alloc"
@@ -30,9 +28,9 @@ checksum = "8ff9f338986406db85e2b5deb40a9255b796ca03a194c7457403d215173f3fd5"
 
 [[package]]
 name = "cc"
-version = "1.0.67"
+version = "1.0.68"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3c69b077ad434294d3ce9f1f6143a2a4b89a8a2d54ef813d85003a4fd1137fd"
+checksum = "4a72c244c1ff497a746a7e1fb3d14bd08420ecda70c8f25c7112f2781652d787"
 
 [[package]]
 name = "cfg-if"
@@ -44,7 +42,6 @@ checksum = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 name = "checker-bond-cell-lockscript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
 ]
@@ -53,17 +50,8 @@ dependencies = [
 name = "checker-info-cell-typescript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
-]
-
-[[package]]
-name = "ckb-lib-secp256k1"
-version = "0.1.0"
-dependencies = [
- "blake2b-rs",
- "ckb-std",
 ]
 
 [[package]]
@@ -88,18 +76,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "code-cell"
+version = "0.1.0"
+dependencies = [
+ "bit-vec",
+ "ckb-std",
+ "common",
+]
+
+[[package]]
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "bit-vec",
  "blake2b-ref",
  "ckb-std",
 ]
 
 [[package]]
 name = "molecule"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "663f76cc52219e5957e2f5563cce9d89f98aa8503c9c898b5c412d97df663998"
+checksum = "3067ceba3d7f5dcc7427cfc584fc506e756f1161151032fec840455f5a3c2fd5"
 dependencies = [
  "cfg-if",
 ]
@@ -108,7 +106,6 @@ dependencies = [
 name = "sidechain-bond-cell-lockscript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
 ]
@@ -117,7 +114,6 @@ dependencies = [
 name = "sidechain-config-cell-typescript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
 ]
@@ -126,7 +122,6 @@ dependencies = [
 name = "sidechain-fee-cell-lockscript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
 ]
@@ -135,7 +130,6 @@ dependencies = [
 name = "sidechain-state-cell-typescript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
 ]
@@ -144,7 +138,6 @@ dependencies = [
 name = "task-cell-typescript"
 version = "0.1.0"
 dependencies = [
- "ckb-lib-secp256k1",
  "ckb-std",
  "common",
 ]

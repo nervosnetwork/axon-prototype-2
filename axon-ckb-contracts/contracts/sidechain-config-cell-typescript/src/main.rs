@@ -8,12 +8,15 @@
 #![no_main]
 #![feature(lang_items, alloc_error_handler, panic_info_message)]
 
-use common::ckb_std;
+use ckb_std::default_alloc;
 
 mod entry;
 mod error;
 
 ckb_std::entry!(program_entry);
+/*// Alloc 4K fast HEAP + 2M HEAP to receives PrefilledData
+default_alloc!(4 * 1024, 2048 * 1024, 64);*/
+default_alloc!();
 
 /// program entry
 fn program_entry() -> i8 {
