@@ -1,18 +1,10 @@
 use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use ckb_std::error::SysError;
-
-use crate::error::CommonError;
 use crate::{
     check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8, FromRaw, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH,
     SUDT_HASHTYPE, SUDT_MUSE_ARGS,
 };
-use alloc::vec::Vec;
-use ckb_std::ckb_constants::Source;
-use ckb_std::ckb_types::prelude::{Entity, Unpack};
-use ckb_std::high_level::{load_cell, load_cell_data, load_cell_type_hash};
-
 const CHECKER_INFO_DATA_LEN: usize = 563;
 const CHECKER_INFO_TYPE_ARGS_LEN: usize = 33;
 
@@ -38,7 +30,7 @@ pub enum CheckerInfoCellMode {
 }
 
 impl TryFrom<u8> for CheckerInfoCellMode {
-    type Error = SysError;
+    type Error = ();
 
     fn try_from(mode: u8) -> Result<Self, Self::Error> {
         match mode {
@@ -46,7 +38,7 @@ impl TryFrom<u8> for CheckerInfoCellMode {
             1u8 => Ok(Self::TaskPassed),
             2u8 => Ok(Self::ChallengePassed),
             3u8 => Ok(Self::ChallengeRejected),
-            _ => Err(SysError::IndexOutOfBound),
+            _ => Err(()),
         }
     }
 }
@@ -75,7 +67,7 @@ impl Default for CheckerInfoCellData {
 }
 
 impl FromRaw for CheckerInfoCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Result<CheckerInfoCellData, SysError> {
+    fn from_raw(cell_raw_data: &[u8]) -> Option<CheckerInfoCellData> {
         check_args_len(cell_raw_data.len(), CHECKER_INFO_DATA_LEN)?;
 
         let chain_id = decode_u8(&cell_raw_data[0..1])?;
@@ -89,9 +81,9 @@ impl FromRaw for CheckerInfoCellData {
         checker_public_key_hash.copy_from_slice(&cell_raw_data[530..562]);
 
         let mode_u8 = decode_u8(&cell_raw_data[562..563])?;
-        let mode: CheckerInfoCellMode = mode_u8.try_into()?;
+        let mode: CheckerInfoCellMode = mode_u8.try_into().ok()?;
 
-        Ok(CheckerInfoCellData {
+        Some(CheckerInfoCellData {
             chain_id,
             checker_id,
             unpaid_fee,
@@ -109,7 +101,7 @@ pub struct CheckerInfoCellTypeArgs {
 }
 
 impl FromRaw for CheckerInfoCellTypeArgs {
-    fn from_raw(arg_raw_data: &[u8]) -> Result<CheckerInfoCellTypeArgs, SysError> {
+    fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerInfoCellTypeArgs> {
         check_args_len(arg_raw_data.len(), CHECKER_INFO_TYPE_ARGS_LEN)?;
 
         let chain_id = decode_u8(&arg_raw_data[0..1])?;
@@ -117,7 +109,7 @@ impl FromRaw for CheckerInfoCellTypeArgs {
         let mut checker_public_key = [0u8; 32];
         checker_public_key.copy_from_slice(&arg_raw_data[1..33]);
 
-        Ok(CheckerInfoCellTypeArgs {
+        Some(CheckerInfoCellTypeArgs {
             chain_id,
             checker_public_key,
         })

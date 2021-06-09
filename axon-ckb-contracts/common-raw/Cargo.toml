@@ -1,14 +1,9 @@
 [package]
-name = "tests"
+name = "common-raw"
 version = "0.1.0"
+authors = ["handsome0hell <handsome0hell@gmail.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ckb-tool = "0.3"
-ckb-testtool = "0.3"
-ckb-system-scripts = "0.5.1"
-molecule = "0.6.0"
-
-common-raw = { path = "../common-raw" }

@@ -1,17 +1,10 @@
 use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use ckb_std::error::SysError;
-
-use crate::error::CommonError;
 use crate::{
     check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8, FromRaw, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH,
     SUDT_DATA_LEN, SUDT_HASHTYPE, SUDT_MUSE_ARGS,
 };
-use alloc::vec::Vec;
-use ckb_std::ckb_constants::Source;
-use ckb_std::ckb_types::prelude::{Entity, Unpack};
-use ckb_std::high_level::{load_cell, load_cell_data, load_cell_type_hash};
 
 const SIDECHAIN_BOND_LOCK_ARGS_LEN: usize = 49;
 
@@ -35,12 +28,12 @@ pub struct SidechainBondCellData {
 }
 
 impl FromRaw for SidechainBondCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Result<SidechainBondCellData, SysError> {
+    fn from_raw(cell_raw_data: &[u8]) -> Option<SidechainBondCellData> {
         check_args_len(cell_raw_data.len(), SUDT_DATA_LEN)?;
 
         let sudt_amount = decode_u128(&cell_raw_data[0..16])?;
 
-        Ok(SidechainBondCellData { amount: sudt_amount })
+        Some(SidechainBondCellData { amount: sudt_amount })
     }
 }
 
@@ -52,7 +45,7 @@ pub struct SidechainBondCellLockArgs {
 }
 
 impl FromRaw for SidechainBondCellLockArgs {
-    fn from_raw(arg_raw_data: &[u8]) -> Result<SidechainBondCellLockArgs, SysError> {
+    fn from_raw(arg_raw_data: &[u8]) -> Option<SidechainBondCellLockArgs> {
         check_args_len(arg_raw_data.len(), SIDECHAIN_BOND_LOCK_ARGS_LEN)?;
 
         let chain_id = decode_u8(&arg_raw_data[0..1])?;
@@ -62,7 +55,7 @@ impl FromRaw for SidechainBondCellLockArgs {
 
         let unlock_sidechain_height = decode_u128(&arg_raw_data[33..49])?;
 
-        Ok(SidechainBondCellLockArgs {
+        Some(SidechainBondCellLockArgs {
             chain_id,
             collator_public_key,
             unlock_sidechain_height,

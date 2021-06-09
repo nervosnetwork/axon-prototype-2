@@ -12,5 +12,7 @@ blake2b-ref = "0.3"
 #molecule = { version = "0.6", default-features = false }
 bit-vec = { version = "0.6", default-features = false }
 
+common-raw = { path = "../common-raw" }
+
 [features]
 default = ["ckb-std/ckb-types","ckb-std/allocator"]

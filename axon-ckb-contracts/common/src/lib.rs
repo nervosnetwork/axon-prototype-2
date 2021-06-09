@@ -16,7 +16,6 @@ pub mod cell;
 pub mod error;
 pub mod hash;
 pub mod pattern;
-pub mod witness;
 
 pub const SUDT_CODEHASH: [u8; 32] = [0; 32];
 pub const SUDT_HASHTYPE: u8 = 1u8;

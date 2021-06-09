@@ -19,34 +19,36 @@ use common::cell::CellType::CheckerInfo;
 
 use crate::error::Error::CheckerInfoMode;
 use ckb_std::high_level::QueryIter;
-use common::cell::checker_bond::CheckerBondCellLockArgs;
-use common::cell::checker_info::{CheckerInfoCellData, CheckerInfoCellMode};
-use common::cell::code::{CodeCellLockArgs, CodeCellTypeWitness};
-use common::cell::muse_token::MuseTokenData;
-use common::cell::sidechain_bond::SidechainBondCellData;
-use common::cell::sidechain_config::SidechainConfigCellData;
-use common::cell::sidechain_fee::SidechainFeeCellData;
-use common::cell::sidechain_state::SidechainStateCellData;
-use common::cell::sudt_token::SudtTokenData;
-use common::cell::task::{TaskCellData, TaskCellMode};
 use common::pattern::Pattern::AdminCreateSidechain;
 use common::pattern::{
     is_admin_create_sidechain, is_checker_bond_deposit, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
     is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond, Pattern,
 };
-use common::witness::admin_create_sidechain::AdminCreateSidechainWitness;
-use common::witness::checker_join_sidechain::CheckerJoinSidechainWitness;
-use common::witness::checker_publish_challenge::CheckerPublishChallengeWitness;
-use common::witness::checker_quit_sidechain::CheckerQuitSidechainWitness;
-use common::witness::checker_submit_challenge::CheckerSubmitChallengeWitness;
-use common::witness::checker_take_beneficiary::CheckerTakeBeneficiaryWitness;
-use common::witness::collator_publish_task::CollatorPublishTaskWitness;
-use common::witness::collator_refresh_task::CollatorRefreshTaskWitness;
-use common::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
-use common::witness::collator_submit_task::CollatorSubmitTaskWitness;
-use common::witness::collator_unlock_bond::CollatorUnlockBondWitness;
-use common::{bit_map_add, bit_map_marked, bit_map_remove, FromRaw, EMPTY_BIT_MAP};
+use common::{bit_map_add, bit_map_marked, bit_map_remove, EMPTY_BIT_MAP};
+use common_raw::{
+    cell::{
+        checker_bond::CheckerBondCellLockArgs,
+        checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
+        code::{CodeCellLockArgs, CodeCellTypeWitness},
+        muse_token::MuseTokenData,
+        sidechain_bond::SidechainBondCellData,
+        sidechain_config::SidechainConfigCellData,
+        sidechain_fee::SidechainFeeCellData,
+        sidechain_state::SidechainStateCellData,
+        sudt_token::SudtTokenData,
+        task::{TaskCellData, TaskCellMode},
+    },
+    witness::{
+        admin_create_sidechain::AdminCreateSidechainWitness, checker_join_sidechain::CheckerJoinSidechainWitness,
+        checker_publish_challenge::CheckerPublishChallengeWitness, checker_quit_sidechain::CheckerQuitSidechainWitness,
+        checker_submit_challenge::CheckerSubmitChallengeWitness, checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
+        collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
+        collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
+        collator_unlock_bond::CollatorUnlockBondWitness,
+    },
+    FromRaw,
+};
 
 pub fn main() -> Result<(), Error> {
     /*
@@ -55,12 +57,14 @@ pub fn main() -> Result<(), Error> {
      */
     // of cause, the signer is correct
     let lock_args = load_cell_lock(0, Source::Input)?;
-    let signer = CodeCellLockArgs::from_raw(lock_args.args().as_slice())?.public_key_hash;
+    let signer = CodeCellLockArgs::from_raw(lock_args.args().as_reader().raw_data())
+        .ok_or(Error::Encoding)?
+        .public_key_hash;
 
     let witness_args = load_witness_args(0, Source::GroupInput)?;
     let witness_args_input_type = witness_args.input_type().to_opt().ok_or(Error::MissingWitness)?;
 
-    let pattern = CodeCellTypeWitness::from_raw(witness_args_input_type.as_slice())?;
+    let pattern = CodeCellTypeWitness::from_raw(witness_args_input_type.as_reader().raw_data()).ok_or(Error::Encoding)?;
 
     match pattern.pattern.into() {
         /*
@@ -316,7 +320,7 @@ fn checker_bond_withdraw(signer: [u8; 20]) -> Result<(), Error> {
      */
 
     let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
-    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice())?;
+    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice()).ok_or(Error::Encoding)?;
 
     if checker_bond_input.chain_id_bitmap != EMPTY_BIT_MAP {
         return Err(Error::ChainIdBitMapNotZero);
@@ -345,22 +349,22 @@ fn checker_join_sidechain(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerJoinSidechainWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CheckerJoinSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let config_cell_data_input = load_cell_data(1, Source::Input)?;
-    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input)?;
+    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input).ok_or(Error::Encoding)?;
 
     let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
-    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice())?;
+    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice()).ok_or(Error::Encoding)?;
 
     let config_cell_data_output = load_cell_data(1, Source::Output)?;
-    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output)?;
+    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output).ok_or(Error::Encoding)?;
 
     let checker_bond_cell_lock_args_output = load_cell_lock(2, Source::Output)?.args();
-    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice())?;
+    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_output = load_cell_data(3, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut config_res = config_input.clone();
 
@@ -400,22 +404,22 @@ fn checker_quit_sidechain(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let config_cell_data_input = load_cell_data(1, Source::Input)?;
-    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input)?;
+    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input).ok_or(Error::Encoding)?;
 
     let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
-    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice())?;
+    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_input = load_cell_data(3, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let config_cell_data_output = load_cell_data(1, Source::Output)?;
-    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output)?;
+    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output).ok_or(Error::Encoding)?;
 
     let checker_bond_cell_lock_args_output = load_cell_lock(2, Source::Output)?.args();
-    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice())?;
+    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut config_res = config_input.clone();
     config_res.chain_id = witness.chain_id;
@@ -454,16 +458,16 @@ fn checker_submit_task(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let task_cell_data_input = load_cell_data(2, Source::Input)?;
-    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice())?;
+    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut checker_info_res = checker_info_input.clone();
     checker_info_res.chain_id = witness.chain_id;
@@ -496,16 +500,16 @@ fn checker_publish_challenge(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerPublishChallengeWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CheckerPublishChallengeWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let task_cell_data_input = load_cell_data(2, Source::Input)?;
-    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice())?;
+    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut checker_info_res = checker_info_input.clone();
 
@@ -528,7 +532,7 @@ fn checker_publish_challenge(signer: [u8; 20]) -> Result<(), Error> {
 
     if !QueryIter::new(load_cell_data, Source::Output).skip(2).all(|task_cell_data_input| {
         let task_cell_output = TaskCellData::from_raw(task_cell_data_input.as_slice());
-        if let Ok(task_cell_output) = task_cell_output {
+        if let Some(task_cell_output) = task_cell_output {
             task_cell_output == task_cell_res
         } else {
             false
@@ -555,16 +559,16 @@ fn checker_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerSubmitChallengeWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CheckerSubmitChallengeWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let task_cell_data_input = load_cell_data(2, Source::Input)?;
-    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice())?;
+    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut checker_info_res = checker_info_input.clone();
     checker_info_res.chain_id = witness.chain_id;
@@ -597,25 +601,25 @@ fn checker_take_beneficiary(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerTakeBeneficiaryWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CheckerTakeBeneficiaryWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice())?;
+    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice())?;
+    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let muse_token_data_input = load_cell_data(3, Source::Input)?;
-    let muse_token_input = MuseTokenData::from_raw(muse_token_data_input.as_slice())?;
+    let muse_token_input = MuseTokenData::from_raw(muse_token_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice())?;
+    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice())?;
+    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let muse_token_data_output = load_cell_data(3, Source::Output)?;
-    let muse_token_output = MuseTokenData::from_raw(muse_token_data_output.as_slice())?;
+    let muse_token_output = MuseTokenData::from_raw(muse_token_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut checker_info_res = checker_info_input.clone();
     checker_info_res.chain_id = witness.chain_id;
@@ -648,13 +652,13 @@ fn admin_create_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     */
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = AdminCreateSidechainWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = AdminCreateSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let sidechain_config_cell_data_output = load_cell_data(1, Source::Output)?;
-    let sidechain_config_output = SidechainConfigCellData::from_raw(sidechain_config_cell_data_output.as_slice())?;
+    let sidechain_config_output = SidechainConfigCellData::from_raw(sidechain_config_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_state_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_output.as_slice())?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     if sidechain_config_output.chain_id != witness.chain_id {
         return Err(Error::Wrong);
@@ -683,22 +687,23 @@ fn collator_publish_task(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorPublishTaskWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CollatorPublishTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let sidechain_config_celldep = SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice())?;
+    let sidechain_config_celldep =
+        SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
-    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice())?;
+    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let sudt_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sudt_input = SudtTokenData::from_raw(sudt_cell_data_input.as_slice())?;
+    let sudt_input = SudtTokenData::from_raw(sudt_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice())?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_bond_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice())?;
+    let sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut sidechain_state_res = sidechain_state_input;
     //currently always true
@@ -711,7 +716,7 @@ fn collator_publish_task(signer: [u8; 20]) -> Result<(), Error> {
 
     if !QueryIter::new(load_cell_data, Source::Output).skip(3).all(|task_cell_data_output| {
         let task_cell_output = TaskCellData::from_raw(task_cell_data_output.as_slice());
-        if let Ok(task_cell_output) = task_cell_output {
+        if let Some(task_cell_output) = task_cell_output {
             task_cell_output == task_cell_res
         } else {
             false
@@ -747,34 +752,37 @@ fn collator_submit_task(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorSubmitTaskWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CollatorSubmitTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let sidechain_config_celldep = SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice())?;
+    let sidechain_config_celldep =
+        SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
 
     //==========
 
     let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
-    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice())?;
+    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice())?;
+    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
         .skip(3)
         .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::Encoding)?;
 
     let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice())?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice())?;
+    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
         .skip(3)
         .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::Encoding)?;
 
     let mut sidechain_state_res = sidechain_state_input;
     //currently always true
@@ -821,34 +829,37 @@ fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorSubmitChallengeWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CollatorSubmitChallengeWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let sidechain_config_celldep = SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice())?;
+    let sidechain_config_celldep =
+        SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
 
     //==============
 
     let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
-    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice())?;
+    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice())?;
+    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
         .skip(3)
         .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::Encoding)?;
 
     let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice())?;
+    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice())?;
+    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
         .skip(3)
         .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::Encoding)?;
 
     let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
 
@@ -906,17 +917,19 @@ fn collator_refresh_task(signer: [u8; 20]) -> Result<(), Error> {
     */
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorRefreshTaskWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CollatorRefreshTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
         .skip(1)
         .map(|task_cell_data_input| TaskCellData::from_raw(task_cell_data_input.as_slice()))
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::Encoding)?;
 
     let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
         .skip(1)
         .map(|task_cell_data_output| TaskCellData::from_raw(task_cell_data_output.as_slice()))
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Option<Vec<_>>>()
+        .ok_or(Error::Encoding)?;
 
     if !checker_info_inputs.into_iter().zip(checker_info_outputs).all(|(input, output)| {
         let res = input;
@@ -943,7 +956,7 @@ fn collator_unlock_bond(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorUnlockBondWitness::from_raw(&witness.as_slice()[..])?;
+    let witness = CollatorUnlockBondWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     Ok(())
 }

@@ -8,8 +8,10 @@ edition = "2018"
 [dependencies]
 ckb-std = {version = "0.7.4",default-features = false }
 #ckb-lib-secp256k1 = { path = "../../ckb-lib-secp256k1" }
-common = {path = "../../common"}
 bit-vec = { version = "0.6", default-features = false }
+
+common = {path = "../../common"}
+common-raw = {path = "../../common-raw"}
 
 [features]
 default = ["ckb-std/ckb-types","ckb-std/allocator"]

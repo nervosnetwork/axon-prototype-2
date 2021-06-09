@@ -3,28 +3,13 @@ use core::result::Result;
 
 use ckb_std::error::SysError;
 
-use crate::cell::global_config::GlobalConfigCellData;
 use crate::error::CommonError;
-use crate::{
-    check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8, FromRaw, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH,
-    SUDT_HASHTYPE, SUDT_MUSE_ARGS,
-};
+use crate::{check_args_len, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
 use alloc::vec::Vec;
 use ckb_std::ckb_constants::Source;
 use ckb_std::ckb_types::prelude::{Entity, Unpack};
 use ckb_std::high_level::{load_cell, load_cell_data, load_cell_type_hash};
-
-pub mod checker_bond;
-pub mod checker_info;
-pub mod code;
-pub mod global_config;
-pub mod muse_token;
-pub mod sidechain_bond;
-pub mod sidechain_config;
-pub mod sidechain_fee;
-pub mod sidechain_state;
-pub mod sudt_token;
-pub mod task;
+use common_raw::{cell::global_config::GlobalConfigCellData, FromRaw};
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
 pub enum CellType {
@@ -48,7 +33,7 @@ pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
     }
 
     let global_config_data = load_cell_data(0, Source::CellDep)?;
-    let global_config_data = GlobalConfigCellData::from_raw(&global_config_data)?;
+    let global_config_data = GlobalConfigCellData::from_raw(&global_config_data).ok_or(CommonError::Encoding)?;
 
     Ok(global_config_data)
 }

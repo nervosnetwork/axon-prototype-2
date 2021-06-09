@@ -1,17 +1,10 @@
 use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use ckb_std::error::SysError;
-
-use crate::error::CommonError;
 use crate::{
     check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8, FromRaw, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH,
     SUDT_HASHTYPE, SUDT_MUSE_ARGS,
 };
-use alloc::vec::Vec;
-use ckb_std::ckb_constants::Source;
-use ckb_std::ckb_types::prelude::{Entity, Unpack};
-use ckb_std::high_level::{load_cell, load_cell_data, load_cell_type_hash};
 
 const GLOBAL_CONFIG_DATA_LEN: usize = 296;
 
@@ -60,7 +53,7 @@ pub struct GlobalConfigCellData {
 }
 
 impl FromRaw for GlobalConfigCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Result<GlobalConfigCellData, SysError> {
+    fn from_raw(cell_raw_data: &[u8]) -> Option<GlobalConfigCellData> {
         check_args_len(cell_raw_data.len(), GLOBAL_CONFIG_DATA_LEN)?;
 
         let mut admin_public_key = [0u8; 32];
@@ -98,7 +91,7 @@ impl FromRaw for GlobalConfigCellData {
         sidechain_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[263..295]);
         let sidechain_bond_cell_lock_hashtype = decode_u8(&cell_raw_data[295..296])?;
 
-        Ok(GlobalConfigCellData {
+        Some(GlobalConfigCellData {
             admin_public_key,
             code_cell_type_codehash,
             code_cell_type_hashtype,

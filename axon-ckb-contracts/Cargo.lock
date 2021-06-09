@@ -853,6 +853,7 @@ dependencies = [
  "bit-vec 0.6.3",
  "ckb-std",
  "common",
+ "common-raw",
 ]
 
 [[package]]
@@ -862,7 +863,12 @@ dependencies = [
  "bit-vec 0.6.3",
  "blake2b-ref 0.3.0",
  "ckb-std",
+ "common-raw",
 ]
+
+[[package]]
+name = "common-raw"
+version = "0.1.0"
 
 [[package]]
 name = "convert_case"
@@ -2711,6 +2717,7 @@ dependencies = [
  "ckb-system-scripts",
  "ckb-testtool",
  "ckb-tool",
+ "common-raw",
  "molecule",
 ]
 
