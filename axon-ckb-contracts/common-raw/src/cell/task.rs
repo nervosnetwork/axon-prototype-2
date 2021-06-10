@@ -3,7 +3,7 @@ use core::result::Result;
 
 use crate::{check_args_len, decode_u128, decode_u16, decode_u8, FromRaw};
 
-const TASK_DATA_LEN: usize = 69;
+const TASK_DATA_LEN: usize = 85;
 const TASK_TYPE_ARGS_LEN: usize = 1;
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
 #[repr(u8)]
@@ -50,7 +50,7 @@ pub struct TaskCellData {
     // 应该为ssc committed_height + 1
     pub check_block_height_to:   u128,
     // inclusive 应该为latest_height
-    pub check_block_hash_to:     u128,
+    pub check_block_hash_to:     [u8; 32],
     pub check_data_size:         u128,
     pub refresh_interval:        u16,
     pub mode:                    TaskCellMode,
@@ -64,11 +64,14 @@ impl FromRaw for TaskCellData {
         let version = decode_u8(&cell_raw_data[1..2])?;
         let check_block_height_from = decode_u128(&cell_raw_data[2..18])?;
         let check_block_height_to = decode_u128(&cell_raw_data[18..34])?;
-        let check_block_hash_to = decode_u128(&cell_raw_data[34..50])?;
-        let check_data_size = decode_u128(&cell_raw_data[50..66])?;
-        let refresh_interval = decode_u16(&cell_raw_data[66..68])?;
 
-        let mode_u8 = decode_u8(&cell_raw_data[68..69])?;
+        let mut check_block_hash_to = [0u8; 32];
+        check_block_hash_to.copy_from_slice(&cell_raw_data[34..66]);
+
+        let check_data_size = decode_u128(&cell_raw_data[66..82])?;
+        let refresh_interval = decode_u16(&cell_raw_data[82..84])?;
+
+        let mode_u8 = decode_u8(&cell_raw_data[84..85])?;
         let mode: TaskCellMode = mode_u8.try_into().ok()?;
 
         Some(TaskCellData {
