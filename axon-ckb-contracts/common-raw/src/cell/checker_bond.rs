@@ -1,4 +1,4 @@
-use crate::{check_args_len, decode_u128, FromRaw, SUDT_DATA_LEN};
+use crate::{check_args_len, decode_u128, encode_u128, FromRaw, Serialize, SUDT_DATA_LEN};
 
 const CHECKER_BOND_LOCK_ARGS_LEN: usize = 64;
 
@@ -28,6 +28,14 @@ impl FromRaw for CheckerBondCellData {
         let sudt_amount = decode_u128(&cell_raw_data[0..16])?;
 
         Some(CheckerBondCellData { amount: sudt_amount })
+    }
+}
+
+impl Serialize for CheckerBondCellData {
+    type RawType = [u8; SUDT_DATA_LEN];
+
+    fn serialize(&self) -> Self::RawType {
+        encode_u128(self.amount)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::{check_args_len, decode_u128, decode_u16, decode_u8, encode_u128, encode_u16, encode_u8, FromRaw};
+use crate::{check_args_len, decode_u128, decode_u16, decode_u8, encode_u128, encode_u16, encode_u8, FromRaw, Serialize};
 
 const SIDECHAIN_CONFIG_DATA_LEN: usize = 185;
 const SIDECHAIN_CONFIG_TYPE_ARGS_LEN: usize = 1;
@@ -81,8 +81,10 @@ impl FromRaw for SidechainConfigCellData {
     }
 }
 
-impl SidechainConfigCellData {
-    fn into_raw(self) -> [u8; SIDECHAIN_CONFIG_DATA_LEN] {
+impl Serialize for SidechainConfigCellData {
+    type RawType = [u8; SIDECHAIN_CONFIG_DATA_LEN];
+
+    fn serialize(&self) -> Self::RawType {
         let mut buf = [0u8; SIDECHAIN_CONFIG_DATA_LEN];
 
         buf[0..1].copy_from_slice(&encode_u8(self.chain_id));
