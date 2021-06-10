@@ -4,22 +4,17 @@ use core::result::Result;
 // Import heap related library from `alloc`
 // https://doc.rust-lang.org/alloc/index.html
 use alloc::vec::Vec;
-use bit_vec::*;
 
 // Import CKB syscalls and structures
 // https://nervosnetwork.github.io/ckb-std/riscv64imac-unknown-none-elf/doc/ckb_std/index.html
 use crate::error::Error;
 use ckb_std::ckb_constants::Source;
 use ckb_std::{
-    ckb_types::{bytes::Bytes, prelude::*},
-    debug,
-    high_level::{load_cell_data, load_cell_lock, load_script, load_tx_hash, load_witness_args},
+    ckb_types::prelude::*,
+    high_level::{load_cell_data, load_cell_lock, load_witness_args},
 };
-use common::cell::CellType::CheckerInfo;
 
-use crate::error::Error::CheckerInfoMode;
 use ckb_std::high_level::QueryIter;
-use common::pattern::Pattern::AdminCreateSidechain;
 use common::pattern::{
     is_admin_create_sidechain, is_checker_bond_deposit, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
@@ -289,7 +284,7 @@ pub fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_bond_deposit(signer: [u8; 20]) -> Result<(), Error> {
+fn checker_bond_deposit(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerBondDeposit
 
@@ -390,7 +385,7 @@ fn checker_join_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_quit_sidechain(signer: [u8; 20]) -> Result<(), Error> {
+fn checker_quit_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerQuitSidechain
 
@@ -443,7 +438,7 @@ fn checker_quit_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_submit_task(signer: [u8; 20]) -> Result<(), Error> {
+fn checker_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerSubmitTask,
 
@@ -485,7 +480,7 @@ fn checker_submit_task(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_publish_challenge(signer: [u8; 20]) -> Result<(), Error> {
+fn checker_publish_challenge(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerPublishChallenge,
 
@@ -544,7 +539,7 @@ fn checker_publish_challenge(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
+fn checker_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerSubmitChallenge,
 
@@ -586,7 +581,7 @@ fn checker_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_take_beneficiary(signer: [u8; 20]) -> Result<(), Error> {
+fn checker_take_beneficiary(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerTakeBeneficiary,
 
@@ -639,7 +634,7 @@ fn checker_take_beneficiary(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn admin_create_sidechain(signer: [u8; 20]) -> Result<(), Error> {
+fn admin_create_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     AdminCreateSidechain,
 
@@ -671,7 +666,7 @@ fn admin_create_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn collator_publish_task(signer: [u8; 20]) -> Result<(), Error> {
+fn collator_publish_task(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorPublishTask,
 
@@ -703,7 +698,7 @@ fn collator_publish_task(signer: [u8; 20]) -> Result<(), Error> {
     let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
 
     let sidechain_bond_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice()).ok_or(Error::Encoding)?;
+    let _sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut sidechain_state_res = sidechain_state_input;
     //currently always true
@@ -736,7 +731,7 @@ fn collator_publish_task(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn collator_submit_task(signer: [u8; 20]) -> Result<(), Error> {
+fn collator_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorSubmitTask,
 
@@ -755,7 +750,7 @@ fn collator_submit_task(signer: [u8; 20]) -> Result<(), Error> {
     let witness = CollatorSubmitTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let sidechain_config_celldep =
+    let _sidechain_config_celldep =
         SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
 
     //==========
@@ -813,7 +808,7 @@ fn collator_submit_task(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
+fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorSubmitChallenge,
 
@@ -832,7 +827,7 @@ fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
     let witness = CollatorSubmitChallengeWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let sidechain_config_celldep =
+    let _sidechain_config_celldep =
         SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
 
     //==============
@@ -861,7 +856,7 @@ fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
         .collect::<Option<Vec<_>>>()
         .ok_or(Error::Encoding)?;
 
-    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
+    let _sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
 
     let mut sidechain_state_res = sidechain_state_input;
     //currently always true
@@ -883,10 +878,10 @@ fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
         .filter_map(|checker_info_input| {
             let result = bit_map_marked(witness.punish_checker_bitmap, checker_info_input.checker_id);
 
-            if let Ok(res) = result {
-                Some(checker_info_input)
+            if result.is_ok() {
+                return Some(checker_info_input);
             } else {
-                None
+                return None;
             }
         })
         .collect::<Vec<_>>();
@@ -904,7 +899,7 @@ fn collator_submit_challenge(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn collator_refresh_task(signer: [u8; 20]) -> Result<(), Error> {
+fn collator_refresh_task(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorRefreshTask,
 
@@ -917,7 +912,7 @@ fn collator_refresh_task(signer: [u8; 20]) -> Result<(), Error> {
     */
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorRefreshTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
+    let _witness = CollatorRefreshTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
         .skip(1)
@@ -941,7 +936,7 @@ fn collator_refresh_task(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn collator_unlock_bond(signer: [u8; 20]) -> Result<(), Error> {
+fn collator_unlock_bond(_signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorUnlockBond,
 
@@ -956,7 +951,7 @@ fn collator_unlock_bond(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorUnlockBondWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
+    let _witness = CollatorUnlockBondWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     Ok(())
 }

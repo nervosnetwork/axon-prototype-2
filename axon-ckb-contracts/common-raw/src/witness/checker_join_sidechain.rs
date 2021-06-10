@@ -1,11 +1,6 @@
-use core::{
-    convert::{TryFrom, TryInto},
-    default::Default,
-};
+use core::default::Default;
 
-use crate::{
-    check_args_len, decode_u8, encode_u8, FromRaw, Serialize, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS,
-};
+use crate::{decode_u8, encode_u8, FromRaw, Serialize};
 
 const CHECKER_JOIN_SIDECHAIN_WITNESS_LEN: usize = 3;
 

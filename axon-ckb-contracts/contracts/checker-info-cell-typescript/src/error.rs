@@ -8,7 +8,6 @@ pub enum Error {
     ItemMissing,
     LengthNotEnough,
     Encoding,
-    InvalidArgument,
 }
 
 impl From<SysError> for Error {

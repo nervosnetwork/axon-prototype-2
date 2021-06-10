@@ -9,8 +9,6 @@ use crate::error::CommonError;
 use bit_vec::*;
 use ckb_std::error::SysError;
 use ckb_std::high_level::{load_cell, QueryIter};
-use core::fmt::Error;
-use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign};
 
 pub mod cell;
 pub mod error;
@@ -150,7 +148,7 @@ pub fn bit_map_remove(input: [u8; 32], checker_id: u8) -> Result<[u8; 32], Commo
 
 //check if given number is bit-marked in input array
 pub fn bit_map_marked(input: [u8; 32], checker_id: u8) -> Result<bool, CommonError> {
-    let mut input = BitVec::from_bytes(&input[..]);
+    let input = BitVec::from_bytes(&input[..]);
 
     Ok(input.get(checker_id as usize).ok_or(CommonError::BitOperator)?)
 }

@@ -1,10 +1,7 @@
-use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use ckb_std::error::SysError;
-
 use crate::error::CommonError;
-use crate::{check_args_len, GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
+use crate::{GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
 use alloc::vec::Vec;
 use ckb_std::ckb_constants::Source;
 use ckb_std::ckb_types::prelude::{Entity, Unpack};

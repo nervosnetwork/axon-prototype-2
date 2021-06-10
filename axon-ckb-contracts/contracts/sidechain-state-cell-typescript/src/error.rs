@@ -8,8 +8,6 @@ pub enum Error {
     ItemMissing,
     LengthNotEnough,
     Encoding,
-    InvalidArgument,
-    Secp256k1Error,
 }
 
 impl From<SysError> for Error {

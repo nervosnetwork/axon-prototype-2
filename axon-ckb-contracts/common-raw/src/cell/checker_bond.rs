@@ -1,9 +1,4 @@
-use core::convert::{TryFrom, TryInto};
-use core::result::Result;
-
-use crate::{
-    check_args_len, decode_i8, decode_u128, decode_u16, decode_u64, decode_u8, FromRaw, SUDT_DATA_LEN, SUDT_HASHTYPE, SUDT_MUSE_ARGS,
-};
+use crate::{check_args_len, decode_u128, FromRaw, SUDT_DATA_LEN};
 
 const CHECKER_BOND_LOCK_ARGS_LEN: usize = 64;
 
