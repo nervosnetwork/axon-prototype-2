@@ -15,14 +15,17 @@ pub mod error;
 pub mod hash;
 pub mod pattern;
 
-pub const SUDT_CODEHASH: [u8; 32] = [0; 32];
-pub const SUDT_HASHTYPE: u8 = 1u8;
-pub const SUDT_MUSE_ARGS: &[u8] = &[1u8];
+pub const SUDT_CODEHASH: [u8; 32] = [220, 119, 113, 76, 154, 36, 54, 83, 120, 144, 192, 65, 69, 88, 144, 235, 134, 189, 90, 138, 42, 237, 82, 25, 243, 92, 250, 145, 25, 53, 95, 95];
+pub const SUDT_HASHTYPE: u8 = 0u8;
+pub const SUDT_MUSE_ARGS: &[u8] = &[];
 pub const SUDT_DATA_LEN: usize = 16; // u128
 
 pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
 
-pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = [0; 32];
+pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = [
+    245, 208, 14, 171, 59, 152, 16, 213, 201, 255, 131, 77, 22, 90, 198, 197, 156, 60, 77, 233, 241, 191, 127, 194, 187, 229, 123, 127,
+    218, 254, 226, 255,
+];
 
 #[macro_use]
 extern crate alloc;

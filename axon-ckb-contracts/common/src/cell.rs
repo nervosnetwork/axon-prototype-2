@@ -25,11 +25,18 @@ pub enum CellType {
 
 //the dep0 must be global cell
 pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
-    if load_cell_type_hash(0, Source::CellDep)?.ok_or(CommonError::LoadTypeHash)? != GLOBAL_CONFIG_TYPE_HASH {
-        return Err(CommonError::GlobalConfigCellDep);
-    }
 
-    let global_config_data = load_cell_data(0, Source::CellDep)?;
+    let global_config_data = (0..).find_map(|i| {
+        let type_hash = match load_cell_type_hash(i, Source::CellDep) {
+            Ok(hash) => hash,
+            Err(err) => return Some(Err(err)),
+        }?;
+        if type_hash == GLOBAL_CONFIG_TYPE_HASH {
+            return load_cell_data(i, Source::CellDep).ok().map(|data| Ok(data));
+        }
+        None
+    }).ok_or(CommonError::GlobalConfigCellDep)??;
+
     let global_config_data = GlobalConfigCellData::from_raw(&global_config_data).ok_or(CommonError::Encoding)?;
 
     Ok(global_config_data)
@@ -107,7 +114,7 @@ pub fn check_cell(cell_type: CellType, index: usize, source: Source, global: &Gl
                 return Err(CommonError::CodeHashMismatch);
             }
 
-            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+            if hashtype != SUDT_HASHTYPE || script.as_reader().args().raw_data() != SUDT_MUSE_ARGS {
                 return Err(CommonError::HashTypeMismatch);
             }
 

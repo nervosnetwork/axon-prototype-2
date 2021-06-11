@@ -47,6 +47,7 @@ fn test_io_amount_mismatch() {
     // prepare cell_deps
     let mut global_config = GlobalConfigCellData::default();
 
+    global_config.code_cell_type_codehash.copy_from_slice(code_cell_script.as_reader().code_hash().raw_data());
     global_config.checker_bond_cell_lock_codehash.copy_from_slice(a_s_codehash);
     global_config.checker_info_cell_type_codehash.copy_from_slice(a_s_codehash);
     global_config.sidechain_config_cell_type_codehash.copy_from_slice(a_s_codehash);
@@ -61,7 +62,7 @@ fn test_io_amount_mismatch() {
 
     // prepare inputs
     let config_input_data = SidechainConfigCellData::default();
-    let config_input = create_input(&mut context, new_cell_output(1000, &always_success), config_input_data.serialize());
+    let config_input = create_input(&mut context, new_type_cell_output(1000, &always_success, &always_success), config_input_data.serialize());
 
     let checker_bond_input_data = CheckerBondCellData::default();
     let checker_bond_input = create_input(
