@@ -1,14 +1,7 @@
-
 use core::result::Result;
-
-
-
-
 
 use crate::error::Error;
 use common::pattern::check_code_cell;
-
-const UDT_LEN: usize = 16;
 
 pub fn main() -> Result<(), Error> {
     /*

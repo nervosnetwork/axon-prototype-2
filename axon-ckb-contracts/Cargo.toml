@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    #"tests",
+    "tests",
     "contracts/code-cell",
     "contracts/always-success",
     "contracts/checker-bond-cell-lockscript",

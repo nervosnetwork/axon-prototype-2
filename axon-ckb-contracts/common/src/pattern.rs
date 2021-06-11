@@ -2,10 +2,7 @@ use crate::cell::{check_cell, check_cells, check_global_cell, CellType};
 use crate::error::CommonError;
 use crate::{get_input_cell_count, get_output_cell_count};
 
-
-use ckb_std::{
-    ckb_constants::Source,
-};
+use ckb_std::ckb_constants::Source;
 
 #[repr(u8)]
 #[derive(PartialOrd, PartialEq)]

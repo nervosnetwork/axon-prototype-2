@@ -1,3 +1,4 @@
+use crate::common::*;
 use ckb_system_scripts::BUNDLED_CELL;
 use ckb_testtool::context::Context;
 use ckb_tool::ckb_crypto::secp::Privkey;
@@ -10,7 +11,8 @@ use ckb_tool::ckb_types::{
     prelude::*,
     H256,
 };
-use std::fs;
+
+const SIGNATURE_SIZE: usize = 65;
 
 pub fn blake160(data: &[u8]) -> [u8; 20] {
     let mut buf = [0u8; 20];
@@ -20,72 +22,71 @@ pub fn blake160(data: &[u8]) -> [u8; 20] {
 }
 
 pub fn sign_tx(tx: TransactionView, key: &Privkey) -> TransactionView {
-    const SIGNATURE_SIZE: usize = 65;
-
-    let witnesses_len = tx.witnesses().len();
-    let tx_hash = tx.hash();
-    let mut signed_witnesses: Vec<packed::Bytes> = Vec::new();
-    let mut blake2b = new_blake2b();
-    let mut message = [0u8; 32];
-    blake2b.update(&tx_hash.raw_data());
-    // digest the first witness
-    let witness = WitnessArgs::default();
-    let zero_lock: Bytes = {
-        let mut buf = Vec::new();
-        buf.resize(SIGNATURE_SIZE, 0);
-        buf.into()
-    };
-    let witness_for_digest = witness
-        .clone()
-        .as_builder()
-        .lock(Some(zero_lock).pack())
-        .build();
-    let witness_len = witness_for_digest.as_bytes().len() as u64;
-    blake2b.update(&witness_len.to_le_bytes());
-    blake2b.update(&witness_for_digest.as_bytes());
-    (1..witnesses_len).for_each(|n| {
-        let witness = tx.witnesses().get(n).unwrap();
-        let witness_len = witness.raw_data().len() as u64;
-        blake2b.update(&witness_len.to_le_bytes());
-        blake2b.update(&witness.raw_data());
-    });
-    blake2b.finalize(&mut message);
-    let message = H256::from(message);
-    let sig = key.sign_recoverable(&message).expect("sign");
-    signed_witnesses.push(
-        witness
-            .as_builder()
-            .lock(Some(Bytes::from(sig.serialize())).pack())
-            .build()
-            .as_bytes()
-            .pack(),
-    );
-    for i in 1..witnesses_len {
-        signed_witnesses.push(tx.witnesses().get(i).unwrap());
-    }
+    let witnesses = BytesVecBuilder::default().push(get_dummy_witness_builder().pack()).build();
     tx.as_advanced_builder()
-        .set_witnesses(signed_witnesses)
+        .set_witnesses(sign_tx_with_witnesses(tx, witnesses, key).unwrap())
         .build()
 }
 
-pub fn with_secp256k1_cell_deps(
-    builder: TransactionBuilder,
-    context: &mut Context,
-) -> TransactionBuilder {
-    let secp256k1_bin: Bytes =
-        fs::read("../ckb-miscellaneous-scripts/build/secp256k1_blake2b_sighash_all_dual")
-            .expect("load secp256k1")
-            .into();
-    let secp256k1_out_point = context.deploy_cell(secp256k1_bin);
-    let secp256k1_dep = CellDep::new_builder()
-        .out_point(secp256k1_out_point)
-        .build();
+pub fn get_dummy_witness_builder() -> WitnessArgsBuilder {
+    let zero_lock: Bytes = {
+        let buf = [0u8; SIGNATURE_SIZE];
+        buf.serialize()
+    };
+
+    WitnessArgsBuilder::default().lock(zero_lock.pack_some())
+}
+
+pub fn sign_tx_with_witnesses(tx: TransactionView, witnesses: BytesVec, key: &Privkey) -> Option<Vec<packed::Bytes>> {
+    let witnesses_len = witnesses.len();
+
+    let mut blake2b = new_blake2b();
+    blake2b.update(&tx.hash().raw_data());
+
+    // digest the first witness
+    let signature_witness = witnesses.get(0)?.raw_data();
+    WitnessArgsReader::verify(&signature_witness, false).ok()?;
+
+    let signature_witness_len = signature_witness.len() as u64;
+    blake2b.update(&signature_witness_len.to_le_bytes());
+    blake2b.update(&signature_witness);
+
+    // digest rest witnesses
+    (1..witnesses_len).for_each(|n| {
+        let witness = witnesses.get(n).unwrap().raw_data();
+        let witness_len = witness.len() as u64;
+        blake2b.update(&witness_len.to_le_bytes());
+        blake2b.update(&witness);
+    });
+
+    let mut message = [0u8; 32];
+    blake2b.finalize(&mut message);
+    let message = H256::from(message);
+
+    let sig = key.sign_recoverable(&message).expect("sign");
+
+    let mut signed_witnesses: Vec<packed::Bytes> = Vec::new();
+    signed_witnesses.push(
+        WitnessArgs::new_unchecked(signature_witness)
+            .as_builder()
+            .lock(Bytes::from(sig.serialize()).pack_some())
+            .pack(),
+    );
+    for i in 1..witnesses_len {
+        signed_witnesses.push(witnesses.get(i)?);
+    }
+
+    Some(signed_witnesses)
+}
+
+pub fn with_secp256k1_cell_deps(builder: TransactionBuilder, context: &mut Context) -> (TransactionBuilder, OutPoint) {
+    let secp256k1_bin = BUNDLED_CELL.get("specs/cells/secp256k1_blake160_sighash_all").unwrap();
+    let secp256k1_out_point = context.deploy_cell(secp256k1_bin.serialize());
+    let secp256k1_dep = CellDep::new_builder().out_point(secp256k1_out_point.clone()).build();
 
     let secp256k1_data_bin = BUNDLED_CELL.get("specs/cells/secp256k1_data").unwrap();
-    let secp256k1_data_out_point = context.deploy_cell(secp256k1_data_bin.to_vec().into());
-    let secp256k1_data_dep = CellDep::new_builder()
-        .out_point(secp256k1_data_out_point)
-        .build();
+    let secp256k1_data_out_point = context.deploy_cell(secp256k1_data_bin.serialize());
+    let secp256k1_data_dep = CellDep::new_builder().out_point(secp256k1_data_out_point).build();
 
-    builder.cell_dep(secp256k1_dep).cell_dep(secp256k1_data_dep)
+    (builder.cell_dep(secp256k1_dep).cell_dep(secp256k1_data_dep), secp256k1_out_point)
 }

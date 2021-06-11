@@ -1,7 +1,5 @@
 use core::result::Result;
 
-
-
 use crate::error::Error;
 
 use common::pattern::check_code_cell;

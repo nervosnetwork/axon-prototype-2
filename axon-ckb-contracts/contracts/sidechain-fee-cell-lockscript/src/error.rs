@@ -1,4 +1,4 @@
-use ckb_std::{error::SysError};
+use ckb_std::error::SysError;
 use common::error::CommonError;
 
 #[repr(i8)]
@@ -7,9 +7,6 @@ pub enum Error {
     ItemMissing,
     LengthNotEnough,
     Encoding,
-    InvalidArgument,
-    MoleculeError,
-    NotBalancedAmount,
 }
 
 impl From<SysError> for Error {
