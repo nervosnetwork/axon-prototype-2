@@ -31,8 +31,21 @@ fn bootstrap(builder: TransactionBuilder, context: &mut Context, lock_args: &[u8
     (builder.input(code_cell_input), code_cell_script, secp256k1_script)
 }
 
+fn with_time_header(
+    builder: TransactionBuilder,
+    context: &mut Context,
+    timestamp: u64,
+) -> (TransactionBuilder, ckb_tool::ckb_types::core::HeaderView) {
+    let header = ckb_tool::ckb_types::core::HeaderBuilder::default()
+        .timestamp(timestamp.pack())
+        .build();
+    context.insert_header(header.clone());
+
+    (builder.header_dep(header.hash()), header)
+}
+
 #[test]
-fn test_io_amount_mismatch() {
+fn test_success() {
     // generate key pair
     let privkey = Generator::random_privkey();
     let pubkey = privkey.pubkey().expect("pubkey");
@@ -65,6 +78,10 @@ fn test_io_amount_mismatch() {
 
     let builder = builder.cell_dep(global_config_dep);
 
+    // prepare headers
+    let (builder, config_header) = with_time_header(builder, &mut context, 1000);
+    let (builder, _) = with_time_header(builder, &mut context, 1100);
+
     // prepare scripts
     let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
     let checker_bond_lock_input_script = context
@@ -80,31 +97,37 @@ fn test_io_amount_mismatch() {
         .expect("script");
 
     // prepare inputs
-    let config_input_data = SidechainConfigCellData::default();
-    let config_input = create_input(
-        &mut context,
+    let mut config_input_data = SidechainConfigCellData::default();
+    config_input_data.minimal_bond = 100;
+    config_input_data.update_interval = 100;
+
+    let config_input_out_point = context.create_cell(
         new_type_cell_output(1000, &always_success, &always_success),
         config_input_data.serialize(),
     );
+    let config_input = CellInput::new_builder().previous_output(config_input_out_point.clone()).build();
 
-    let checker_bond_input_data = CheckerBondCellData::default();
+    let mut checker_bond_input_data = CheckerBondCellData::default();
+    checker_bond_input_data.amount = 100;
+
     let checker_bond_input = create_input(
         &mut context,
         new_type_cell_output(1000, &checker_bond_lock_input_script, &always_success),
         checker_bond_input_data.serialize(),
     );
 
+    context.link_cell_with_block(config_input_out_point.clone(), config_header.hash(), 0);
     let builder = builder.input(config_input).input(checker_bond_input);
 
     // prepare outputs
-    let mut config_output = SidechainConfigCellData::default();
+    let mut config_output = config_input_data.clone();
     config_output.checker_total_count = 1;
     config_output.checker_bitmap = [
         0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ];
 
-    let checker_bond_output = CheckerBondCellData::default();
+    let checker_bond_output = checker_bond_input_data.clone();
     let mut checker_info_output = CheckerInfoCellData::default();
     checker_info_output.checker_public_key_hash.copy_from_slice(&pubkey_hash);
 

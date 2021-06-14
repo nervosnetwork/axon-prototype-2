@@ -11,10 +11,9 @@ use crate::error::Error;
 use ckb_std::ckb_constants::Source;
 use ckb_std::{
     ckb_types::prelude::*,
-    high_level::{load_cell_data, load_cell_lock, load_witness_args},
+    high_level::{load_cell_data, load_cell_lock, load_header, load_witness_args, QueryIter},
 };
 
-use ckb_std::high_level::QueryIter;
 use common::pattern::{
     is_admin_create_sidechain, is_checker_bond_deposit, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
@@ -34,6 +33,7 @@ use common_raw::{
         sudt_token::SudtTokenData,
         task::{TaskCellData, TaskCellMode},
     },
+    decode_u64,
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_join_sidechain::CheckerJoinSidechainWitness,
         checker_publish_challenge::CheckerPublishChallengeWitness, checker_quit_sidechain::CheckerQuitSidechainWitness,
@@ -386,7 +386,18 @@ fn checker_join_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     checker_info_res.checker_public_key_hash = signer;
     checker_info_res.mode = CheckerInfoCellMode::Idle;
 
-    // TODO: Check update gap limit
+    if config_input.checker_total_count >= config_input.checker_threshold {
+        // check if time interval passed limit
+        let config_timestamp = decode_u64(load_header(1, Source::Input)?.as_reader().raw().timestamp().raw_data()).unwrap();
+        let time_proof = QueryIter::new(load_header, Source::HeaderDep).find(|header| {
+            let timestamp = decode_u64(header.as_reader().raw().timestamp().raw_data()).unwrap();
+            timestamp - config_timestamp >= config_input.update_interval.into()
+        });
+        if time_proof.is_none() {
+            return Err(Error::SidechainConfigMismatch);
+        }
+    }
+
     if config_res.chain_id != witness.chain_id || config_res != config_output {
         return Err(Error::SidechainConfigMismatch);
     }
