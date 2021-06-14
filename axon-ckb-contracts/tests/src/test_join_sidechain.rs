@@ -1,14 +1,13 @@
 use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
 use crate::secp256k1::*;
-use ckb_testtool::context::Context;
 use ckb_tool::ckb_crypto::secp::Generator;
-use ckb_tool::ckb_types::{bytes::Bytes, core::TransactionBuilder, packed::*, prelude::*};
+use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::CheckerInfoCellData,
-        global_config::GlobalConfigCellData,
         sidechain_config::SidechainConfigCellData,
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
@@ -16,32 +15,13 @@ use common_raw::{
 
 const MAX_CYCLES: u64 = 10_000_000;
 
-fn bootstrap(builder: TransactionBuilder, context: &mut Context, lock_args: &[u8]) -> (TransactionBuilder, Script, Script) {
-    let (builder, secp256k1_code) = with_secp256k1_cell_deps(builder, context);
-    let secp256k1_script = context.build_script(&secp256k1_code, lock_args.to_vec().into()).expect("script");
+fn with_time_header(mut builder: EnvironmentBuilder, timestamp: u64) -> (EnvironmentBuilder, core::HeaderView) {
+    let header = core::HeaderBuilder::default().timestamp(timestamp.pack()).build();
+    builder.context.insert_header(header.clone());
 
-    let (builder, code_cell_script) = load_script(context, builder, "code-cell");
+    let builder = builder.header_dep(header.hash());
 
-    let code_cell_input = create_input(
-        context,
-        new_type_cell_output(1000, &secp256k1_script, &code_cell_script),
-        Bytes::new(),
-    );
-
-    (builder.input(code_cell_input), code_cell_script, secp256k1_script)
-}
-
-fn with_time_header(
-    builder: TransactionBuilder,
-    context: &mut Context,
-    timestamp: u64,
-) -> (TransactionBuilder, ckb_tool::ckb_types::core::HeaderView) {
-    let header = ckb_tool::ckb_types::core::HeaderBuilder::default()
-        .timestamp(timestamp.pack())
-        .build();
-    context.insert_header(header.clone());
-
-    (builder.header_dep(header.hash()), header)
+    (builder, header)
 }
 
 #[test]
@@ -52,39 +32,24 @@ fn test_success() {
     let pubkey_hash = blake160(&pubkey.serialize());
 
     // deploy contract
-    let mut context = Context::default();
-
-    let (builder, code_cell_script, secp256k1_script) = bootstrap(TransactionBuilder::default(), &mut context, &pubkey_hash);
-
-    let (builder, always_success_code) = load_contract(&mut context, builder, "always-success");
-    let always_success = context.build_script(&always_success_code, Bytes::new()).expect("script");
-    let a_s_codehash = always_success.as_reader().code_hash().raw_data();
-
-    // prepare cell_deps
-    let mut global_config = GlobalConfigCellData::default();
-
-    global_config
-        .code_cell_type_codehash
-        .copy_from_slice(code_cell_script.as_reader().code_hash().raw_data());
-    global_config.checker_bond_cell_lock_codehash.copy_from_slice(a_s_codehash);
-    global_config.checker_info_cell_type_codehash.copy_from_slice(a_s_codehash);
-    global_config.sidechain_config_cell_type_codehash.copy_from_slice(a_s_codehash);
-
-    let global_config_dep = create_dep(
-        &mut context,
-        new_type_cell_output(1000, &always_success, &always_success),
-        global_config.serialize(),
-    );
-
-    let builder = builder.cell_dep(global_config_dep);
+    let (
+        builder,
+        AxonScripts {
+            always_success_code,
+            always_success_script: always_success,
+            code_cell_script,
+            ..
+        },
+    ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
 
     // prepare headers
-    let (builder, config_header) = with_time_header(builder, &mut context, 1000);
-    let (builder, _) = with_time_header(builder, &mut context, 1100);
+    let (builder, config_header) = with_time_header(builder, 1000);
+    let (mut builder, _) = with_time_header(builder, 1100);
 
     // prepare scripts
     let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
-    let checker_bond_lock_input_script = context
+    let checker_bond_lock_input_script = builder
+        .context
         .build_script(&always_success_code, checker_bond_lock_args.serialize())
         .expect("script");
 
@@ -92,7 +57,8 @@ fn test_success() {
         0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     ];
-    let checker_bond_lock_output_script = context
+    let checker_bond_lock_output_script = builder
+        .context
         .build_script(&always_success_code, checker_bond_lock_args.serialize())
         .expect("script");
 
@@ -101,7 +67,7 @@ fn test_success() {
     config_input_data.minimal_bond = 100;
     config_input_data.update_interval = 100;
 
-    let config_input_out_point = context.create_cell(
+    let config_input_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &always_success),
         config_input_data.serialize(),
     );
@@ -110,13 +76,14 @@ fn test_success() {
     let mut checker_bond_input_data = CheckerBondCellData::default();
     checker_bond_input_data.amount = 100;
 
-    let checker_bond_input = create_input(
-        &mut context,
+    let checker_bond_input = builder.create_input(
         new_type_cell_output(1000, &checker_bond_lock_input_script, &always_success),
         checker_bond_input_data.serialize(),
     );
 
-    context.link_cell_with_block(config_input_out_point.clone(), config_header.hash(), 0);
+    builder
+        .context
+        .link_cell_with_block(config_input_out_point.clone(), config_header.hash(), 0);
     let builder = builder.input(config_input).input(checker_bond_input);
 
     // prepare outputs
@@ -132,7 +99,7 @@ fn test_success() {
     checker_info_output.checker_public_key_hash.copy_from_slice(&pubkey_hash);
 
     let outputs = vec![
-        new_type_cell_output(1000, &secp256k1_script, &code_cell_script),
+        new_type_cell_output(1000, &always_success, &code_cell_script),
         new_type_cell_output(1000, &always_success, &always_success),
         new_type_cell_output(1000, &checker_bond_lock_output_script, &always_success),
         new_type_cell_output(1000, &always_success, &always_success),
@@ -150,12 +117,13 @@ fn test_success() {
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 
     // build transaction
-    let tx = builder.outputs(outputs).outputs_data(outputs_data.pack()).build();
+    let builder = builder.outputs(outputs).outputs_data(outputs_data.pack());
+    let tx = builder.builder.build();
     let tx = tx
         .as_advanced_builder()
         .set_witnesses(sign_tx_with_witnesses(tx, witnesses.pack(), &privkey).unwrap())
         .build();
 
     // run
-    context.verify_tx(&tx, MAX_CYCLES).expect("pass verification");
+    builder.context.verify_tx(&tx, MAX_CYCLES).expect("pass verification");
 }
