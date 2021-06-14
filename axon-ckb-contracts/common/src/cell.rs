@@ -25,17 +25,18 @@ pub enum CellType {
 
 //the dep0 must be global cell
 pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
-
-    let global_config_data = (0..).find_map(|i| {
-        let type_hash = match load_cell_type_hash(i, Source::CellDep) {
-            Ok(hash) => hash,
-            Err(err) => return Some(Err(err)),
-        }?;
-        if type_hash == GLOBAL_CONFIG_TYPE_HASH {
-            return load_cell_data(i, Source::CellDep).ok().map(|data| Ok(data));
-        }
-        None
-    }).ok_or(CommonError::GlobalConfigCellDep)??;
+    let global_config_data = (0..)
+        .find_map(|i| {
+            let type_hash = match load_cell_type_hash(i, Source::CellDep) {
+                Ok(hash) => hash,
+                Err(err) => return Some(Err(err)),
+            }?;
+            if type_hash == GLOBAL_CONFIG_TYPE_HASH {
+                return load_cell_data(i, Source::CellDep).ok().map(|data| Ok(data));
+            }
+            None
+        })
+        .ok_or(CommonError::GlobalConfigCellDep)??;
 
     let global_config_data = GlobalConfigCellData::from_raw(&global_config_data).ok_or(CommonError::Encoding)?;
 
