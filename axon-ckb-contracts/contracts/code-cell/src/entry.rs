@@ -23,7 +23,7 @@ use common::pattern::{
 use common::{bit_map_add, bit_map_marked, bit_map_remove, EMPTY_BIT_MAP};
 use common_raw::{
     cell::{
-        checker_bond::CheckerBondCellLockArgs,
+        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
         code::{CodeCellLockArgs, CodeCellTypeWitness},
         muse_token::MuseTokenData,
@@ -322,7 +322,7 @@ fn checker_bond_withdraw(signer: [u8; 20]) -> Result<(), Error> {
     }
 
     //check owner
-    if signer != &checker_bond_input.checker_public_key[..] {
+    if signer != &checker_bond_input.checker_lock_arg[..] {
         return Err(Error::SignatureMismatch);
     }
 
@@ -344,42 +344,60 @@ fn checker_join_sidechain(signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerJoinSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
+    let witness = CheckerJoinSidechainWitness::from_raw(witness.as_reader().raw_data()).ok_or(Error::Encoding)?;
 
+    // input cells
     let config_cell_data_input = load_cell_data(1, Source::Input)?;
     let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input).ok_or(Error::Encoding)?;
 
-    let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
-    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice()).ok_or(Error::Encoding)?;
+    let checker_bond_input_lock_args = load_cell_lock(2, Source::Input)?.args();
+    let checker_bond_input_lock_args =
+        CheckerBondCellLockArgs::from_raw(checker_bond_input_lock_args.as_reader().raw_data()).ok_or(Error::Encoding)?;
 
+    let checker_bond_input = load_cell_data(2, Source::Input)?;
+    let checker_bond_input = CheckerBondCellData::from_raw(&checker_bond_input).ok_or(Error::Encoding)?;
+
+    // output cells
     let config_cell_data_output = load_cell_data(1, Source::Output)?;
     let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output).ok_or(Error::Encoding)?;
 
-    let checker_bond_cell_lock_args_output = load_cell_lock(2, Source::Output)?.args();
-    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice()).ok_or(Error::Encoding)?;
+    let checker_bond_output_lock_args = load_cell_lock(2, Source::Output)?.args();
+    let checker_bond_output_lock_args =
+        CheckerBondCellLockArgs::from_raw(checker_bond_output_lock_args.as_reader().raw_data()).ok_or(Error::Encoding)?;
+
+    let checker_bond_output = load_cell_data(2, Source::Output)?;
+    let checker_bond_output = CheckerBondCellData::from_raw(&checker_bond_output).ok_or(Error::Encoding)?;
 
     let checker_info_cell_data_output = load_cell_data(3, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
+    let checker_info_output = CheckerInfoCellData::from_raw(&checker_info_cell_data_output).ok_or(Error::Encoding)?;
 
     let mut config_res = config_input.clone();
 
-    config_res.chain_id = witness.chain_id;
     config_res.checker_total_count += 1;
-    config_res.checker_bitmap = bit_map_add(config_res.checker_bitmap, witness.checker_id)?;
+    config_res.checker_bitmap = bit_map_add(&config_res.checker_bitmap, witness.checker_id)?;
 
-    let mut checker_bond_res = checker_bond_input.clone();
-    checker_bond_res.chain_id_bitmap = bit_map_add(checker_bond_res.chain_id_bitmap, witness.chain_id)?;
+    let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
+    checker_bond_res_lock_args.chain_id_bitmap = bit_map_add(&checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id)?;
 
-    let mut checker_info_res = CheckerInfoCellData::default();
+    let mut checker_info_res = checker_info_output.clone();
     checker_info_res.chain_id = witness.chain_id;
     checker_info_res.checker_id = witness.checker_id;
     checker_info_res.unpaid_fee = 0;
-    checker_info_res.rpc_url = checker_info_output.rpc_url;
     checker_info_res.checker_public_key_hash = signer;
     checker_info_res.mode = CheckerInfoCellMode::Idle;
 
-    if config_res != config_output || checker_bond_res != checker_bond_output || checker_info_res != checker_info_output {
-        return Err(Error::Wrong);
+    // TODO: Check update gap limit
+    if config_res.chain_id != witness.chain_id || config_res != config_output {
+        return Err(Error::SidechainConfigMismatch);
+    }
+    if checker_bond_res_lock_args != checker_bond_output_lock_args
+        || checker_bond_input != checker_bond_output
+        || checker_bond_output.amount < config_input.minimal_bond
+    {
+        return Err(Error::CheckerBondMismatch);
+    }
+    if checker_info_res != checker_info_output {
+        return Err(Error::CheckerInfoMismatch);
     }
 
     Ok(())

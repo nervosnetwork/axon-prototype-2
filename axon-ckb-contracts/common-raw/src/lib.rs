@@ -61,6 +61,20 @@ pub fn encode_u64(num: u64) -> [u8; 8] {
     num.to_le_bytes()
 }
 
+pub fn decode_u32(data: &[u8]) -> Option<u32> {
+    if data.len() != 4 {
+        return None;
+    }
+
+    let mut buf = [0u8; 4];
+    buf.copy_from_slice(data);
+    Some(u32::from_le_bytes(buf))
+}
+
+pub fn encode_u32(num: u32) -> [u8; 4] {
+    num.to_le_bytes()
+}
+
 pub fn decode_u16(data: &[u8]) -> Option<u16> {
     if data.len() != 2 {
         return None;

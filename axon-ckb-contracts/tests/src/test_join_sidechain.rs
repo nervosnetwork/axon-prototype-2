@@ -6,7 +6,9 @@ use ckb_tool::ckb_types::{bytes::Bytes, core::TransactionBuilder, packed::*, pre
 
 use common_raw::{
     cell::{
-        checker_bond::CheckerBondCellData, checker_info::CheckerInfoCellData, global_config::GlobalConfigCellData,
+        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
+        checker_info::CheckerInfoCellData,
+        global_config::GlobalConfigCellData,
         sidechain_config::SidechainConfigCellData,
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
@@ -14,9 +16,9 @@ use common_raw::{
 
 const MAX_CYCLES: u64 = 10_000_000;
 
-fn bootstrap(builder: TransactionBuilder, context: &mut Context, lock_args: Vec<u8>) -> (TransactionBuilder, Script, Script) {
+fn bootstrap(builder: TransactionBuilder, context: &mut Context, lock_args: &[u8]) -> (TransactionBuilder, Script, Script) {
     let (builder, secp256k1_code) = with_secp256k1_cell_deps(builder, context);
-    let secp256k1_script = context.build_script(&secp256k1_code, lock_args.into()).expect("script");
+    let secp256k1_script = context.build_script(&secp256k1_code, lock_args.to_vec().into()).expect("script");
 
     let (builder, code_cell_script) = load_script(context, builder, "code-cell");
 
@@ -34,20 +36,23 @@ fn test_io_amount_mismatch() {
     // generate key pair
     let privkey = Generator::random_privkey();
     let pubkey = privkey.pubkey().expect("pubkey");
-    let pubkey_hash = blake160(&pubkey.serialize()).to_vec();
+    let pubkey_hash = blake160(&pubkey.serialize());
 
     // deploy contract
     let mut context = Context::default();
 
-    let (builder, code_cell_script, secp256k1_script) = bootstrap(TransactionBuilder::default(), &mut context, pubkey_hash);
+    let (builder, code_cell_script, secp256k1_script) = bootstrap(TransactionBuilder::default(), &mut context, &pubkey_hash);
 
-    let (builder, always_success) = load_script(&mut context, builder, "always-success");
+    let (builder, always_success_code) = load_contract(&mut context, builder, "always-success");
+    let always_success = context.build_script(&always_success_code, Bytes::new()).expect("script");
     let a_s_codehash = always_success.as_reader().code_hash().raw_data();
 
     // prepare cell_deps
     let mut global_config = GlobalConfigCellData::default();
 
-    global_config.code_cell_type_codehash.copy_from_slice(code_cell_script.as_reader().code_hash().raw_data());
+    global_config
+        .code_cell_type_codehash
+        .copy_from_slice(code_cell_script.as_reader().code_hash().raw_data());
     global_config.checker_bond_cell_lock_codehash.copy_from_slice(a_s_codehash);
     global_config.checker_info_cell_type_codehash.copy_from_slice(a_s_codehash);
     global_config.sidechain_config_cell_type_codehash.copy_from_slice(a_s_codehash);
@@ -60,28 +65,53 @@ fn test_io_amount_mismatch() {
 
     let builder = builder.cell_dep(global_config_dep);
 
+    // prepare scripts
+    let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
+    let checker_bond_lock_input_script = context
+        .build_script(&always_success_code, checker_bond_lock_args.serialize())
+        .expect("script");
+
+    checker_bond_lock_args.chain_id_bitmap = [
+        0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ];
+    let checker_bond_lock_output_script = context
+        .build_script(&always_success_code, checker_bond_lock_args.serialize())
+        .expect("script");
+
     // prepare inputs
     let config_input_data = SidechainConfigCellData::default();
-    let config_input = create_input(&mut context, new_type_cell_output(1000, &always_success, &always_success), config_input_data.serialize());
+    let config_input = create_input(
+        &mut context,
+        new_type_cell_output(1000, &always_success, &always_success),
+        config_input_data.serialize(),
+    );
 
     let checker_bond_input_data = CheckerBondCellData::default();
     let checker_bond_input = create_input(
         &mut context,
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &checker_bond_lock_input_script, &always_success),
         checker_bond_input_data.serialize(),
     );
 
     let builder = builder.input(config_input).input(checker_bond_input);
 
     // prepare outputs
-    let config_output = SidechainConfigCellData::default();
+    let mut config_output = SidechainConfigCellData::default();
+    config_output.checker_total_count = 1;
+    config_output.checker_bitmap = [
+        0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ];
+
     let checker_bond_output = CheckerBondCellData::default();
-    let checker_info_output = CheckerInfoCellData::default();
+    let mut checker_info_output = CheckerInfoCellData::default();
+    checker_info_output.checker_public_key_hash.copy_from_slice(&pubkey_hash);
 
     let outputs = vec![
         new_type_cell_output(1000, &secp256k1_script, &code_cell_script),
         new_type_cell_output(1000, &always_success, &always_success),
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &checker_bond_lock_output_script, &always_success),
         new_type_cell_output(1000, &always_success, &always_success),
     ];
     let outputs_data: Vec<Bytes> = vec![
