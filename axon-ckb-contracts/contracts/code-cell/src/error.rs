@@ -1,13 +1,15 @@
-use ckb_std::error::SysError;
+use ckb_std::{debug, error::SysError};
 use common::error::CommonError;
 
 /// Error
 #[repr(i8)]
+#[derive(Debug)]
 pub enum Error {
     IndexOutOfBound = 1,
     ItemMissing,
     LengthNotEnough,
     Encoding,
+    CommonError,
     // PatternWitnessTypeMissing,
     PatternRecognitionFailure,
     // Secp256k1Error,
@@ -41,7 +43,8 @@ impl From<SysError> for Error {
 }
 
 impl From<CommonError> for Error {
-    fn from(_: CommonError) -> Self {
-        unimplemented!()
+    fn from(_err: CommonError) -> Self {
+        debug!("CommonError: {:#?}", _err);
+        Self::CommonError
     }
 }

@@ -14,7 +14,7 @@
 mod entry;
 mod error;
 
-use ckb_std::default_alloc;
+use ckb_std::{debug, default_alloc};
 
 ckb_std::entry!(program_entry);
 default_alloc!();
@@ -24,6 +24,9 @@ fn program_entry() -> i8 {
     // Call main function and return error code
     match entry::main() {
         Ok(_) => 0,
-        Err(err) => err as i8,
+        Err(err) => {
+            debug!("Error: {:#?}", err);
+            err as i8
+        }
     }
 }
