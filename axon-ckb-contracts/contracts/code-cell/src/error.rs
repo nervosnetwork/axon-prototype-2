@@ -23,6 +23,8 @@ pub enum Error {
     // ChainIdBitMapMismatch,
     // CheckerInfoMode,
     // CheckerUnpaidFee,
+    #[allow(dead_code)]
+    TypeScriptMissed,
     Wrong,
     SidechainConfigMismatch,
     CheckerBondMismatch,

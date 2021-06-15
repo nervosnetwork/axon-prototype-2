@@ -11,8 +11,13 @@
 #![feature(panic_info_message)]
 
 // define modules
+#[macro_use]
+mod common;
 mod entry;
 mod error;
+
+mod checker_join_sidechain;
+mod checker_quit_sidechain;
 
 use ckb_std::{debug, default_alloc};
 
