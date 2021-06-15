@@ -415,7 +415,7 @@ fn checker_join_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     Ok(())
 }
 
-fn checker_quit_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
+fn checker_quit_sidechain(signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerQuitSidechain
 
@@ -429,40 +429,66 @@ fn checker_quit_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
 
     let witness = load_witness_args(0, Source::Input)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
+    let witness = CheckerQuitSidechainWitness::from_raw(witness.as_reader().raw_data()).ok_or(Error::Encoding)?;
 
-    let config_cell_data_input = load_cell_data(1, Source::Input)?;
-    let config_input = SidechainConfigCellData::from_raw(&config_cell_data_input).ok_or(Error::Encoding)?;
+    let config_input = load_cell_data(1, Source::Input)?;
+    let config_input = SidechainConfigCellData::from_raw(&config_input).ok_or(Error::Encoding)?;
 
-    let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
-    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice()).ok_or(Error::Encoding)?;
+    let checker_bond_input_lock_args = load_cell_lock(2, Source::Input)?.args();
+    let checker_bond_input_lock_args =
+        CheckerBondCellLockArgs::from_raw(checker_bond_input_lock_args.as_reader().raw_data()).ok_or(Error::Encoding)?;
 
-    let checker_info_cell_data_input = load_cell_data(3, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
+    let checker_bond_input = load_cell_data(2, Source::Input)?;
+    let checker_bond_input = CheckerBondCellData::from_raw(&checker_bond_input).ok_or(Error::Encoding)?;
 
-    let config_cell_data_output = load_cell_data(1, Source::Output)?;
-    let config_output = SidechainConfigCellData::from_raw(&config_cell_data_output).ok_or(Error::Encoding)?;
+    let checker_info_input = load_cell_data(3, Source::Input)?;
+    let checker_info_input = CheckerInfoCellData::from_raw(&checker_info_input).ok_or(Error::Encoding)?;
 
-    let checker_bond_cell_lock_args_output = load_cell_lock(2, Source::Output)?.args();
-    let checker_bond_output = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_output.as_slice()).ok_or(Error::Encoding)?;
+    let config_output = load_cell_data(1, Source::Output)?;
+    let config_output = SidechainConfigCellData::from_raw(&config_output).ok_or(Error::Encoding)?;
+
+    let checker_bond_output_lock_args = load_cell_lock(2, Source::Output)?.args();
+    let checker_bond_output_lock_args =
+        CheckerBondCellLockArgs::from_raw(checker_bond_output_lock_args.as_reader().raw_data()).ok_or(Error::Encoding)?;
+
+    let checker_bond_output = load_cell_data(2, Source::Output)?;
+    let checker_bond_output = CheckerBondCellData::from_raw(&checker_bond_output).ok_or(Error::Encoding)?;
 
     let mut config_res = config_input.clone();
-    config_res.chain_id = witness.chain_id;
+    if config_res.checker_total_count <= 0 {
+        return Err(Error::SidechainConfigMismatch);
+    }
     config_res.checker_total_count -= 1;
+
     config_res.checker_bitmap = bit_map_remove(config_res.checker_bitmap, witness.checker_id)?;
 
-    let mut checker_bond_res = checker_bond_input.clone();
-    checker_bond_res.chain_id_bitmap = bit_map_remove(checker_bond_res.chain_id_bitmap, witness.chain_id)?;
+    let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
+    checker_bond_res_lock_args.chain_id_bitmap = bit_map_remove(checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id)?;
 
-    if config_res != config_output || checker_bond_res != checker_bond_output {
-        return Err(Error::Wrong);
+    if config_input.checker_total_count >= config_input.checker_threshold {
+        // check if time interval passed limit
+        let config_timestamp = decode_u64(load_header(1, Source::Input)?.as_reader().raw().timestamp().raw_data()).unwrap();
+        let time_proof = QueryIter::new(load_header, Source::HeaderDep).find(|header| {
+            let timestamp = decode_u64(header.as_reader().raw().timestamp().raw_data()).unwrap();
+            timestamp - config_timestamp >= config_input.update_interval.into()
+        });
+        if time_proof.is_none() {
+            return Err(Error::SidechainConfigMismatch);
+        }
     }
 
+    if config_res.chain_id != witness.chain_id || config_res != config_output {
+        return Err(Error::SidechainConfigMismatch);
+    }
+    if checker_bond_res_lock_args != checker_bond_output_lock_args || checker_bond_input != checker_bond_output {
+        return Err(Error::CheckerBondMismatch);
+    }
     if checker_info_input.chain_id != witness.chain_id
         || checker_info_input.checker_id != witness.checker_id
+        || checker_info_input.checker_public_key_hash != signer
         || checker_info_input.mode != CheckerInfoCellMode::Idle
     {
-        return Err(Error::Wrong);
+        return Err(Error::CheckerInfoMismatch);
     }
 
     Ok(())
