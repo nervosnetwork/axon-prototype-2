@@ -11,3 +11,5 @@ pub mod collator_refresh_task;
 pub mod collator_submit_challenge;
 pub mod collator_submit_task;
 pub mod collator_unlock_bond;
+
+pub mod code_cell_witness;

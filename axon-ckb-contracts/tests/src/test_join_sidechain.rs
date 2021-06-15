@@ -111,9 +111,7 @@ fn test_success() {
         checker_info_output.serialize(),
     ];
 
-    let mut witness = CheckerJoinSidechainWitness::default();
-    witness.pattern = 5u8;
-
+    let witness = CheckerJoinSidechainWitness::default();
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 
     // build transaction

@@ -1,9 +1,7 @@
 use crate::{check_args_len, decode_u8, FromRaw};
 
 const CODE_TYPE_ARGS_LEN: usize = 33;
-const CODE_TYPE_WITNESS_LEN_MIN: usize = 1;
 const CODE_LOCK_ARGS_LEN: usize = 20;
-const CODE_LOCK_WITNESS_LEN: usize = 33;
 /*
 
     Code Cell
@@ -37,23 +35,6 @@ impl FromRaw for CodeCellTypeArgs {
             chain_id,
             /* who_public_key */
         })
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct CodeCellTypeWitness {
-    pub pattern: u8,
-}
-
-impl FromRaw for CodeCellTypeWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Option<CodeCellTypeWitness> {
-        if witness_raw_data.len() < CODE_TYPE_WITNESS_LEN_MIN {
-            return None;
-        }
-
-        let pattern = decode_u8(&witness_raw_data[0..1])?;
-
-        Some(CodeCellTypeWitness { pattern })
     }
 }
 

@@ -15,7 +15,6 @@ pub enum Error {
     // MissingSignature,
     SignatureMismatch,
     MissingWitness,
-    // UnknownPattern,
     // PatternCollision,
     // PatternInvalid,
     ChainIdBitMapNotZero,

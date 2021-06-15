@@ -1,12 +1,12 @@
-use core::default::Default;
+use core::{convert::TryInto, default::Default};
 
-use crate::{decode_u8, encode_u8, FromRaw, Serialize};
+use crate::{decode_u8, encode_u8, pattern::Pattern, FromRaw, Serialize};
 
 const CHECKER_JOIN_SIDECHAIN_WITNESS_LEN: usize = 3;
 
 #[derive(Debug)]
 pub struct CheckerJoinSidechainWitness {
-    pub pattern:    u8,
+    pattern:        Pattern,
     pub chain_id:   u8,
     pub checker_id: u8,
 }
@@ -14,7 +14,7 @@ pub struct CheckerJoinSidechainWitness {
 impl Default for CheckerJoinSidechainWitness {
     fn default() -> Self {
         Self {
-            pattern:    0,
+            pattern:    Pattern::CheckerJoinSidechain,
             chain_id:   0,
             checker_id: 0,
         }
@@ -27,7 +27,7 @@ impl FromRaw for CheckerJoinSidechainWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?;
+        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
         let chain_id = decode_u8(&witness_raw_data[1..2])?;
         let checker_id = decode_u8(&witness_raw_data[2..3])?;
 
@@ -45,7 +45,7 @@ impl Serialize for CheckerJoinSidechainWitness {
     fn serialize(&self) -> Self::RawType {
         let mut buf = [0u8; CHECKER_JOIN_SIDECHAIN_WITNESS_LEN];
 
-        buf[0..1].copy_from_slice(&encode_u8(self.pattern));
+        buf[0..1].copy_from_slice(&encode_u8(self.pattern as u8));
         buf[1..2].copy_from_slice(&encode_u8(self.chain_id));
         buf[2..3].copy_from_slice(&encode_u8(self.checker_id));
 

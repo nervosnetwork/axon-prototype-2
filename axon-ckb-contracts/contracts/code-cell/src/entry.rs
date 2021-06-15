@@ -17,14 +17,14 @@ use ckb_std::{
 use common::pattern::{
     is_admin_create_sidechain, is_checker_bond_deposit, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
-    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond, Pattern,
+    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
 };
 use common::{bit_map_add, bit_map_marked, bit_map_remove, EMPTY_BIT_MAP};
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
-        code::{CodeCellLockArgs, CodeCellTypeWitness},
+        code::CodeCellLockArgs,
         muse_token::MuseTokenData,
         sidechain_bond::SidechainBondCellData,
         sidechain_config::SidechainConfigCellData,
@@ -34,13 +34,14 @@ use common_raw::{
         task::{TaskCellData, TaskCellMode},
     },
     decode_u64,
+    pattern::Pattern,
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_join_sidechain::CheckerJoinSidechainWitness,
         checker_publish_challenge::CheckerPublishChallengeWitness, checker_quit_sidechain::CheckerQuitSidechainWitness,
         checker_submit_challenge::CheckerSubmitChallengeWitness, checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
-        collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
-        collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
-        collator_unlock_bond::CollatorUnlockBondWitness,
+        code_cell_witness::CodeCellTypeWitness, collator_publish_task::CollatorPublishTaskWitness,
+        collator_refresh_task::CollatorRefreshTaskWitness, collator_submit_challenge::CollatorSubmitChallengeWitness,
+        collator_submit_task::CollatorSubmitTaskWitness, collator_unlock_bond::CollatorUnlockBondWitness,
     },
     FromRaw,
 };
@@ -56,12 +57,12 @@ pub fn main() -> Result<(), Error> {
         .ok_or(Error::Encoding)?
         .public_key_hash;
 
-    let witness_args = load_witness_args(0, Source::GroupInput)?;
-    let witness_args_input_type = witness_args.input_type().to_opt().ok_or(Error::MissingWitness)?;
+    let witness = load_witness_args(0, Source::GroupInput)?;
+    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
 
-    let pattern = CodeCellTypeWitness::from_raw(witness_args_input_type.as_reader().raw_data()).ok_or(Error::Encoding)?;
+    let witness = CodeCellTypeWitness::from_raw(witness.as_reader().raw_data()).ok_or(Error::Encoding)?;
 
-    match pattern.pattern.into() {
+    match witness.pattern() {
         /*
         CheckerBondDeposit
 

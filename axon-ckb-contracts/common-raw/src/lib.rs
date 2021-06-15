@@ -2,6 +2,7 @@
 #![no_std]
 
 pub mod cell;
+pub mod pattern;
 pub mod witness;
 
 pub const SUDT_CODEHASH: [u8; 32] = [0; 32];
