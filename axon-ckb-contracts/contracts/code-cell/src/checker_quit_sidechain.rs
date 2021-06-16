@@ -61,7 +61,10 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     if config_res.chain_id != witness.chain_id || config_res != config_output {
         return Err(Error::SidechainConfigMismatch);
     }
-    if checker_bond_res_lock_args != checker_bond_output_lock_args || checker_bond_input != checker_bond_output {
+    if checker_bond_res_lock_args != checker_bond_output_lock_args
+        || checker_bond_input_lock_args.checker_lock_arg != signer
+        || checker_bond_input != checker_bond_output
+    {
         return Err(Error::CheckerBondMismatch);
     }
     if checker_info_input.chain_id != witness.chain_id

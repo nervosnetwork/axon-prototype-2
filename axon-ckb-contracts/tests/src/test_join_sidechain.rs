@@ -48,6 +48,8 @@ fn test_success() {
 
     // prepare scripts
     let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
+    checker_bond_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+
     let checker_bond_lock_input_script = builder
         .context
         .build_script(&always_success_code, checker_bond_lock_args.serialize())
