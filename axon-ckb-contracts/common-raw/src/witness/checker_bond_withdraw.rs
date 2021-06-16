@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use crate::{decode_u8, encode_u8, pattern::Pattern, FromRaw, Serialize};
+use crate::{pattern::Pattern, FromRaw, Serialize};
 
 const CHECKER_BOND_WITHDRAW_WITNESS_LEN: usize = 1;
 
@@ -23,7 +23,7 @@ impl FromRaw for CheckerBondWithdrawWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
+        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
 
         Some(CheckerBondWithdrawWitness { pattern })
     }
@@ -33,6 +33,6 @@ impl Serialize for CheckerBondWithdrawWitness {
     type RawType = [u8; CHECKER_BOND_WITHDRAW_WITNESS_LEN];
 
     fn serialize(&self) -> Self::RawType {
-        encode_u8(self.pattern as u8)
+        (self.pattern as u8).serialize()
     }
 }

@@ -1,7 +1,7 @@
 use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use crate::{check_args_len, decode_u128, decode_u16, decode_u8, encode_u128, encode_u16, encode_u8, FromRaw, Serialize};
+use crate::{check_args_len, FromRaw, Serialize};
 
 const TASK_DATA_LEN: usize = 85;
 const TASK_TYPE_ARGS_LEN: usize = 1;
@@ -60,18 +60,18 @@ impl FromRaw for TaskCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Option<TaskCellData> {
         check_args_len(cell_raw_data.len(), TASK_DATA_LEN)?;
 
-        let chain_id = decode_u8(&cell_raw_data[0..1])?;
-        let version = decode_u8(&cell_raw_data[1..2])?;
-        let check_block_height_from = decode_u128(&cell_raw_data[2..18])?;
-        let check_block_height_to = decode_u128(&cell_raw_data[18..34])?;
+        let chain_id = u8::from_raw(&cell_raw_data[0..1])?;
+        let version = u8::from_raw(&cell_raw_data[1..2])?;
+        let check_block_height_from = u128::from_raw(&cell_raw_data[2..18])?;
+        let check_block_height_to = u128::from_raw(&cell_raw_data[18..34])?;
 
         let mut check_block_hash_to = [0u8; 32];
         check_block_hash_to.copy_from_slice(&cell_raw_data[34..66]);
 
-        let check_data_size = decode_u128(&cell_raw_data[66..82])?;
-        let refresh_interval = decode_u16(&cell_raw_data[82..84])?;
+        let check_data_size = u128::from_raw(&cell_raw_data[66..82])?;
+        let refresh_interval = u16::from_raw(&cell_raw_data[82..84])?;
 
-        let mode_u8 = decode_u8(&cell_raw_data[84..85])?;
+        let mode_u8 = u8::from_raw(&cell_raw_data[84..85])?;
         let mode: TaskCellMode = mode_u8.try_into().ok()?;
 
         Some(TaskCellData {
@@ -93,17 +93,17 @@ impl Serialize for TaskCellData {
     fn serialize(&self) -> Self::RawType {
         let mut buf = [0u8; TASK_DATA_LEN];
 
-        buf[0..1].copy_from_slice(&encode_u8(self.chain_id));
-        buf[1..2].copy_from_slice(&encode_u8(self.version));
-        buf[2..18].copy_from_slice(&encode_u128(self.check_block_height_from));
-        buf[18..34].copy_from_slice(&encode_u128(self.check_block_height_to));
+        buf[0..1].copy_from_slice(&self.chain_id.serialize());
+        buf[1..2].copy_from_slice(&self.version.serialize());
+        buf[2..18].copy_from_slice(&self.check_block_height_from.serialize());
+        buf[18..34].copy_from_slice(&self.check_block_height_to.serialize());
 
         buf[34..66].copy_from_slice(&self.check_block_hash_to);
 
-        buf[66..82].copy_from_slice(&encode_u128(self.check_data_size));
-        buf[82..84].copy_from_slice(&encode_u16(self.refresh_interval));
+        buf[66..82].copy_from_slice(&self.check_data_size.serialize());
+        buf[82..84].copy_from_slice(&self.refresh_interval.serialize());
 
-        buf[84..85].copy_from_slice(&encode_u8(self.mode as u8));
+        buf[84..85].copy_from_slice(&(self.mode as u8).serialize());
 
         buf
     }
@@ -118,7 +118,7 @@ impl FromRaw for TaskCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<TaskCellTypeArgs> {
         check_args_len(arg_raw_data.len(), TASK_TYPE_ARGS_LEN)?;
 
-        let chain_id = decode_u8(&arg_raw_data[0..1])?;
+        let chain_id = u8::from_raw(&arg_raw_data[0..1])?;
 
         Some(TaskCellTypeArgs { chain_id })
     }

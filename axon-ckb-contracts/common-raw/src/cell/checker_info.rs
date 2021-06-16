@@ -1,7 +1,7 @@
 use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use crate::{check_args_len, decode_u128, decode_u8, encode_u128, encode_u8, FromRaw, Serialize};
+use crate::{check_args_len, FromRaw, Serialize};
 
 const CHECKER_INFO_DATA_LEN: usize = 563;
 const CHECKER_INFO_TYPE_ARGS_LEN: usize = 33;
@@ -68,9 +68,9 @@ impl FromRaw for CheckerInfoCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Option<CheckerInfoCellData> {
         check_args_len(cell_raw_data.len(), CHECKER_INFO_DATA_LEN)?;
 
-        let chain_id = decode_u8(&cell_raw_data[0..1])?;
-        let checker_id = decode_u8(&cell_raw_data[1..2])?;
-        let unpaid_fee = decode_u128(&cell_raw_data[2..18])?;
+        let chain_id = u8::from_raw(&cell_raw_data[0..1])?;
+        let checker_id = u8::from_raw(&cell_raw_data[1..2])?;
+        let unpaid_fee = u128::from_raw(&cell_raw_data[2..18])?;
 
         let mut rpc_url = [0u8; 512];
         rpc_url.copy_from_slice(&cell_raw_data[18..530]);
@@ -78,7 +78,7 @@ impl FromRaw for CheckerInfoCellData {
         let mut checker_public_key_hash = [0u8; 20];
         checker_public_key_hash.copy_from_slice(&cell_raw_data[530..550]);
 
-        let mode_u8 = decode_u8(&cell_raw_data[550..551])?;
+        let mode_u8 = u8::from_raw(&cell_raw_data[550..551])?;
         let mode: CheckerInfoCellMode = mode_u8.try_into().ok()?;
 
         Some(CheckerInfoCellData {
@@ -98,14 +98,14 @@ impl Serialize for CheckerInfoCellData {
     fn serialize(&self) -> Self::RawType {
         let mut buf = [0u8; CHECKER_INFO_DATA_LEN];
 
-        buf[0..1].copy_from_slice(&encode_u8(self.chain_id));
-        buf[1..2].copy_from_slice(&encode_u8(self.checker_id));
-        buf[2..18].copy_from_slice(&encode_u128(self.unpaid_fee));
+        buf[0..1].copy_from_slice(&self.chain_id.serialize());
+        buf[1..2].copy_from_slice(&self.checker_id.serialize());
+        buf[2..18].copy_from_slice(&self.unpaid_fee.serialize());
 
         buf[18..530].copy_from_slice(&self.rpc_url);
         buf[530..550].copy_from_slice(&self.checker_public_key_hash);
 
-        buf[550..551].copy_from_slice(&encode_u8(self.mode as u8));
+        buf[550..551].copy_from_slice(&(self.mode as u8).serialize());
 
         buf
     }
@@ -121,7 +121,7 @@ impl FromRaw for CheckerInfoCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerInfoCellTypeArgs> {
         check_args_len(arg_raw_data.len(), CHECKER_INFO_TYPE_ARGS_LEN)?;
 
-        let chain_id = decode_u8(&arg_raw_data[0..1])?;
+        let chain_id = u8::from_raw(&arg_raw_data[0..1])?;
 
         let mut checker_public_key = [0u8; 32];
         checker_public_key.copy_from_slice(&arg_raw_data[1..33]);

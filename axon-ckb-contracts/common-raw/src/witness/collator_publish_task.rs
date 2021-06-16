@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use crate::{decode_u128, decode_u8, pattern::Pattern, FromRaw};
+use crate::{pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
 pub struct CollatorPublishTaskWitness {
@@ -15,9 +15,9 @@ impl FromRaw for CollatorPublishTaskWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
-        let chain_id = decode_u8(&witness_raw_data[1..2])?;
-        let bond = decode_u128(&witness_raw_data[2..18])?;
+        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
+        let bond = u128::from_raw(&witness_raw_data[2..18])?;
 
         Some(CollatorPublishTaskWitness { pattern, chain_id, bond })
     }

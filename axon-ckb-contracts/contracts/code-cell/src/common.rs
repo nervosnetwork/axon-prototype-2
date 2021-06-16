@@ -18,7 +18,7 @@ use common_raw::{
         sudt_token::SudtTokenData,
         task::{TaskCellData, TaskCellTypeArgs},
     },
-    decode_u64, FromRaw,
+    FromRaw,
 };
 
 pub struct CellOrigin(pub usize, pub Source);
@@ -90,10 +90,10 @@ macro_rules! load_entities {
 pub fn has_sidechain_config_passed_update_interval(config: SidechainConfigCellData, origin: CellOrigin) -> Result<(), Error> {
     if config.checker_total_count >= config.checker_threshold {
         let CellOrigin(index, source) = origin;
-        let config_timestamp = decode_u64(load_header(index, source)?.as_reader().raw().timestamp().raw_data()).unwrap();
+        let config_timestamp = u64::from_raw(load_header(index, source)?.as_reader().raw().timestamp().raw_data()).unwrap();
 
         let time_proof = QueryIter::new(load_header, Source::HeaderDep).find(|header| {
-            let timestamp = decode_u64(header.as_reader().raw().timestamp().raw_data()).unwrap();
+            let timestamp = u64::from_raw(header.as_reader().raw().timestamp().raw_data()).unwrap();
             timestamp - config_timestamp >= config.update_interval.into()
         });
 
