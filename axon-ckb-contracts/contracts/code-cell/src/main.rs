@@ -12,9 +12,12 @@
 
 // define modules
 #[macro_use]
+mod cell;
+#[macro_use]
 mod common;
 mod entry;
 mod error;
+mod pattern;
 
 mod checker_bond_withdraw;
 mod checker_join_sidechain;

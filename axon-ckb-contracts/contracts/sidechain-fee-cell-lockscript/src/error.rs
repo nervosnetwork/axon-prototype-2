@@ -1,5 +1,4 @@
 use ckb_std::error::SysError;
-use common::error::CommonError;
 
 #[repr(i8)]
 pub enum Error {
@@ -7,6 +6,7 @@ pub enum Error {
     ItemMissing,
     LengthNotEnough,
     Encoding,
+    CodeCellMissing,
 }
 
 impl From<SysError> for Error {
@@ -19,11 +19,5 @@ impl From<SysError> for Error {
             Encoding => Self::Encoding,
             Unknown(err_code) => panic!("unexpected sys error {}", err_code),
         }
-    }
-}
-
-impl From<CommonError> for Error {
-    fn from(_: CommonError) -> Self {
-        unimplemented!()
     }
 }

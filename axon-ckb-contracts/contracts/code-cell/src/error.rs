@@ -1,5 +1,4 @@
-use ckb_std::{debug, error::SysError};
-use common::error::CommonError;
+use ckb_std::error::SysError;
 
 /// Error
 #[repr(i8)]
@@ -9,7 +8,13 @@ pub enum Error {
     ItemMissing,
     LengthNotEnough,
     Encoding,
-    CommonError,
+
+    MissingTypeScript,
+    CodeHashMismatch,
+    HashTypeMismatch,
+    CellNumberMismatch,
+
+    GlobalConfigMissed,
     // PatternWitnessTypeMissing,
     // Secp256k1Error,
     // BusyChecker,
@@ -39,12 +44,5 @@ impl From<SysError> for Error {
             Encoding => Self::Encoding,
             Unknown(err_code) => panic!("unexpected sys error {}", err_code),
         }
-    }
-}
-
-impl From<CommonError> for Error {
-    fn from(_err: CommonError) -> Self {
-        debug!("CommonError: {:#?}", _err);
-        Self::CommonError
     }
 }

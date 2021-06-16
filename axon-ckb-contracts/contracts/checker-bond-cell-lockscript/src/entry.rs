@@ -2,9 +2,9 @@ use core::result::Result;
 
 use crate::error::Error;
 
-use common::pattern::check_code_cell;
+use common::check_code_cell;
 
 pub fn main() -> Result<(), Error> {
-    check_code_cell()?;
+    check_code_cell().ok_or(Error::CodeCellMissing)?;
     Ok(())
 }

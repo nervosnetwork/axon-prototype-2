@@ -1,179 +1,18 @@
-use crate::cell::{check_global_cell, CellOrigin, LockedTypedSudtCell, TypedCell, TypedSudtCell};
-use crate::error::CommonError;
-use crate::{get_input_cell_count, get_output_cell_count};
+use crate::{
+    cell::{CellOrigin, LockedTypedSudtCell, TypedCell, TypedSudtCell},
+    common::*,
+    error::Error,
+};
 
 use ckb_std::ckb_constants::Source;
 
 use common_raw::cell::{
-    checker_bond::CheckerBondCellData, checker_info::CheckerInfoCellData, code::CodeCellData, muse_token::MuseTokenData,
-    sidechain_bond::SidechainBondCellData, sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData,
-    sidechain_state::SidechainStateCellData, sudt_token::SudtTokenData, task::TaskCellData,
+    checker_info::CheckerInfoCellData, code::CodeCellData, muse_token::MuseTokenData, sidechain_bond::SidechainBondCellData,
+    sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData, sidechain_state::SidechainStateCellData,
+    sudt_token::SudtTokenData, task::TaskCellData,
 };
-use common_raw::witness::checker_submit_task::CheckerSubmitTaskWitness;
 
-macro_rules! check_cells {
-    ($global: expr, {$($type: ty: $origin: expr), * $(,)?} $(,)?) => {
-        $(<$type>::check($origin, $global)?;)*
-    }
-}
-
-pub fn is_checker_bond_deposit() -> Result<(), CommonError> {
-    /*
-    CheckerBondDeposit
-
-    Muse Token Cell             ->          Check Bond Cell
-
-    No way to monitor this pattern, regard all check bond cell trustless
-
-     */
-    Ok(())
-}
-
-pub fn is_checker_bond_withdraw() -> Result<(), CommonError> {
-    /*
-    CheckerBondWithdraw
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Bond Cell           ->         Muse Token Cell
-
-     */
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 2 || output_count != 2 {
-        return Err(CommonError::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerBondCellData: CellOrigin(1, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            MuseTokenData: CellOrigin(1, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-
-pub fn is_checker_join_sidechain() -> Result<(), CommonError> {
-    /*
-    CheckerJoinSidechain,
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->         Code Cell
-    Sidechain Config Cell       ->          Sidechain Config Cell
-    Checker Bond Cell           ->          Checker Bond Cell
-    Null                        ->          Checker Info Cell
-
-    */
-
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count != 4 {
-        return Err(CommonError::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            CodeCellData: CellOrigin(0, Source::Input),
-            SidechainConfigCellData: CellOrigin(1, Source::Input),
-            CheckerBondCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            SidechainConfigCellData: CellOrigin(1, Source::Output),
-            CheckerBondCellData: CellOrigin(2, Source::Output),
-            CheckerInfoCellData: CellOrigin(3, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-
-pub fn is_checker_quit_sidechain() -> Result<(), CommonError> {
-    /*
-    CheckerQuitSidechain
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain Config Cell       ->          Sidechain Config Cell
-    Checker Bond Cell           ->          Checker Bond Cell
-    Checker Info Cell           ->          Null
-    */
-
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 4 || output_count != 3 {
-        return Err(CommonError::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            CodeCellData: CellOrigin(0, Source::Input),
-            SidechainConfigCellData: CellOrigin(1, Source::Input),
-            CheckerBondCellData: CellOrigin(2, Source::Input),
-            CheckerInfoCellData: CellOrigin(3, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            SidechainConfigCellData: CellOrigin(1, Source::Output),
-            CheckerBondCellData: CellOrigin(2, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-
-pub fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), CommonError> {
-    /*
-    CheckerSubmitTask,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          Null
-
-    */
-
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count != 2 {
-        return Err(CommonError::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerInfoCellData: CellOrigin(1, Source::Input),
-            TaskCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            CheckerInfoCellData: CellOrigin(1, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-
-pub fn is_checker_publish_challenge() -> Result<(), CommonError> {
+pub fn is_checker_publish_challenge() -> Result<(), Error> {
     /*
     CheckerPublishChallenge,
 
@@ -192,7 +31,7 @@ pub fn is_checker_publish_challenge() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count != 3 || output_count < 4 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -214,7 +53,7 @@ pub fn is_checker_publish_challenge() -> Result<(), CommonError> {
     Ok(())
 }
 
-pub fn is_checker_submit_challenge() -> Result<(), CommonError> {
+pub fn is_checker_submit_challenge() -> Result<(), Error> {
     /*
     CheckerSubmitChallenge,
 
@@ -233,7 +72,7 @@ pub fn is_checker_submit_challenge() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count != 3 || output_count != 2 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -251,7 +90,7 @@ pub fn is_checker_submit_challenge() -> Result<(), CommonError> {
     Ok(())
 }
 
-pub fn is_checker_take_beneficiary() -> Result<(), CommonError> {
+pub fn is_checker_take_beneficiary() -> Result<(), Error> {
     /*
     CheckerTakeBeneficiary,
 
@@ -270,7 +109,7 @@ pub fn is_checker_take_beneficiary() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count != 4 || output_count != 4 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -289,7 +128,7 @@ pub fn is_checker_take_beneficiary() -> Result<(), CommonError> {
 
     Ok(())
 }
-pub fn is_admin_create_sidechain() -> Result<(), CommonError> {
+pub fn is_admin_create_sidechain() -> Result<(), Error> {
     /*
     AdminCreateSidechain,
 
@@ -307,7 +146,7 @@ pub fn is_admin_create_sidechain() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count != 2 || output_count != 3 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -323,7 +162,7 @@ pub fn is_admin_create_sidechain() -> Result<(), CommonError> {
     Ok(())
 }
 
-pub fn is_collator_publish_task() -> Result<(), CommonError> {
+pub fn is_collator_publish_task() -> Result<(), Error> {
     /*
     CollatorPublishTask,
 
@@ -342,7 +181,7 @@ pub fn is_collator_publish_task() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count != 3 || output_count < 4 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -364,7 +203,7 @@ pub fn is_collator_publish_task() -> Result<(), CommonError> {
 
     Ok(())
 }
-pub fn is_collator_submit_task() -> Result<(), CommonError> {
+pub fn is_collator_submit_task() -> Result<(), Error> {
     /*
     CollatorSubmitTask,
 
@@ -384,7 +223,7 @@ pub fn is_collator_submit_task() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count < 4 || output_count < 4 || input_count != output_count {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -411,7 +250,7 @@ pub fn is_collator_submit_task() -> Result<(), CommonError> {
     Ok(())
 }
 
-pub fn is_collator_submit_challenge() -> Result<(), CommonError> {
+pub fn is_collator_submit_challenge() -> Result<(), Error> {
     /*
     CollatorSubmitChallenge,
 
@@ -431,7 +270,7 @@ pub fn is_collator_submit_challenge() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count < 5 || output_count < 5 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -459,7 +298,7 @@ pub fn is_collator_submit_challenge() -> Result<(), CommonError> {
     Ok(())
 }
 
-pub fn is_collator_refresh_task() -> Result<(), CommonError> {
+pub fn is_collator_refresh_task() -> Result<(), Error> {
     /*
     CollatorRefreshTask,
 
@@ -477,7 +316,7 @@ pub fn is_collator_refresh_task() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count < 2 || output_count < 2 || input_count != output_count {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -500,7 +339,7 @@ pub fn is_collator_refresh_task() -> Result<(), CommonError> {
     Ok(())
 }
 
-pub fn is_collator_unlock_bond() -> Result<(), CommonError> {
+pub fn is_collator_unlock_bond() -> Result<(), Error> {
     /*
     CollatorUnlockBond,
 
@@ -518,7 +357,7 @@ pub fn is_collator_unlock_bond() -> Result<(), CommonError> {
     let output_count = get_output_cell_count();
 
     if input_count < 2 || output_count < 2 {
-        return Err(CommonError::CellNumberMismatch);
+        return Err(Error::CellNumberMismatch);
     }
 
     check_cells! {
@@ -530,62 +369,6 @@ pub fn is_collator_unlock_bond() -> Result<(), CommonError> {
             SidechainBondCellData: CellOrigin(1, Source::Input),
             CodeCellData: CellOrigin(0, Source::Output),
             SudtTokenData: CellOrigin(1, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-pub fn is_create_code_cell() -> Result<(), CommonError> {
-    /*
-    CreateCodeCell,
-
-    Dep:    0 Global Config Cell
-
-    CKB Cell                    ->          Code Cell
-
-    */
-
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-
-    if input_count < 1 {
-        return Err(CommonError::CellNumberMismatch);
-    }
-    check_cells! {
-        &global,
-        {
-            CodeCellData: CellOrigin(0, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-
-pub fn check_code_cell() -> Result<(), CommonError> {
-    /*
-    CollatorUnlockBond,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 .....
-    Code Cell                   ->          Code Cell
-    ...
-    */
-
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count < 1 || output_count < 2 {
-        return Err(CommonError::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            CodeCellData: CellOrigin(0, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
         },
     };
 

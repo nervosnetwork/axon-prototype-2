@@ -2,7 +2,7 @@ use core::result::Result;
 
 use crate::error::Error;
 
-use common::pattern::check_code_cell;
+use common::check_code_cell;
 
 pub fn main() -> Result<(), Error> {
     /*
@@ -13,7 +13,7 @@ pub fn main() -> Result<(), Error> {
     3. CollatorSubmitChallenge
     */
 
-    check_code_cell()?;
+    check_code_cell().ok_or(Error::CodeCellMissing)?;
 
     Ok(())
 }

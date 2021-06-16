@@ -1,90 +1,26 @@
-use core::result::Result;
-
-use crate::error::Error;
+use crate::{cell::CellOrigin, error::Error};
 
 use ckb_std::ckb_constants::Source;
-use ckb_std::high_level::{load_cell_data, load_cell_lock, load_cell_type, load_header, QueryIter};
+use ckb_std::high_level::{load_cell, load_header, QueryIter};
+
 use common_raw::{
-    cell::{
-        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
-        code::{CodeCellLockArgs, CodeCellTypeArgs},
-        global_config::GlobalConfigCellData,
-        muse_token::MuseTokenData,
-        sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
-        sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
-        sudt_token::SudtTokenData,
-        task::{TaskCellData, TaskCellTypeArgs},
-    },
+    cell::{global_config::GlobalConfigCellData, sidechain_config::SidechainConfigCellData},
     FromRaw,
 };
 
-pub struct CellOrigin(pub usize, pub Source);
+use bit_vec::*;
 
-pub trait LoadableCell {
-    fn load(origin: CellOrigin) -> Result<Self, Error>
-    where
-        Self: Sized + FromRaw,
-    {
-        let CellOrigin(index, source) = origin;
-        let data = load_cell_data(index, source)?;
-        Self::from_raw(&data).ok_or(Error::Encoding)
-    }
+pub const CODE_INPUT: CellOrigin = CellOrigin(0, Source::Input);
+pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
+
+pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
+
+pub fn get_input_cell_count() -> usize {
+    QueryIter::new(load_cell, Source::Input).count()
 }
 
-impl LoadableCell for CheckerBondCellData {}
-impl LoadableCell for CheckerInfoCellData {}
-impl LoadableCell for GlobalConfigCellData {}
-impl LoadableCell for MuseTokenData {}
-impl LoadableCell for SidechainBondCellData {}
-impl LoadableCell for SidechainConfigCellData {}
-impl LoadableCell for SidechainFeeCellData {}
-impl LoadableCell for SidechainStateCellData {}
-impl LoadableCell for SudtTokenData {}
-impl LoadableCell for TaskCellData {}
-
-pub trait LoadableLockArgs {
-    fn load(origin: CellOrigin) -> Result<Self, Error>
-    where
-        Self: Sized + FromRaw,
-    {
-        let CellOrigin(index, source) = origin;
-        let data = load_cell_lock(index, source)?.args();
-        Self::from_raw(data.as_reader().raw_data()).ok_or(Error::Encoding)
-    }
-}
-
-impl LoadableLockArgs for CheckerBondCellLockArgs {}
-impl LoadableLockArgs for CodeCellLockArgs {}
-impl LoadableLockArgs for SidechainBondCellLockArgs {}
-impl LoadableLockArgs for SidechainFeeCellLockArgs {}
-
-pub trait LoadableTypeArgs {
-    fn load(origin: CellOrigin) -> Result<Self, Error>
-    where
-        Self: Sized + FromRaw,
-    {
-        let CellOrigin(index, source) = origin;
-        let data = load_cell_type(index, source)?.ok_or(Error::TypeScriptMissed)?.args();
-        Self::from_raw(data.as_reader().raw_data()).ok_or(Error::Encoding)
-    }
-}
-
-impl LoadableLockArgs for CheckerInfoCellTypeArgs {}
-impl LoadableTypeArgs for CodeCellTypeArgs {}
-impl LoadableTypeArgs for SidechainConfigCellTypeArgs {}
-impl LoadableTypeArgs for SidechainStateCellTypeArgs {}
-impl LoadableTypeArgs for TaskCellTypeArgs {}
-
-#[macro_export]
-macro_rules! load_entities {
-    ($($type: ty: $origin: expr), * $(,)?) => {
-        (
-            $(<$type>::load($origin)?,)*
-        )
-    }
+pub fn get_output_cell_count() -> usize {
+    QueryIter::new(load_cell, Source::Output).count()
 }
 
 pub fn has_sidechain_config_passed_update_interval(config: SidechainConfigCellData, origin: CellOrigin) -> Result<(), Error> {
@@ -103,4 +39,54 @@ pub fn has_sidechain_config_passed_update_interval(config: SidechainConfigCellDa
     }
 
     Ok(())
+}
+
+#[macro_export]
+macro_rules! check_cells {
+    ($global: expr, {$($type: ty: $origin: expr), * $(,)?} $(,)?) => {
+        $(<$type>::check($origin, $global)?;)*
+    }
+}
+
+pub fn bit_map_add(input: &[u8; 32], checker_id: u8) -> Option<[u8; 32]> {
+    let mut input = BitVec::from_bytes(&input[..]);
+
+    //should be false
+    if input.get(checker_id as usize)? {
+        return None;
+    }
+
+    input.set(checker_id as usize, true);
+
+    let mut ret = [0u8; 32];
+    ret.copy_from_slice(input.to_bytes().as_slice());
+
+    Some(ret)
+}
+
+pub fn bit_map_remove(input: [u8; 32], checker_id: u8) -> Option<[u8; 32]> {
+    let mut input = BitVec::from_bytes(&input[..]);
+
+    //should be true
+    if !input.get(checker_id as usize)? {
+        return None;
+    }
+
+    input.set(checker_id as usize, false);
+
+    let mut ret = [0u8; 32];
+    ret.copy_from_slice(&input.to_bytes().as_slice()[0..32]);
+
+    Some(ret)
+}
+
+//check if given number is bit-marked in input array
+pub fn bit_map_marked(input: [u8; 32], checker_id: u8) -> Option<bool> {
+    let input = BitVec::from_bytes(&input[..]);
+
+    Some(input.get(checker_id as usize)?)
+}
+
+pub fn check_global_cell() -> Result<GlobalConfigCellData, Error> {
+    common::check_global_cell().ok_or(Error::GlobalConfigMissed)
 }
