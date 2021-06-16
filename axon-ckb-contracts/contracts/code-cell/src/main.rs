@@ -16,6 +16,7 @@ mod common;
 mod entry;
 mod error;
 
+mod checker_bond_withdraw;
 mod checker_join_sidechain;
 mod checker_quit_sidechain;
 

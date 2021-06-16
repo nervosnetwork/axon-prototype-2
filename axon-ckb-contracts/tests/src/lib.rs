@@ -15,6 +15,8 @@ mod secp256k1;
 #[cfg(test)]
 mod test_always_success;
 #[cfg(test)]
+mod test_checker_withdraw;
+#[cfg(test)]
 mod test_join_sidechain;
 #[cfg(test)]
 mod test_quit_sidechain;
