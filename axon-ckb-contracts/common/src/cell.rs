@@ -2,26 +2,16 @@ use core::result::Result;
 
 use crate::error::CommonError;
 use crate::{GLOBAL_CONFIG_TYPE_HASH, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS};
-use alloc::vec::Vec;
 use ckb_std::ckb_constants::Source;
-use ckb_std::ckb_types::prelude::{Entity, Unpack};
-use ckb_std::high_level::{load_cell, load_cell_data, load_cell_type_hash};
-use common_raw::{cell::global_config::GlobalConfigCellData, FromRaw};
-
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
-pub enum CellType {
-    Unknown,
-    Sudt,
-    MuseToken,
-    CheckerBond,
-    CheckerInfo,
-    SidechainConfig,
-    SidechainState,
-    Task,
-    SidechainFee,
-    SidechainBond,
-    Code,
-}
+use ckb_std::high_level::{load_cell_data, load_cell_lock, load_cell_type, load_cell_type_hash};
+use common_raw::{
+    cell::{
+        checker_bond::CheckerBondCellData, checker_info::CheckerInfoCellData, code::CodeCellData, global_config::GlobalConfigCellData,
+        muse_token::MuseTokenData, sidechain_bond::SidechainBondCellData, sidechain_config::SidechainConfigCellData,
+        sidechain_fee::SidechainFeeCellData, sidechain_state::SidechainStateCellData, sudt_token::SudtTokenData, task::TaskCellData,
+    },
+    FromRaw,
+};
 
 //the dep0 must be global cell
 pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
@@ -43,151 +33,122 @@ pub fn check_global_cell() -> Result<GlobalConfigCellData, CommonError> {
     Ok(global_config_data)
 }
 
-pub fn check_cells(requests: Vec<(CellType, usize, Source)>, global: &GlobalConfigCellData) -> Result<(), CommonError> {
-    for (cell_type, index, source) in requests {
-        check_cell(cell_type, index, source, global)?;
+pub struct CellOrigin(pub usize, pub Source);
+
+macro_rules! check_script {
+    ($script: expr, $code_hash: expr, $hash_type: expr) => {
+        if $script.as_reader().code_hash().raw_data() != $code_hash {
+            return Err(CommonError::CodeHashMismatch);
+        }
+        if $script.as_reader().hash_type().as_slice()[0] != $hash_type {
+            return Err(CommonError::HashTypeMismatch);
+        }
+    };
+    ($script: expr, $code_hash: expr, $hash_type: expr, $args: expr) => {
+        check_script!($script, $code_hash, $hash_type);
+
+        if $script.as_reader().args().raw_data() != $args {
+            return Err(CommonError::HashTypeMismatch);
+        }
+    };
+}
+
+pub trait TypedCell {
+    fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8);
+
+    fn check(origin: CellOrigin, global: &GlobalConfigCellData) -> Result<(), CommonError> {
+        let CellOrigin(index, source) = origin;
+        let script = load_cell_type(index, source)?.ok_or(CommonError::MissingTypeScript)?;
+
+        let (code_hash, hash_type) = Self::type_script_info(global);
+
+        check_script!(script, code_hash, hash_type);
+
+        Ok(())
     }
+}
+
+impl TypedCell for CodeCellData {
+    fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.code_cell_type_codehash, global.code_cell_type_hashtype)
+    }
+}
+
+impl TypedCell for SidechainConfigCellData {
+    fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (
+            global.sidechain_config_cell_type_codehash,
+            global.sidechain_config_cell_type_hashtype,
+        )
+    }
+}
+
+impl TypedCell for SidechainStateCellData {
+    fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.sidechain_state_cell_type_codehash, global.sidechain_state_cell_type_hashtype)
+    }
+}
+
+impl TypedCell for TaskCellData {
+    fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.task_cell_type_codehash, global.task_cell_type_hashtype)
+    }
+}
+
+impl TypedCell for CheckerInfoCellData {
+    fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.checker_info_cell_type_codehash, global.checker_info_cell_type_hashtype)
+    }
+}
+
+fn check_sudt_type_script(index: usize, source: Source) -> Result<(), CommonError> {
+    let script = load_cell_type(index, source)?.ok_or(CommonError::MissingTypeScript)?;
+    check_script!(script, SUDT_CODEHASH, SUDT_HASHTYPE, SUDT_MUSE_ARGS);
 
     Ok(())
 }
 
-pub fn check_cell(cell_type: CellType, index: usize, source: Source, global: &GlobalConfigCellData) -> Result<(), CommonError> {
-    let cell = load_cell(index, source)?;
-    let script = cell.type_().to_opt().ok_or(CommonError::MissingTypeScript)?;
-    let codehash = script.code_hash().unpack();
-    let hashtype = script.hash_type().as_slice()[0];
+pub trait TypedSudtCell {
+    fn check(origin: CellOrigin, _: &GlobalConfigCellData) -> Result<(), CommonError> {
+        let CellOrigin(index, source) = origin;
 
-    match cell_type {
-        CellType::Unknown => Err(CommonError::UnknownCellType),
-        CellType::Code => {
-            if codehash != global.code_cell_type_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
-            if hashtype != global.code_cell_type_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::Sudt => {
-            if codehash != SUDT_CODEHASH {
-                return Err(CommonError::CodeHashMismatch);
-            }
+        check_sudt_type_script(index, source)
+    }
+}
 
-            if hashtype != SUDT_HASHTYPE || script.as_reader().args().raw_data() != SUDT_MUSE_ARGS {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::MuseToken => {
-            if codehash != SUDT_CODEHASH {
-                return Err(CommonError::CodeHashMismatch);
-            }
+impl TypedSudtCell for MuseTokenData {}
+impl TypedSudtCell for SudtTokenData {}
 
-            if hashtype != SUDT_HASHTYPE || script.as_reader().args().raw_data() != SUDT_MUSE_ARGS {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::SidechainBond => {
-            if codehash != SUDT_CODEHASH {
-                return Err(CommonError::CodeHashMismatch);
-            }
+pub trait LockedTypedSudtCell {
+    fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8);
 
-            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
-                return Err(CommonError::HashTypeMismatch);
-            }
+    fn check(origin: CellOrigin, global: &GlobalConfigCellData) -> Result<(), CommonError> {
+        let CellOrigin(index, source) = origin;
 
-            let lock_script = cell.lock();
-            let lock_codehash = lock_script.code_hash().unpack();
-            let lock_hashtype = lock_script.hash_type().as_slice()[0];
-            if lock_codehash != global.sidechain_bond_cell_lock_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
+        check_sudt_type_script(index, source)?;
 
-            if lock_hashtype != global.sidechain_bond_cell_lock_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
+        let script = load_cell_lock(index, source)?;
+        let (code_hash, hash_type) = Self::lock_script_info(global);
+        check_script!(script, code_hash, hash_type);
 
-            Ok(())
-        }
-        CellType::CheckerBond => {
-            if codehash != SUDT_CODEHASH {
-                return Err(CommonError::CodeHashMismatch);
-            }
+        Ok(())
+    }
+}
 
-            if hashtype != SUDT_HASHTYPE || script.as_reader().args().raw_data() != SUDT_MUSE_ARGS {
-                return Err(CommonError::HashTypeMismatch);
-            }
+impl LockedTypedSudtCell for CheckerBondCellData {
+    fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.checker_bond_cell_lock_codehash, global.checker_bond_cell_lock_hashtype)
+    }
+}
 
-            let lock_script = cell.lock();
-            let lock_codehash = lock_script.code_hash().unpack();
-            let lock_hashtype = lock_script.hash_type().as_slice()[0];
-            if lock_codehash != global.checker_bond_cell_lock_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
+impl LockedTypedSudtCell for SidechainBondCellData {
+    fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.sidechain_bond_cell_lock_codehash, global.sidechain_bond_cell_lock_hashtype)
+    }
+}
 
-            if lock_hashtype != global.checker_bond_cell_lock_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-
-            Ok(())
-        }
-        CellType::CheckerInfo => {
-            if codehash != global.checker_info_cell_type_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
-            if hashtype != global.checker_info_cell_type_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::SidechainConfig => {
-            if codehash != global.sidechain_config_cell_type_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
-            if hashtype != global.sidechain_config_cell_type_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::SidechainState => {
-            if codehash != global.sidechain_state_cell_type_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
-            if hashtype != global.sidechain_state_cell_type_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::Task => {
-            if codehash != global.task_cell_type_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
-            if hashtype != global.task_cell_type_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
-        CellType::SidechainFee => {
-            if codehash != SUDT_CODEHASH {
-                return Err(CommonError::CodeHashMismatch);
-            }
-
-            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
-                return Err(CommonError::HashTypeMismatch);
-            }
-
-            let lock_script = cell.lock();
-            let lock_codehash = lock_script.code_hash().unpack();
-            let lock_hashtype = lock_script.hash_type().as_slice()[0];
-            if lock_codehash != global.sidechain_fee_cell_lock_codehash {
-                return Err(CommonError::CodeHashMismatch);
-            }
-
-            if lock_hashtype != global.sidechain_fee_cell_lock_hashtype {
-                return Err(CommonError::HashTypeMismatch);
-            }
-            Ok(())
-        }
+impl LockedTypedSudtCell for SidechainFeeCellData {
+    fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
+        (global.sidechain_fee_cell_lock_codehash, global.sidechain_fee_cell_lock_hashtype)
     }
 }

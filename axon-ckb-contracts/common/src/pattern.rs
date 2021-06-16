@@ -1,10 +1,21 @@
-use crate::cell::{check_cell, check_cells, check_global_cell, CellType};
+use crate::cell::{check_global_cell, CellOrigin, LockedTypedSudtCell, TypedCell, TypedSudtCell};
 use crate::error::CommonError;
 use crate::{get_input_cell_count, get_output_cell_count};
 
 use ckb_std::ckb_constants::Source;
 
+use common_raw::cell::{
+    checker_bond::CheckerBondCellData, checker_info::CheckerInfoCellData, code::CodeCellData, muse_token::MuseTokenData,
+    sidechain_bond::SidechainBondCellData, sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData,
+    sidechain_state::SidechainStateCellData, sudt_token::SudtTokenData, task::TaskCellData,
+};
 use common_raw::witness::checker_submit_task::CheckerSubmitTaskWitness;
+
+macro_rules! check_cells {
+    ($global: expr, {$($type: ty: $origin: expr), * $(,)?} $(,)?) => {
+        $(<$type>::check($origin, $global)?;)*
+    }
+}
 
 pub fn is_checker_bond_deposit() -> Result<(), CommonError> {
     /*
@@ -37,15 +48,17 @@ pub fn is_checker_bond_withdraw() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::Code, 0, Source::Input),
-            (CellType::CheckerBond, 1, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::MuseToken, 1, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            CheckerBondCellData: CellOrigin(1, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            MuseTokenData: CellOrigin(1, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 
 pub fn is_checker_join_sidechain() -> Result<(), CommonError> {
@@ -70,18 +83,20 @@ pub fn is_checker_join_sidechain() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::Code, 0, Source::Input),
-            (CellType::SidechainConfig, 1, Source::Input),
-            (CellType::CheckerBond, 2, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::SidechainConfig, 1, Source::Output),
-            (CellType::CheckerBond, 2, Source::Output),
-            (CellType::CheckerInfo, 3, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            SidechainConfigCellData: CellOrigin(1, Source::Input),
+            CheckerBondCellData: CellOrigin(2, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SidechainConfigCellData: CellOrigin(1, Source::Output),
+            CheckerBondCellData: CellOrigin(2, Source::Output),
+            CheckerInfoCellData: CellOrigin(3, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 
 pub fn is_checker_quit_sidechain() -> Result<(), CommonError> {
@@ -105,18 +120,20 @@ pub fn is_checker_quit_sidechain() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::Code, 0, Source::Input),
-            (CellType::SidechainConfig, 1, Source::Input),
-            (CellType::CheckerBond, 2, Source::Input),
-            (CellType::CheckerInfo, 3, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::SidechainConfig, 1, Source::Output),
-            (CellType::CheckerBond, 2, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            SidechainConfigCellData: CellOrigin(1, Source::Input),
+            CheckerBondCellData: CellOrigin(2, Source::Input),
+            CheckerInfoCellData: CellOrigin(3, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SidechainConfigCellData: CellOrigin(1, Source::Output),
+            CheckerBondCellData: CellOrigin(2, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 
 pub fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), CommonError> {
@@ -141,17 +158,19 @@ pub fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), 
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, witness.sidechain_config_dep_index, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::CheckerInfo, 1, Source::Input),
-            (CellType::Task, 2, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::CheckerInfo, 1, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            CheckerInfoCellData: CellOrigin(1, Source::Input),
+            TaskCellData: CellOrigin(2, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            CheckerInfoCellData: CellOrigin(1, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 
 pub fn is_checker_publish_challenge() -> Result<(), CommonError> {
@@ -176,20 +195,20 @@ pub fn is_checker_publish_challenge() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::CheckerInfo, 1, Source::Input),
-            (CellType::Task, 2, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::CheckerInfo, 1, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )?;
+        {
+            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            CheckerInfoCellData: CellOrigin(1, Source::Input),
+            TaskCellData: CellOrigin(2, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            CheckerInfoCellData: CellOrigin(1, Source::Output),
+        },
+    };
 
     for x in 2..output_count {
-        check_cell(CellType::Task, x, Source::Output, &global)?;
+        TaskCellData::check(CellOrigin(x, Source::Output), &global)?;
     }
 
     Ok(())
@@ -217,17 +236,17 @@ pub fn is_checker_submit_challenge() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::CheckerInfo, 1, Source::Input),
-            (CellType::Task, 2, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::CheckerInfo, 1, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )?;
+        {
+            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            CheckerInfoCellData: CellOrigin(1, Source::Input),
+            TaskCellData: CellOrigin(2, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            CheckerInfoCellData: CellOrigin(1, Source::Output),
+        },
+    };
 
     Ok(())
 }
@@ -254,19 +273,21 @@ pub fn is_checker_take_beneficiary() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::Code, 0, Source::Input),
-            (CellType::CheckerInfo, 1, Source::Input),
-            (CellType::SidechainFee, 2, Source::Input),
-            (CellType::MuseToken, 3, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::CheckerInfo, 1, Source::Output),
-            (CellType::SidechainFee, 2, Source::Output),
-            (CellType::MuseToken, 3, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            CheckerInfoCellData: CellOrigin(1, Source::Input),
+            SidechainFeeCellData: CellOrigin(2, Source::Input),
+            MuseTokenData: CellOrigin(3, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            CheckerInfoCellData: CellOrigin(1, Source::Output),
+            SidechainFeeCellData: CellOrigin(2, Source::Output),
+            MuseTokenData: CellOrigin(3, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 pub fn is_admin_create_sidechain() -> Result<(), CommonError> {
     /*
@@ -289,15 +310,17 @@ pub fn is_admin_create_sidechain() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::Code, 0, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::SidechainConfig, 1, Source::Output),
-            (CellType::SidechainState, 2, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SidechainConfigCellData: CellOrigin(1, Source::Output),
+            SidechainStateCellData: CellOrigin(2, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 
 pub fn is_collator_publish_task() -> Result<(), CommonError> {
@@ -322,21 +345,21 @@ pub fn is_collator_publish_task() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::SidechainState, 1, Source::Input),
-            (CellType::SidechainBond, 2, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::SidechainState, 1, Source::Output),
-            (CellType::SidechainBond, 2, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )?;
+        {
+            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            SidechainStateCellData: CellOrigin(1, Source::Input),
+            SidechainBondCellData: CellOrigin(2, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SidechainStateCellData: CellOrigin(1, Source::Output),
+            SidechainBondCellData: CellOrigin(2, Source::Output),
+        },
+    };
 
     for x in 3..output_count {
-        check_cell(CellType::Task, x as usize, Source::Output, &global)?;
+        TaskCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
     }
 
     Ok(())
@@ -364,25 +387,25 @@ pub fn is_collator_submit_task() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::SidechainState, 1, Source::Input),
-            (CellType::SidechainFee, 2, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::SidechainState, 1, Source::Output),
-            (CellType::SidechainFee, 2, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )?;
+        {
+            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            SidechainStateCellData: CellOrigin(1, Source::Input),
+            SidechainFeeCellData: CellOrigin(2, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SidechainStateCellData: CellOrigin(1, Source::Output),
+            SidechainFeeCellData: CellOrigin(2, Source::Output),
+        },
+    };
 
     for x in 3..input_count {
-        check_cell(CellType::CheckerInfo, x as usize, Source::Input, &global)?;
+        CheckerInfoCellData::check(CellOrigin(x as usize, Source::Input), &global)?;
     }
 
     for x in 3..output_count {
-        check_cell(CellType::CheckerInfo, x as usize, Source::Output, &global)?;
+        CheckerInfoCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
     }
 
     Ok(())
@@ -411,26 +434,26 @@ pub fn is_collator_submit_challenge() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::Code, 0, Source::Input),
-            (CellType::SidechainConfig, 1, Source::Input),
-            (CellType::SidechainState, 2, Source::Input),
-            (CellType::SidechainFee, 3, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::SidechainConfig, 1, Source::Output),
-            (CellType::SidechainState, 2, Source::Output),
-            (CellType::SidechainFee, 3, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )?;
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            SidechainConfigCellData: CellOrigin(1, Source::Input),
+            SidechainStateCellData: CellOrigin(2, Source::Input),
+            SidechainFeeCellData: CellOrigin(3, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SidechainConfigCellData: CellOrigin(1, Source::Output),
+            SidechainStateCellData: CellOrigin(2, Source::Output),
+            SidechainFeeCellData: CellOrigin(3, Source::Output),
+        },
+    };
 
     for x in 4..input_count {
-        check_cell(CellType::CheckerInfo, x, Source::Input, &global)?;
+        CheckerInfoCellData::check(CellOrigin(x, Source::Input), &global)?;
     }
 
     for x in 4..output_count {
-        check_cell(CellType::CheckerInfo, x, Source::Output, &global)?;
+        CheckerInfoCellData::check(CellOrigin(x, Source::Output), &global)?;
     }
 
     Ok(())
@@ -457,21 +480,21 @@ pub fn is_collator_refresh_task() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::Code, 0, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )?;
+        {
+            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+        },
+    };
 
     for x in 1..input_count {
-        check_cell(CellType::Task, x as usize, Source::Input, &global)?;
+        TaskCellData::check(CellOrigin(x as usize, Source::Input), &global)?;
     }
 
     for x in 1..output_count {
-        check_cell(CellType::Task, x as usize, Source::Output, &global)?;
+        TaskCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
     }
 
     Ok(())
@@ -498,17 +521,19 @@ pub fn is_collator_unlock_bond() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
-            (CellType::SidechainState, 2, Source::CellDep),
-            (CellType::Code, 0, Source::Input),
-            (CellType::SidechainBond, 1, Source::Input),
-            (CellType::Code, 0, Source::Output),
-            (CellType::Sudt, 1, Source::Output),
-        ],
+    check_cells! {
         &global,
-    )
+        {
+            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
+            SidechainStateCellData: CellOrigin(2, Source::CellDep),
+            CodeCellData: CellOrigin(0, Source::Input),
+            SidechainBondCellData: CellOrigin(1, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+            SudtTokenData: CellOrigin(1, Source::Output),
+        },
+    };
+
+    Ok(())
 }
 pub fn is_create_code_cell() -> Result<(), CommonError> {
     /*
@@ -527,8 +552,14 @@ pub fn is_create_code_cell() -> Result<(), CommonError> {
     if input_count < 1 {
         return Err(CommonError::CellNumberMismatch);
     }
+    check_cells! {
+        &global,
+        {
+            CodeCellData: CellOrigin(0, Source::Output),
+        },
+    };
 
-    check_cells(vec![(CellType::Code, 0, Source::Output)], &global)
+    Ok(())
 }
 
 pub fn check_code_cell() -> Result<(), CommonError> {
@@ -550,8 +581,13 @@ pub fn check_code_cell() -> Result<(), CommonError> {
         return Err(CommonError::CellNumberMismatch);
     }
 
-    check_cells(
-        vec![(CellType::Code, 0, Source::Input), (CellType::Code, 0, Source::Output)],
+    check_cells! {
         &global,
-    )
+        {
+            CodeCellData: CellOrigin(0, Source::Input),
+            CodeCellData: CellOrigin(0, Source::Output),
+        },
+    };
+
+    Ok(())
 }

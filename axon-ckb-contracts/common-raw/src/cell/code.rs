@@ -17,6 +17,9 @@ const CODE_LOCK_ARGS_LEN: usize = 20;
 */
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
+pub struct CodeCellData {}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CodeCellTypeArgs {
     pub chain_id: u8,
     //pub who_public_key: [u8; 32],
