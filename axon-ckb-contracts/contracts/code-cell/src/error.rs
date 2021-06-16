@@ -11,7 +11,6 @@ pub enum Error {
     Encoding,
     CommonError,
     // PatternWitnessTypeMissing,
-    PatternRecognitionFailure,
     // Secp256k1Error,
     // BusyChecker,
     // MissingSignature,

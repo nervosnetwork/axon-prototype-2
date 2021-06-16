@@ -5,7 +5,7 @@ use core::result::Result;
 // https://doc.rust-lang.org/alloc/index.html
 use alloc::vec::Vec;
 
-use crate::{checker_join_sidechain::checker_join_sidechain, checker_quit_sidechain::checker_quit_sidechain, error::Error};
+use crate::{checker_join_sidechain::checker_join_sidechain, checker_quit_sidechain::checker_quit_sidechain, common::*, error::Error};
 
 use ckb_std::ckb_constants::Source;
 use ckb_std::{
@@ -14,7 +14,7 @@ use ckb_std::{
 };
 
 use common::pattern::{
-    is_admin_create_sidechain, is_checker_bond_deposit, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
+    is_admin_create_sidechain, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
     is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
 };
@@ -61,19 +61,6 @@ pub fn main() -> Result<(), Error> {
     let witness = CodeCellTypeWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
     match witness.pattern() {
-        /*
-        CheckerBondDeposit
-
-        Muse Token Cell             ->          Check Bond Cell
-
-        No way to monitor this pattern, regard all check bond cell trustless
-
-         */
-        Pattern::CheckerBondDeposit => {
-            is_checker_bond_deposit()?;
-            checker_bond_deposit(signer)?
-        }
-
         /*
         CheckerBondWithdraw
 
@@ -276,22 +263,8 @@ pub fn main() -> Result<(), Error> {
             is_collator_unlock_bond()?;
             collator_unlock_bond(signer)?
         }
-
-        _ => return Err(Error::PatternRecognitionFailure),
     }
 
-    Ok(())
-}
-
-fn checker_bond_deposit(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CheckerBondDeposit
-
-    Muse Token Cell             ->          Check Bond Cell
-
-    No way to monitor this pattern, regard all check bond cell trustless
-
-     */
     Ok(())
 }
 
