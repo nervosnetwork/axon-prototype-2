@@ -31,6 +31,8 @@ impl Default for EnvironmentBuilder {
 }
 
 impl EnvironmentBuilder {
+    pub const BOOTSTRAP_CELL_DEPS_LENGTH: usize = 5;
+
     pub fn create_input(&mut self, output: CellOutput, data: Bytes) -> CellInput {
         CellInput::new_builder()
             .previous_output(self.context.create_cell(output, data))
@@ -72,6 +74,7 @@ impl EnvironmentBuilder {
         global_config.checker_bond_cell_lock_codehash.copy_from_slice(a_s_codehash);
         global_config.checker_info_cell_type_codehash.copy_from_slice(a_s_codehash);
         global_config.sidechain_config_cell_type_codehash.copy_from_slice(a_s_codehash);
+        global_config.task_cell_type_codehash.copy_from_slice(a_s_codehash);
 
         let global_config_dep = self_.create_dep(
             new_type_cell_output(1000, &always_success_script, &always_success_script),

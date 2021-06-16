@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 
 use crate::{
     checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
-    checker_quit_sidechain::checker_quit_sidechain, common::*, error::Error,
+    checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task, common::*, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -37,7 +37,7 @@ use common_raw::{
     pattern::Pattern,
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_publish_challenge::CheckerPublishChallengeWitness,
-        checker_quit_sidechain::CheckerQuitSidechainWitness, checker_submit_challenge::CheckerSubmitChallengeWitness,
+        checker_submit_challenge::CheckerSubmitChallengeWitness, checker_submit_task::CheckerSubmitTaskWitness,
         checker_take_beneficiary::CheckerTakeBeneficiaryWitness, code_cell_witness::CodeCellTypeWitness,
         collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
         collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
@@ -119,8 +119,9 @@ pub fn main() -> Result<(), Error> {
 
         */
         Pattern::CheckerSubmitTask => {
-            is_checker_submit_task()?;
-            checker_submit_task(signer)?
+            let witness = CheckerSubmitTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
+            is_checker_submit_task(&witness)?;
+            checker_submit_task(&witness, signer)?
         }
         /*
         CheckerPublishChallenge,
@@ -265,48 +266,6 @@ pub fn main() -> Result<(), Error> {
             is_collator_unlock_bond()?;
             collator_unlock_bond(signer)?
         }
-    }
-
-    Ok(())
-}
-
-fn checker_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CheckerSubmitTask,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          Null
-
-    */
-
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
-
-    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let task_cell_data_input = load_cell_data(2, Source::Input)?;
-    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let mut checker_info_res = checker_info_input.clone();
-    checker_info_res.chain_id = witness.chain_id;
-    checker_info_res.checker_id = witness.checker_id;
-    checker_info_res.mode = CheckerInfoCellMode::TaskPassed;
-
-    if checker_info_res != checker_info_output {
-        return Err(Error::Wrong);
-    }
-
-    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Task {
-        return Err(Error::Wrong);
     }
 
     Ok(())

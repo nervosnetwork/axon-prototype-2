@@ -26,6 +26,7 @@ pub enum Error {
     SidechainConfigMismatch,
     CheckerBondMismatch,
     CheckerInfoMismatch,
+    TaskMismatch,
 }
 
 impl From<SysError> for Error {

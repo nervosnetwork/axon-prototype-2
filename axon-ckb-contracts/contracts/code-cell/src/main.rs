@@ -19,6 +19,7 @@ mod error;
 mod checker_bond_withdraw;
 mod checker_join_sidechain;
 mod checker_quit_sidechain;
+mod checker_submit_task;
 
 use ckb_std::{debug, default_alloc};
 

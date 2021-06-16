@@ -4,6 +4,8 @@ use crate::{get_input_cell_count, get_output_cell_count};
 
 use ckb_std::ckb_constants::Source;
 
+use common_raw::witness::checker_submit_task::CheckerSubmitTaskWitness;
+
 pub fn is_checker_bond_deposit() -> Result<(), CommonError> {
     /*
     CheckerBondDeposit
@@ -117,7 +119,7 @@ pub fn is_checker_quit_sidechain() -> Result<(), CommonError> {
     )
 }
 
-pub fn is_checker_submit_task() -> Result<(), CommonError> {
+pub fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), CommonError> {
     /*
     CheckerSubmitTask,
 
@@ -141,7 +143,7 @@ pub fn is_checker_submit_task() -> Result<(), CommonError> {
 
     check_cells(
         vec![
-            (CellType::SidechainConfig, 1, Source::CellDep),
+            (CellType::SidechainConfig, witness.sidechain_config_dep_index, Source::CellDep),
             (CellType::Code, 0, Source::Input),
             (CellType::CheckerInfo, 1, Source::Input),
             (CellType::Task, 2, Source::Input),

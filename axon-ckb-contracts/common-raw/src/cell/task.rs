@@ -1,7 +1,7 @@
 use core::convert::{TryFrom, TryInto};
 use core::result::Result;
 
-use crate::{check_args_len, decode_u128, decode_u16, decode_u8, FromRaw};
+use crate::{check_args_len, decode_u128, decode_u16, decode_u8, encode_u128, encode_u16, encode_u8, FromRaw, Serialize};
 
 const TASK_DATA_LEN: usize = 85;
 const TASK_TYPE_ARGS_LEN: usize = 1;
@@ -84,6 +84,28 @@ impl FromRaw for TaskCellData {
             refresh_interval,
             mode,
         })
+    }
+}
+
+impl Serialize for TaskCellData {
+    type RawType = [u8; TASK_DATA_LEN];
+
+    fn serialize(&self) -> Self::RawType {
+        let mut buf = [0u8; TASK_DATA_LEN];
+
+        buf[0..1].copy_from_slice(&encode_u8(self.chain_id));
+        buf[1..2].copy_from_slice(&encode_u8(self.version));
+        buf[2..18].copy_from_slice(&encode_u128(self.check_block_height_from));
+        buf[18..34].copy_from_slice(&encode_u128(self.check_block_height_to));
+
+        buf[34..66].copy_from_slice(&self.check_block_hash_to);
+
+        buf[66..82].copy_from_slice(&encode_u128(self.check_data_size));
+        buf[82..84].copy_from_slice(&encode_u16(self.refresh_interval));
+
+        buf[84..85].copy_from_slice(&encode_u8(self.mode as u8));
+
+        buf
     }
 }
 
