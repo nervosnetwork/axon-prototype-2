@@ -11,7 +11,6 @@ pub enum Error {
     Encoding,
     CommonError,
     // PatternWitnessTypeMissing,
-    PatternRecognitionFailure,
     // Secp256k1Error,
     // BusyChecker,
     // MissingSignature,
@@ -23,6 +22,8 @@ pub enum Error {
     // ChainIdBitMapMismatch,
     // CheckerInfoMode,
     // CheckerUnpaidFee,
+    #[allow(dead_code)]
+    TypeScriptMissed,
     Wrong,
     SidechainConfigMismatch,
     CheckerBondMismatch,

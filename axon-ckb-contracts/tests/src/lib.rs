@@ -16,6 +16,8 @@ mod secp256k1;
 mod test_always_success;
 #[cfg(test)]
 mod test_join_sidechain;
+#[cfg(test)]
+mod test_quit_sidechain;
 
 const TEST_ENV_VAR: &str = "CAPSULE_TEST_ENV";
 
