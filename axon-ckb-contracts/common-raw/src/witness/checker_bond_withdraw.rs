@@ -1,8 +1,10 @@
-use crate::{decode_u8, FromRaw};
+use core::convert::TryInto;
+
+use crate::{decode_u8, pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
 pub struct CheckerBondWithdrawWitness {
-    pub pattern: u8,
+    pattern: Pattern,
 }
 
 impl FromRaw for CheckerBondWithdrawWitness {
@@ -11,7 +13,7 @@ impl FromRaw for CheckerBondWithdrawWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?;
+        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
 
         Some(CheckerBondWithdrawWitness { pattern })
     }

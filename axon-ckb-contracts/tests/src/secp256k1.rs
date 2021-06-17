@@ -1,16 +1,9 @@
 use crate::common::*;
+use crate::environment_builder::EnvironmentBuilder;
 use ckb_system_scripts::BUNDLED_CELL;
-use ckb_testtool::context::Context;
 use ckb_tool::ckb_crypto::secp::Privkey;
 use ckb_tool::ckb_hash::{blake2b_256, new_blake2b};
-use ckb_tool::ckb_types::{
-    bytes::Bytes,
-    core::{TransactionBuilder, TransactionView},
-    packed,
-    packed::*,
-    prelude::*,
-    H256,
-};
+use ckb_tool::ckb_types::{bytes::Bytes, core::TransactionView, packed, packed::*, prelude::*, H256};
 
 const SIGNATURE_SIZE: usize = 65;
 
@@ -79,13 +72,13 @@ pub fn sign_tx_with_witnesses(tx: TransactionView, witnesses: BytesVec, key: &Pr
     Some(signed_witnesses)
 }
 
-pub fn with_secp256k1_cell_deps(builder: TransactionBuilder, context: &mut Context) -> (TransactionBuilder, OutPoint) {
+pub fn with_secp256k1_cell_deps(mut builder: EnvironmentBuilder) -> (EnvironmentBuilder, OutPoint) {
     let secp256k1_bin = BUNDLED_CELL.get("specs/cells/secp256k1_blake160_sighash_all").unwrap();
-    let secp256k1_out_point = context.deploy_cell(secp256k1_bin.serialize());
+    let secp256k1_out_point = builder.context.deploy_cell(secp256k1_bin.serialize());
     let secp256k1_dep = CellDep::new_builder().out_point(secp256k1_out_point.clone()).build();
 
     let secp256k1_data_bin = BUNDLED_CELL.get("specs/cells/secp256k1_data").unwrap();
-    let secp256k1_data_out_point = context.deploy_cell(secp256k1_data_bin.serialize());
+    let secp256k1_data_out_point = builder.context.deploy_cell(secp256k1_data_bin.serialize());
     let secp256k1_data_dep = CellDep::new_builder().out_point(secp256k1_data_out_point).build();
 
     (builder.cell_dep(secp256k1_dep).cell_dep(secp256k1_data_dep), secp256k1_out_point)

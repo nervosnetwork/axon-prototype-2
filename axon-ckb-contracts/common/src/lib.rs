@@ -15,7 +15,10 @@ pub mod error;
 pub mod hash;
 pub mod pattern;
 
-pub const SUDT_CODEHASH: [u8; 32] = [220, 119, 113, 76, 154, 36, 54, 83, 120, 144, 192, 65, 69, 88, 144, 235, 134, 189, 90, 138, 42, 237, 82, 25, 243, 92, 250, 145, 25, 53, 95, 95];
+pub const SUDT_CODEHASH: [u8; 32] = [
+    220, 119, 113, 76, 154, 36, 54, 83, 120, 144, 192, 65, 69, 88, 144, 235, 134, 189, 90, 138, 42, 237, 82, 25, 243, 92, 250, 145, 25, 53,
+    95, 95,
+];
 pub const SUDT_HASHTYPE: u8 = 0u8;
 pub const SUDT_MUSE_ARGS: &[u8] = &[];
 pub const SUDT_DATA_LEN: usize = 16; // u128
@@ -117,7 +120,7 @@ pub fn get_group_output_cell_count() -> usize {
     QueryIter::new(load_cell, Source::GroupOutput).count()
 }
 
-pub fn bit_map_add(input: [u8; 32], checker_id: u8) -> Result<[u8; 32], CommonError> {
+pub fn bit_map_add(input: &[u8; 32], checker_id: u8) -> Result<[u8; 32], CommonError> {
     let mut input = BitVec::from_bytes(&input[..]);
 
     //should be false
@@ -128,7 +131,7 @@ pub fn bit_map_add(input: [u8; 32], checker_id: u8) -> Result<[u8; 32], CommonEr
     input.set(checker_id as usize, true);
 
     let mut ret = [0u8; 32];
-    ret.copy_from_slice(&input.to_bytes().as_slice()[0..32]);
+    ret.copy_from_slice(input.to_bytes().as_slice());
 
     Ok(ret)
 }

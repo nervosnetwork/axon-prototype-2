@@ -4,57 +4,6 @@ use crate::{get_input_cell_count, get_output_cell_count};
 
 use ckb_std::ckb_constants::Source;
 
-#[repr(u8)]
-#[derive(PartialOrd, PartialEq)]
-pub enum Pattern {
-    Unrecognised = 0u8,
-
-    CreateCodeCell = 1u8,
-
-    AdminCreateSidechain = 2u8,
-
-    CheckerBondDeposit = 3u8,
-    CheckerBondWithdraw,
-    CheckerJoinSidechain,
-    CheckerQuitSidechain,
-    CheckerSubmitTask,
-    CheckerPublishChallenge,
-    CheckerSubmitChallenge,
-    CheckerTakeBeneficiary,
-
-    CollatorPublishTask = 11u8,
-    CollatorSubmitTask,
-    CollatorSubmitChallenge,
-    CollatorRefreshTask,
-    CollatorUnlockBond,
-}
-
-impl From<u8> for Pattern {
-    fn from(input: u8) -> Self {
-        match input {
-            0u8 => Self::Unrecognised,
-            1u8 => Self::CreateCodeCell,
-            2u8 => Self::AdminCreateSidechain,
-
-            3u8 => Self::CheckerBondDeposit,
-            4u8 => Self::CheckerBondWithdraw,
-            5u8 => Self::CheckerJoinSidechain,
-            6u8 => Self::CheckerQuitSidechain,
-            7u8 => Self::CheckerSubmitTask,
-            8u8 => Self::CheckerPublishChallenge,
-            9u8 => Self::CheckerSubmitChallenge,
-            10u8 => Self::CheckerTakeBeneficiary,
-
-            11u8 => Self::CollatorPublishTask,
-            12u8 => Self::CollatorSubmitTask,
-            13u8 => Self::CollatorSubmitChallenge,
-            14u8 => Self::CollatorRefreshTask,
-            15u8 => Self::CollatorUnlockBond,
-            _ => Self::Unrecognised,
-        }
-    }
-}
-
 pub fn is_checker_bond_deposit() -> Result<(), CommonError> {
     /*
     CheckerBondDeposit

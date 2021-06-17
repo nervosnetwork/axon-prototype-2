@@ -1,8 +1,10 @@
-use crate::{decode_u8, FromRaw};
+use core::convert::TryInto;
+
+use crate::{decode_u8, pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
 pub struct CollatorUnlockBondWitness {
-    pub pattern:  u8,
+    pattern:      Pattern,
     pub chain_id: u8,
 }
 
@@ -12,7 +14,7 @@ impl FromRaw for CollatorUnlockBondWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?;
+        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
         let chain_id = decode_u8(&witness_raw_data[1..2])?;
 
         Some(CollatorUnlockBondWitness { pattern, chain_id })

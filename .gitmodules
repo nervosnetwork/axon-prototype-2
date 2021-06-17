@@ -1,3 +1,0 @@
-[submodule "axon-ckb-contracts/ckb-miscellaneous-scripts"]
-	path = axon-ckb-contracts/ckb-miscellaneous-scripts
-	url = https://github.com/nervosnetwork/ckb-miscellaneous-scripts

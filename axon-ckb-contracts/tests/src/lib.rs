@@ -8,6 +8,8 @@ use std::str::FromStr;
 #[allow(dead_code)]
 mod common;
 #[cfg(test)]
+mod environment_builder;
+#[cfg(test)]
 #[allow(dead_code)]
 mod secp256k1;
 #[cfg(test)]

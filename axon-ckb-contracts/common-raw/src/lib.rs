@@ -2,6 +2,7 @@
 #![no_std]
 
 pub mod cell;
+pub mod pattern;
 pub mod witness;
 
 pub const SUDT_CODEHASH: [u8; 32] = [0; 32];
@@ -58,6 +59,20 @@ pub fn decode_u64(data: &[u8]) -> Option<u64> {
 }
 
 pub fn encode_u64(num: u64) -> [u8; 8] {
+    num.to_le_bytes()
+}
+
+pub fn decode_u32(data: &[u8]) -> Option<u32> {
+    if data.len() != 4 {
+        return None;
+    }
+
+    let mut buf = [0u8; 4];
+    buf.copy_from_slice(data);
+    Some(u32::from_le_bytes(buf))
+}
+
+pub fn encode_u32(num: u32) -> [u8; 4] {
     num.to_le_bytes()
 }
 
