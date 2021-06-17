@@ -67,6 +67,7 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
         return Err(Error::SidechainConfigMismatch);
     }
     if checker_bond_res_lock_args != checker_bond_output_lock_args
+        || checker_bond_input_lock_args.checker_lock_arg != signer
         || checker_bond_input != checker_bond_output
         || checker_bond_output.amount < config_input.minimal_bond
     {

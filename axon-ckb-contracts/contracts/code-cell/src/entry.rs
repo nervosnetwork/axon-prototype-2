@@ -5,23 +5,25 @@ use core::result::Result;
 // https://doc.rust-lang.org/alloc/index.html
 use alloc::vec::Vec;
 
-use crate::{checker_join_sidechain::checker_join_sidechain, checker_quit_sidechain::checker_quit_sidechain, common::*, error::Error};
+use crate::{
+    checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
+    checker_quit_sidechain::checker_quit_sidechain, common::*, error::Error,
+};
 
 use ckb_std::ckb_constants::Source;
 use ckb_std::{
     ckb_types::prelude::*,
-    high_level::{load_cell_data, load_cell_lock, load_witness_args, QueryIter},
+    high_level::{load_cell_data, load_witness_args, QueryIter},
 };
 
+use common::bit_map_marked;
 use common::pattern::{
     is_admin_create_sidechain, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
     is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
     is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
 };
-use common::{bit_map_marked, EMPTY_BIT_MAP};
 use common_raw::{
     cell::{
-        checker_bond::CheckerBondCellLockArgs,
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
         code::CodeCellLockArgs,
         muse_token::MuseTokenData,
@@ -263,39 +265,6 @@ pub fn main() -> Result<(), Error> {
             is_collator_unlock_bond()?;
             collator_unlock_bond(signer)?
         }
-    }
-
-    Ok(())
-}
-
-fn checker_bond_withdraw(signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CheckerBondWithdraw
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Bond Cell           ->         Muse Token Cell
-
-     */
-
-    /*
-    Job:
-
-    1. chain_id_bitmap is 0x00
-
-     */
-
-    let checker_bond_cell_lock_args_input = load_cell_lock(2, Source::Input)?.args();
-    let checker_bond_input = CheckerBondCellLockArgs::from_raw(checker_bond_cell_lock_args_input.as_slice()).ok_or(Error::Encoding)?;
-
-    if checker_bond_input.chain_id_bitmap != EMPTY_BIT_MAP {
-        return Err(Error::ChainIdBitMapNotZero);
-    }
-
-    //check owner
-    if signer != &checker_bond_input.checker_lock_arg[..] {
-        return Err(Error::SignatureMismatch);
     }
 
     Ok(())

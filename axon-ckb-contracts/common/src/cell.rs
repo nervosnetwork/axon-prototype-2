@@ -73,7 +73,7 @@ pub fn check_cell(cell_type: CellType, index: usize, source: Source, global: &Gl
                 return Err(CommonError::CodeHashMismatch);
             }
 
-            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+            if hashtype != SUDT_HASHTYPE || script.as_reader().args().raw_data() != SUDT_MUSE_ARGS {
                 return Err(CommonError::HashTypeMismatch);
             }
             Ok(())
@@ -83,7 +83,7 @@ pub fn check_cell(cell_type: CellType, index: usize, source: Source, global: &Gl
                 return Err(CommonError::CodeHashMismatch);
             }
 
-            if hashtype != SUDT_HASHTYPE || script.args().as_slice() != SUDT_MUSE_ARGS {
+            if hashtype != SUDT_HASHTYPE || script.as_reader().args().raw_data() != SUDT_MUSE_ARGS {
                 return Err(CommonError::HashTypeMismatch);
             }
             Ok(())
