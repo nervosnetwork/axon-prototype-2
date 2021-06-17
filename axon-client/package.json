@@ -1,0 +1,25 @@
+{
+  "version": "0.1.0",
+  "description": "",
+  "private": true,
+  "engines": {
+    "node": ">=12 <13"
+  },
+  "scripts": {
+    "start": "cross-env NODE_ENV=development DOTENV_CONFIG_PATH=./configs/cooperator.env ts-node src/index",
+    "build:dev": "cross-env NODE_ENV=development lerna run build:dev",
+    "build:prod": "cross-env NODE_ENV=production lerna run build:prod",
+    "clean": "npx rimraf lib && npx rimraf tsconfig.tsbuildinfo",
+    "format": ""
+  },
+  "workspaces": {
+    "packages": [
+      "axon-client-checker",
+      "axon-client-collator",
+      "axon-client-common"
+    ]
+  },
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  }
+}

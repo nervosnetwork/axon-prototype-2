@@ -12,7 +12,7 @@ const SIDECHAIN_BOND_LOCK_ARGS_LEN: usize = 49;
     Lock:
         codehash: sidechain bond cell lockscript
         hashtype: type
-        args: chain_id | collator_public_key | unlock_sidechain_height
+        args: chain_id | collatorPublicKey | unlock_sidechain_height
 */
 
 // which is standard sudt
