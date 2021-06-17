@@ -6,8 +6,8 @@ use core::result::Result;
 use alloc::vec::Vec;
 
 use crate::{
-    checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
-    checker_quit_sidechain::checker_quit_sidechain, common::*, error::Error,
+    cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
+    checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task, common::*, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -16,11 +16,9 @@ use ckb_std::{
     high_level::{load_cell_data, load_witness_args, QueryIter},
 };
 
-use common::bit_map_marked;
-use common::pattern::{
-    is_admin_create_sidechain, is_checker_bond_withdraw, is_checker_join_sidechain, is_checker_publish_challenge,
-    is_checker_quit_sidechain, is_checker_submit_challenge, is_checker_submit_task, is_checker_take_beneficiary, is_collator_publish_task,
-    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
+use crate::pattern::{
+    is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_checker_take_beneficiary,
+    is_collator_publish_task, is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
 };
 use common_raw::{
     cell::{
@@ -37,11 +35,10 @@ use common_raw::{
     pattern::Pattern,
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_publish_challenge::CheckerPublishChallengeWitness,
-        checker_quit_sidechain::CheckerQuitSidechainWitness, checker_submit_challenge::CheckerSubmitChallengeWitness,
-        checker_take_beneficiary::CheckerTakeBeneficiaryWitness, code_cell_witness::CodeCellTypeWitness,
-        collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
-        collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
-        collator_unlock_bond::CollatorUnlockBondWitness,
+        checker_submit_challenge::CheckerSubmitChallengeWitness, checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
+        code_cell_witness::CodeCellTypeWitness, collator_publish_task::CollatorPublishTaskWitness,
+        collator_refresh_task::CollatorRefreshTaskWitness, collator_submit_challenge::CollatorSubmitChallengeWitness,
+        collator_submit_task::CollatorSubmitTaskWitness, collator_unlock_bond::CollatorUnlockBondWitness,
     },
     FromRaw,
 };
@@ -72,10 +69,7 @@ pub fn main() -> Result<(), Error> {
         Checker Bond Cell           ->         Muse Token Cell
 
          */
-        Pattern::CheckerBondWithdraw => {
-            is_checker_bond_withdraw()?;
-            checker_bond_withdraw(signer)?
-        }
+        Pattern::CheckerBondWithdraw => checker_bond_withdraw(signer),
 
         /*
         CheckerJoinSidechain,
@@ -88,10 +82,7 @@ pub fn main() -> Result<(), Error> {
         Null                        ->          Checker Info Cell
 
         */
-        Pattern::CheckerJoinSidechain => {
-            is_checker_join_sidechain()?;
-            checker_join_sidechain(raw_witness, signer)?
-        }
+        Pattern::CheckerJoinSidechain => checker_join_sidechain(raw_witness, signer),
         /*
         CheckerQuitSidechain
 
@@ -102,10 +93,7 @@ pub fn main() -> Result<(), Error> {
         Checker Bond Cell           ->          Checker Bond Cell
         Checker Info Cell           ->          Null
         */
-        Pattern::CheckerQuitSidechain => {
-            is_checker_quit_sidechain()?;
-            checker_quit_sidechain(raw_witness, signer)?
-        }
+        Pattern::CheckerQuitSidechain => checker_quit_sidechain(raw_witness, signer),
 
         /*
         CheckerSubmitTask,
@@ -118,10 +106,7 @@ pub fn main() -> Result<(), Error> {
         Task Cell                   ->          Null
 
         */
-        Pattern::CheckerSubmitTask => {
-            is_checker_submit_task()?;
-            checker_submit_task(signer)?
-        }
+        Pattern::CheckerSubmitTask => checker_submit_task(raw_witness, signer),
         /*
         CheckerPublishChallenge,
 
@@ -135,7 +120,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerPublishChallenge => {
             is_checker_publish_challenge()?;
-            checker_publish_challenge(signer)?
+            checker_publish_challenge(signer)
         }
 
         /*
@@ -151,7 +136,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerSubmitChallenge => {
             is_checker_submit_challenge()?;
-            checker_submit_challenge(signer)?
+            checker_submit_challenge(signer)
         }
         /*
         CheckerTakeBeneficiary,
@@ -166,7 +151,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CheckerTakeBeneficiary => {
             is_checker_take_beneficiary()?;
-            checker_take_beneficiary(signer)?
+            checker_take_beneficiary(signer)
         }
 
         /*
@@ -181,7 +166,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::AdminCreateSidechain => {
             is_admin_create_sidechain()?;
-            admin_create_sidechain(signer)?
+            admin_create_sidechain(signer)
         }
 
         /*
@@ -198,7 +183,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorPublishTask => {
             is_collator_publish_task()?;
-            collator_publish_task(signer)?
+            collator_publish_task(signer)
         }
 
         /*
@@ -215,7 +200,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorSubmitTask => {
             is_collator_submit_task()?;
-            collator_submit_task(signer)?
+            collator_submit_task(signer)
         }
 
         /*
@@ -232,7 +217,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorSubmitChallenge => {
             is_collator_submit_challenge()?;
-            collator_submit_challenge(signer)?
+            collator_submit_challenge(signer)
         }
 
         /*
@@ -247,7 +232,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorRefreshTask => {
             is_collator_refresh_task()?;
-            collator_refresh_task(signer)?
+            collator_refresh_task(signer)
         }
 
         /*
@@ -263,53 +248,9 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorUnlockBond => {
             is_collator_unlock_bond()?;
-            collator_unlock_bond(signer)?
+            collator_unlock_bond(signer)
         }
     }
-
-    Ok(())
-}
-
-fn checker_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CheckerSubmitTask,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          Null
-
-    */
-
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerQuitSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
-
-    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let task_cell_data_input = load_cell_data(2, Source::Input)?;
-    let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let mut checker_info_res = checker_info_input.clone();
-    checker_info_res.chain_id = witness.chain_id;
-    checker_info_res.checker_id = witness.checker_id;
-    checker_info_res.mode = CheckerInfoCellMode::TaskPassed;
-
-    if checker_info_res != checker_info_output {
-        return Err(Error::Wrong);
-    }
-
-    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Task {
-        return Err(Error::Wrong);
-    }
-
-    Ok(())
 }
 
 fn checker_publish_challenge(_signer: [u8; 20]) -> Result<(), Error> {
@@ -710,7 +651,7 @@ fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
         .filter_map(|checker_info_input| {
             let result = bit_map_marked(witness.punish_checker_bitmap, checker_info_input.checker_id);
 
-            if result.is_ok() {
+            if result.is_some() {
                 return Some(checker_info_input);
             } else {
                 return None;

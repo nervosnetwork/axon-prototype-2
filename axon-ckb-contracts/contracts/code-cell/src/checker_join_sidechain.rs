@@ -1,17 +1,17 @@
 use ckb_std::ckb_constants::Source;
 
-use common::bit_map_add;
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
+        code::CodeCellData,
         sidechain_config::SidechainConfigCellData,
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
     FromRaw,
 };
 
-use crate::{common::*, error::Error};
+use crate::{cell::*, common::*, error::Error};
 
 const CONFIG_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const CHECKER_BOND_INPUT: CellOrigin = CellOrigin(2, Source::Input);
@@ -32,6 +32,7 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     Null                        ->          Checker Info Cell
 
     */
+    is_checker_join_sidechain()?;
 
     let witness = CheckerJoinSidechainWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
@@ -50,10 +51,11 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     let mut config_res = config_input.clone();
 
     config_res.checker_total_count += 1;
-    config_res.checker_bitmap = bit_map_add(&config_res.checker_bitmap, witness.checker_id)?;
+    config_res.checker_bitmap = bit_map_add(&config_res.checker_bitmap, witness.checker_id).ok_or(Error::SidechainConfigMismatch)?;
 
     let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
-    checker_bond_res_lock_args.chain_id_bitmap = bit_map_add(&checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id)?;
+    checker_bond_res_lock_args.chain_id_bitmap =
+        bit_map_add(&checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id).ok_or(Error::CheckerBondMismatch)?;
 
     let mut checker_info_res = checker_info_output.clone();
     checker_info_res.chain_id = witness.chain_id;
@@ -76,6 +78,33 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     if checker_info_res != checker_info_output {
         return Err(Error::CheckerInfoMismatch);
     }
+
+    Ok(())
+}
+
+fn is_checker_join_sidechain() -> Result<(), Error> {
+    let global = check_global_cell()?;
+
+    let input_count = get_input_cell_count();
+    let output_count = get_output_cell_count();
+
+    if input_count != 3 || output_count != 4 {
+        return Err(Error::CellNumberMismatch);
+    }
+
+    check_cells! {
+        &global,
+        {
+            CodeCellData: CODE_INPUT,
+            SidechainConfigCellData: CONFIG_INPUT,
+            CheckerBondCellData: CHECKER_BOND_INPUT,
+
+            CodeCellData: CODE_OUTPUT,
+            SidechainConfigCellData: CONFIG_OUTPUT,
+            CheckerBondCellData: CHECKER_BOND_OUTPUT,
+            CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+        },
+    };
 
     Ok(())
 }

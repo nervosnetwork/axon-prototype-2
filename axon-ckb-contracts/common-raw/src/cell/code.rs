@@ -1,4 +1,4 @@
-use crate::{check_args_len, decode_u8, FromRaw};
+use crate::{check_args_len, FromRaw};
 
 const CODE_TYPE_ARGS_LEN: usize = 33;
 const CODE_LOCK_ARGS_LEN: usize = 20;
@@ -17,6 +17,9 @@ const CODE_LOCK_ARGS_LEN: usize = 20;
 */
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
+pub struct CodeCellData {}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CodeCellTypeArgs {
     pub chain_id: u8,
     //pub who_public_key: [u8; 32],
@@ -26,7 +29,7 @@ impl FromRaw for CodeCellTypeArgs {
     fn from_raw(cell_raw_data: &[u8]) -> Option<CodeCellTypeArgs> {
         check_args_len(cell_raw_data.len(), CODE_TYPE_ARGS_LEN)?;
 
-        let chain_id = decode_u8(&cell_raw_data[0..1])?;
+        let chain_id = u8::from_raw(&cell_raw_data[0..1])?;
 
         // let mut who_public_key = [0u8; 32];
         // who_public_key.copy_from_slice(&cell_raw_data[1..33]);

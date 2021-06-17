@@ -31,8 +31,6 @@ read code cell's codehash and hashtype from Global Config Cell and determine whe
 
 if trust, all business logic shall goes into code cell
 
-
-
 the input[0] code cell checks Global Config Cell of CellDeps[0] matches typeId hardcoded
 
 the input[0] code cell checks if all other cell's script matches typeId from Global Config Cell

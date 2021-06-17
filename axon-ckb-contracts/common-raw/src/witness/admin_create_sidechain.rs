@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use crate::{decode_u8, pattern::Pattern, FromRaw};
+use crate::{pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
 pub struct AdminCreateSidechainWitness {
@@ -14,8 +14,8 @@ impl FromRaw for AdminCreateSidechainWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
-        let chain_id = decode_u8(&witness_raw_data[1..2])?;
+        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
 
         Some(AdminCreateSidechainWitness { pattern, chain_id })
     }

@@ -20,6 +20,8 @@ mod test_checker_withdraw;
 mod test_join_sidechain;
 #[cfg(test)]
 mod test_quit_sidechain;
+#[cfg(test)]
+mod test_submit_task;
 
 const TEST_ENV_VAR: &str = "CAPSULE_TEST_ENV";
 

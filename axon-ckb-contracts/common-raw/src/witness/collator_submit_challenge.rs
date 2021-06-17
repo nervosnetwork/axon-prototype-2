@@ -1,6 +1,6 @@
 use core::convert::TryInto;
 
-use crate::{decode_u128, decode_u8, pattern::Pattern, FromRaw};
+use crate::{pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
 pub struct CollatorSubmitChallengeWitness {
@@ -17,10 +17,10 @@ impl FromRaw for CollatorSubmitChallengeWitness {
             return None;
         }
 
-        let pattern = decode_u8(&witness_raw_data[0..1])?.try_into().ok()?;
-        let chain_id = decode_u8(&witness_raw_data[1..2])?;
-        let fee = decode_u128(&witness_raw_data[2..18])?;
-        let fee_per_checker = decode_u128(&witness_raw_data[18..34])?;
+        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
+        let fee = u128::from_raw(&witness_raw_data[2..18])?;
+        let fee_per_checker = u128::from_raw(&witness_raw_data[18..34])?;
 
         let mut punish_checker_bitmap = [0u8; 32];
         punish_checker_bitmap.copy_from_slice(&witness_raw_data[34..66]);
