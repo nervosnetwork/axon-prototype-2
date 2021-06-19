@@ -1,0 +1,58 @@
+{
+  "name": "axon-client-checker",
+  "version": "0.1.0",
+  "description": "",
+  "bin": "lib/index.js",
+  "engines": {
+    "node": ">=12 <13"
+  },
+  "scripts": {
+    "start": "cross-env NODE_ENV=development ts-node src/index",
+    "build:dev": "cross-env NODE_ENV=development yarn run tsc",
+    "build:prod": "cross-env NODE_ENV=production yarn run tsc",
+    "clean": "npx rimraf lib && npx rimraf tsconfig.tsbuildinfo",
+    "format": ""
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*": "npm run format"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@ckb-lumos/base": "0.14.2-rc6",
+    "@types/cron": "1.7.2",
+    "@types/jest": "26.0.19",
+    "@types/node": "14.14.16",
+    "cross-env": "7.0.3",
+    "nodemon": "2.0.7",
+    "prettier": "2.3.1",
+    "ts-jest": "27.0.3",
+    "ts-node": "10.0.0",
+    "typescript": "4.3.2"
+  },
+  "dependencies": {
+    "axon-client-common":"0.1.0",
+    "@ckb-lumos/hd": "0.14.2-rc6",
+    "@ckb-lumos/sql-indexer": "0.14.2-rc6",
+    "@nervosnetwork/ckb-sdk-core": "0.39",
+    "@nervosnetwork/ckb-sdk-rpc": "0.39",
+    "@nervosnetwork/ckb-sdk-utils": "0.39",
+    "@types/json-bigint": "^1.0.0",
+    "@types/lodash": "^4.14.168",
+    "class-validator": "0.12.2",
+    "cron": "1.8.2",
+    "dotenv": "8.2.0",
+    "inversify": "5.0.5",
+    "json-bigint": "^1.0.0",
+    "knex": "^0.21.15",
+    "lodash": "^4.17.20",
+    "tslib": "2.2.0",
+    "winston": "3.3.3"
+  }
+}

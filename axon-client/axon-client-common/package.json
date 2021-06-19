@@ -1,0 +1,30 @@
+{
+  "name": "axon-client-common",
+  "version": "0.1.0",
+  "description": "",
+  "engines": {
+    "node": ">=12 <13"
+  },
+  "scripts": {
+    "start": "cross-env NODE_ENV=development ts-node src/index",
+    "build:dev": "cross-env NODE_ENV=development yarn run tsc",
+    "build:prod": "cross-env NODE_ENV=production yarn run tsc",
+    "clean": "npx rimraf lib && npx rimraf tsconfig.tsbuildinfo",
+    "format": ""
+  },
+  "keywords": [],
+  "author": "lycrus",
+  "license": "MIT",
+  "dependencies": {
+    "@ckb-lumos/base": "0.14.2-rc6",
+    "@ckb-lumos/hd": "0.14.2-rc6",
+    "@ckb-lumos/sql-indexer": "0.14.2-rc6",
+    "@nervosnetwork/ckb-sdk-core": "0.39",
+    "@nervosnetwork/ckb-sdk-rpc": "0.39",
+    "@nervosnetwork/ckb-sdk-utils": "0.39",
+    "@nervosnetwork/ckb-types": "0.39",
+    "@types/json-bigint": "^1.0.0",
+    "dotenv": "8.2.0",
+    "json-bigint": "^1.0.0"
+  }
+}
