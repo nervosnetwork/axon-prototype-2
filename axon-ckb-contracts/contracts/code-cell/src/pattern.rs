@@ -7,7 +7,7 @@ use crate::{
 use ckb_std::ckb_constants::Source;
 
 use common_raw::cell::{
-    checker_info::CheckerInfoCellData, code::CodeCellData, muse_token::MuseTokenData, sidechain_bond::SidechainBondCellData,
+    checker_info::CheckerInfoCellData, code::CodeCellData, sidechain_bond::SidechainBondCellData,
     sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData, sidechain_state::SidechainStateCellData,
     sudt_token::SudtTokenData, task::TaskCellData,
 };
@@ -90,44 +90,6 @@ pub fn is_checker_submit_challenge() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn is_checker_take_beneficiary() -> Result<(), Error> {
-    /*
-    CheckerTakeBeneficiary,
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Sidechain Fee Cell          ->          Sidechain Fee Cell
-    Muse Token Cell             ->          Muse Token Cell
-
-    */
-
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 4 || output_count != 4 {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerInfoCellData: CellOrigin(1, Source::Input),
-            SidechainFeeCellData: CellOrigin(2, Source::Input),
-            MuseTokenData: CellOrigin(3, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            CheckerInfoCellData: CellOrigin(1, Source::Output),
-            SidechainFeeCellData: CellOrigin(2, Source::Output),
-            MuseTokenData: CellOrigin(3, Source::Output),
-        },
-    };
-
-    Ok(())
-}
 pub fn is_admin_create_sidechain() -> Result<(), Error> {
     /*
     AdminCreateSidechain,

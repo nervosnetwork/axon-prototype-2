@@ -7,7 +7,8 @@ use alloc::vec::Vec;
 
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
-    checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task, common::*, error::Error,
+    checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task,
+    checker_take_beneficiary::checker_take_beneficiary, common::*, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -17,14 +18,13 @@ use ckb_std::{
 };
 
 use crate::pattern::{
-    is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_checker_take_beneficiary,
-    is_collator_publish_task, is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
+    is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_collator_publish_task,
+    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
 };
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
         code::CodeCellLockArgs,
-        muse_token::MuseTokenData,
         sidechain_bond::SidechainBondCellData,
         sidechain_config::SidechainConfigCellData,
         sidechain_fee::SidechainFeeCellData,
@@ -35,10 +35,10 @@ use common_raw::{
     pattern::Pattern,
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_publish_challenge::CheckerPublishChallengeWitness,
-        checker_submit_challenge::CheckerSubmitChallengeWitness, checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
-        code_cell_witness::CodeCellTypeWitness, collator_publish_task::CollatorPublishTaskWitness,
-        collator_refresh_task::CollatorRefreshTaskWitness, collator_submit_challenge::CollatorSubmitChallengeWitness,
-        collator_submit_task::CollatorSubmitTaskWitness, collator_unlock_bond::CollatorUnlockBondWitness,
+        checker_submit_challenge::CheckerSubmitChallengeWitness, code_cell_witness::CodeCellTypeWitness,
+        collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
+        collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
+        collator_unlock_bond::CollatorUnlockBondWitness,
     },
     FromRaw,
 };
@@ -149,10 +149,7 @@ pub fn main() -> Result<(), Error> {
         Muse Token Cell             ->          Muse Token Cell
 
         */
-        Pattern::CheckerTakeBeneficiary => {
-            is_checker_take_beneficiary()?;
-            checker_take_beneficiary(signer)
-        }
+        Pattern::CheckerTakeBeneficiary => checker_take_beneficiary(raw_witness, signer),
 
         /*
         AdminCreateSidechain,
@@ -348,59 +345,6 @@ fn checker_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
     }
 
     if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Challenge {
-        return Err(Error::Wrong);
-    }
-
-    Ok(())
-}
-
-fn checker_take_beneficiary(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CheckerTakeBeneficiary,
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Sidechain Fee Cell          ->          Sidechain Fee Cell
-    Muse Token Cell             ->          Muse Token Cell
-
-    */
-
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CheckerTakeBeneficiaryWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
-
-    let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
-    let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let muse_token_data_input = load_cell_data(3, Source::Input)?;
-    let muse_token_input = MuseTokenData::from_raw(muse_token_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
-    let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let muse_token_data_output = load_cell_data(3, Source::Output)?;
-    let muse_token_output = MuseTokenData::from_raw(muse_token_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let mut checker_info_res = checker_info_input.clone();
-    checker_info_res.chain_id = witness.chain_id;
-    checker_info_res.checker_id = witness.checker_id;
-    checker_info_res.unpaid_fee -= witness.fee;
-
-    let mut sidechain_fee_res = sidechain_fee_input.clone();
-    sidechain_fee_res.amount -= witness.fee;
-
-    let mut muse_token_res = muse_token_input.clone();
-    muse_token_res.amount -= witness.fee;
-
-    if checker_info_res != checker_info_output || sidechain_fee_res != sidechain_fee_output || muse_token_res != muse_token_output {
         return Err(Error::Wrong);
     }
 

@@ -1,4 +1,4 @@
-use crate::{check_args_len, FromRaw, SUDT_DATA_LEN};
+use crate::{check_args_len, FromRaw, Serialize, SUDT_DATA_LEN};
 
 const SIDECHAIN_FEE_LOCK_ARGS_LEN: usize = 1;
 
@@ -31,6 +31,14 @@ impl FromRaw for SidechainFeeCellData {
     }
 }
 
+impl Serialize for SidechainFeeCellData {
+    type RawType = [u8; SUDT_DATA_LEN];
+
+    fn serialize(&self) -> Self::RawType {
+        self.amount.serialize()
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainFeeCellLockArgs {
     pub chain_id: u8,
@@ -43,5 +51,13 @@ impl FromRaw for SidechainFeeCellLockArgs {
         let chain_id = u8::from_raw(&arg_raw_data[0..1])?;
 
         Some(SidechainFeeCellLockArgs { chain_id })
+    }
+}
+
+impl Serialize for SidechainFeeCellLockArgs {
+    type RawType = [u8; SIDECHAIN_FEE_LOCK_ARGS_LEN];
+
+    fn serialize(&self) -> Self::RawType {
+        self.chain_id.serialize()
     }
 }
