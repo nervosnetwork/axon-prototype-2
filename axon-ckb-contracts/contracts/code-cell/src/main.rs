@@ -23,6 +23,7 @@ mod checker_bond_withdraw;
 mod checker_join_sidechain;
 mod checker_quit_sidechain;
 mod checker_submit_task;
+mod checker_take_beneficiary;
 
 use ckb_std::{debug, default_alloc};
 

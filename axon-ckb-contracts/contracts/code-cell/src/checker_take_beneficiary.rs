@@ -1,0 +1,117 @@
+use ckb_std::ckb_constants::Source;
+
+use common_raw::{
+    cell::{
+        checker_info::CheckerInfoCellData,
+        code::CodeCellData,
+        muse_token::MuseTokenData,
+        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+    },
+    witness::checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
+    FromRaw,
+};
+
+use crate::{cell::*, common::*, error::Error};
+
+const CHECKER_INFO_INPUT: CellOrigin = CellOrigin(1, Source::Input);
+const FEE_INPUT: CellOrigin = CellOrigin(2, Source::Input);
+const MUSE_INPUT: CellOrigin = CellOrigin(3, Source::Input);
+
+const CHECKER_INFO_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
+const FEE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
+const MUSE_OUTPUT: CellOrigin = CellOrigin(3, Source::Output);
+
+pub fn checker_take_beneficiary(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
+    /*
+    CheckerTakeBeneficiary,
+
+    Dep:    0 Global Config Cell
+
+    Code Cell                   ->         Code Cell
+    Checker Info Cell           ->          Checker Info Cell
+    Sidechain Fee Cell          ->          Sidechain Fee Cell
+    Muse Token Cell             ->          Muse Token Cell
+
+    */
+
+    is_checker_take_beneficiary()?;
+
+    let witness = CheckerTakeBeneficiaryWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
+
+    let (checker_info_input, sidechain_fee_input_lock_args, sidechain_fee_input, muse_token_input) = load_entities! {
+        CheckerInfoCellData: CHECKER_INFO_INPUT,
+        SidechainFeeCellLockArgs: FEE_INPUT,
+        SidechainFeeCellData: FEE_INPUT,
+        MuseTokenData: MUSE_INPUT,
+    };
+    let (checker_info_output, sidechain_fee_output_lock_args, sidechain_fee_output, muse_token_output) = load_entities! {
+        CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+        SidechainFeeCellLockArgs: FEE_OUTPUT,
+        SidechainFeeCellData: FEE_OUTPUT,
+        MuseTokenData: MUSE_OUTPUT,
+    };
+
+    if checker_info_input.unpaid_fee < witness.fee {
+        return Err(Error::CheckerInfoMismatch);
+    }
+
+    let mut checker_info_res = checker_info_input.clone();
+    checker_info_res.unpaid_fee -= witness.fee;
+
+    if sidechain_fee_input.amount < witness.fee {
+        return Err(Error::SidechainFeeMismatch);
+    }
+
+    let mut sidechain_fee_res = sidechain_fee_input.clone();
+    sidechain_fee_res.amount -= witness.fee;
+
+    let mut muse_token_res = muse_token_input.clone();
+    muse_token_res.amount += witness.fee;
+
+    if checker_info_input.chain_id != witness.chain_id
+        || checker_info_input.checker_id != witness.checker_id
+        || checker_info_input.checker_public_key_hash != signer
+        || checker_info_res != checker_info_output
+    {
+        return Err(Error::CheckerInfoMismatch);
+    }
+    if sidechain_fee_res != sidechain_fee_output
+        || sidechain_fee_input_lock_args.chain_id != witness.chain_id
+        || sidechain_fee_input_lock_args != sidechain_fee_output_lock_args
+    {
+        return Err(Error::SidechainFeeMismatch);
+    }
+    if muse_token_res != muse_token_output {
+        return Err(Error::MuseTokenMismatch);
+    }
+
+    Ok(())
+}
+
+fn is_checker_take_beneficiary() -> Result<(), Error> {
+    let global = check_global_cell()?;
+
+    let input_count = get_input_cell_count();
+    let output_count = get_output_cell_count();
+
+    if input_count != 4 || output_count != 4 {
+        return Err(Error::CellNumberMismatch);
+    }
+
+    check_cells! {
+        &global,
+        {
+            CodeCellData: CODE_INPUT,
+            CheckerInfoCellData: CHECKER_INFO_INPUT,
+            SidechainFeeCellData: FEE_INPUT,
+            MuseTokenData: MUSE_INPUT,
+
+            CodeCellData: CODE_OUTPUT,
+            CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+            SidechainFeeCellData: FEE_OUTPUT,
+            MuseTokenData: MUSE_OUTPUT,
+        },
+    };
+
+    Ok(())
+}

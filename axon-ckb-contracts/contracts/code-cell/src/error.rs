@@ -29,8 +29,10 @@ pub enum Error {
     TypeScriptMissed,
     Wrong,
     SidechainConfigMismatch,
+    SidechainFeeMismatch,
     CheckerBondMismatch,
     CheckerInfoMismatch,
+    MuseTokenMismatch,
     TaskMismatch,
 }
 
