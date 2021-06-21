@@ -1,5 +1,3 @@
-use core::convert::TryInto;
-
 use crate::{pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
@@ -14,7 +12,7 @@ impl FromRaw for CollatorRefreshTaskWitness {
             return None;
         }
 
-        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
         let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
 
         Some(CollatorRefreshTaskWitness { pattern, chain_id })

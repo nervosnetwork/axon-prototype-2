@@ -1,5 +1,3 @@
-use core::convert::TryInto;
-
 use crate::{pattern::Pattern, FromRaw};
 
 const CODE_TYPE_WITNESS_LEN_MIN: usize = 1;
@@ -15,7 +13,7 @@ impl FromRaw for CodeCellTypeWitness {
             return None;
         }
 
-        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
 
         Some(CodeCellTypeWitness { pattern })
     }
