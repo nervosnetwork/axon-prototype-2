@@ -28,7 +28,7 @@ use common_raw::{
         sidechain_bond::SidechainBondCellData,
         sidechain_config::SidechainConfigCellData,
         sidechain_fee::SidechainFeeCellData,
-        sidechain_state::SidechainStateCellData,
+        sidechain_state::SidechainStateCellTypeArgs,
         sudt_token::SudtTokenData,
         task::{TaskCellData, TaskCellMode},
     },
@@ -365,14 +365,13 @@ fn admin_create_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
     let sidechain_config_cell_data_output = load_cell_data(1, Source::Output)?;
     let sidechain_config_output = SidechainConfigCellData::from_raw(sidechain_config_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
-    let sidechain_state_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(2, Source::Output))?;
 
     if sidechain_config_output.chain_id != witness.chain_id {
         return Err(Error::Wrong);
     }
 
-    if sidechain_state_output.chain_id != witness.chain_id {
+    if sidechain_state_output_type_args.chain_id != witness.chain_id {
         return Err(Error::Wrong);
     }
 
@@ -401,21 +400,15 @@ fn collator_publish_task(_signer: [u8; 20]) -> Result<(), Error> {
     let sidechain_config_celldep =
         SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
 
-    let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
-    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_input_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Input))?;
 
     let sudt_cell_data_input = load_cell_data(2, Source::Input)?;
     let sudt_input = SudtTokenData::from_raw(sudt_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
-    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Output))?;
 
     let sidechain_bond_data_output = load_cell_data(2, Source::Output)?;
     let _sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let mut sidechain_state_res = sidechain_state_input;
-    //currently always true
-    sidechain_state_res.chain_id = witness.chain_id;
 
     let mut task_cell_res = TaskCellData::default();
     task_cell_res.chain_id = witness.chain_id;
@@ -433,7 +426,7 @@ fn collator_publish_task(_signer: [u8; 20]) -> Result<(), Error> {
         return Err(Error::Wrong);
     }
 
-    if sidechain_state_res != sidechain_state_output {
+    if sidechain_state_input_type_args.chain_id != witness.chain_id || sidechain_state_input_type_args != sidechain_state_output_type_args {
         return Err(Error::Wrong);
     }
 
@@ -468,8 +461,7 @@ fn collator_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
 
     //==========
 
-    let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
-    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_input_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Input))?;
 
     let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
     let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
@@ -480,8 +472,7 @@ fn collator_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
         .collect::<Option<Vec<_>>>()
         .ok_or(Error::Encoding)?;
 
-    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Output))?;
 
     let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
     let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
@@ -492,14 +483,10 @@ fn collator_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
         .collect::<Option<Vec<_>>>()
         .ok_or(Error::Encoding)?;
 
-    let mut sidechain_state_res = sidechain_state_input;
-    //currently always true
-    sidechain_state_res.chain_id = witness.chain_id;
-
     let mut sidechain_fee_res = sidechain_fee_input;
     sidechain_fee_res.amount -= witness.fee;
 
-    if sidechain_state_res != sidechain_state_output {
+    if sidechain_state_input_type_args.chain_id != witness.chain_id || sidechain_state_input_type_args != sidechain_state_output_type_args {
         return Err(Error::Wrong);
     }
 
@@ -545,8 +532,7 @@ fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
 
     //==============
 
-    let sidechain_state_cell_data_input = load_cell_data(1, Source::Input)?;
-    let sidechain_state_input = SidechainStateCellData::from_raw(sidechain_state_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_input_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Input))?;
 
     let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
     let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
@@ -557,8 +543,7 @@ fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
         .collect::<Option<Vec<_>>>()
         .ok_or(Error::Encoding)?;
 
-    let sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-    let sidechain_state_output = SidechainStateCellData::from_raw(sidechain_state_cell_data_ouput.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Output))?;
 
     let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
     let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
@@ -571,14 +556,10 @@ fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
 
     let _sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
 
-    let mut sidechain_state_res = sidechain_state_input;
-    //currently always true
-    sidechain_state_res.chain_id = witness.chain_id;
-
     let mut sidechain_fee_res = sidechain_fee_input;
     sidechain_fee_res.amount -= witness.fee;
 
-    if sidechain_state_res != sidechain_state_output {
+    if sidechain_state_input_type_args.chain_id != witness.chain_id || sidechain_state_input_type_args != sidechain_state_output_type_args {
         return Err(Error::Wrong);
     }
 
