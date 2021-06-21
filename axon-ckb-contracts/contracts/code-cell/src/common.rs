@@ -1,7 +1,7 @@
 use crate::{cell::CellOrigin, error::Error};
 
 use ckb_std::ckb_constants::Source;
-use ckb_std::high_level::{load_cell, load_header, QueryIter};
+use ckb_std::high_level::{load_cell_capacity, load_header, QueryIter};
 
 use common_raw::{
     cell::{global_config::GlobalConfigCellData, sidechain_config::SidechainConfigCellData},
@@ -15,12 +15,16 @@ pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
 
 pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
 
-pub fn get_input_cell_count() -> usize {
-    QueryIter::new(load_cell, Source::Input).count()
+pub fn is_cell_count_greater(n: usize, source: Source) -> bool {
+    load_cell_capacity(n, source).is_ok()
 }
 
-pub fn get_output_cell_count() -> usize {
-    QueryIter::new(load_cell, Source::Output).count()
+pub fn is_cell_count_smaller(n: usize, source: Source) -> bool {
+    load_cell_capacity(n - 1, source).is_err()
+}
+
+pub fn is_cell_count_not_equals(n: usize, source: Source) -> bool {
+    is_cell_count_smaller(n, source) || is_cell_count_greater(n, source)
 }
 
 pub fn has_sidechain_config_passed_update_interval(config: SidechainConfigCellData, origin: CellOrigin) -> Result<(), Error> {

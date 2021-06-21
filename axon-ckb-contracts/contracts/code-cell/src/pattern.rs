@@ -27,10 +27,7 @@ pub fn is_checker_publish_challenge() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count < 4 {
+    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_smaller(3, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -46,11 +43,7 @@ pub fn is_checker_publish_challenge() -> Result<(), Error> {
         },
     };
 
-    for x in 2..output_count {
-        TaskCellData::check(CellOrigin(x, Source::Output), &global)?;
-    }
-
-    Ok(())
+    TaskCellData::range_check(2.., Source::Output, &global)
 }
 
 pub fn is_checker_submit_challenge() -> Result<(), Error> {
@@ -68,10 +61,7 @@ pub fn is_checker_submit_challenge() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count != 2 {
+    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -104,10 +94,7 @@ pub fn is_admin_create_sidechain() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 2 || output_count != 3 {
+    if is_cell_count_not_equals(2, Source::Input) || is_cell_count_not_equals(3, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -139,10 +126,7 @@ pub fn is_collator_publish_task() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count < 4 {
+    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_smaller(4, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -159,11 +143,7 @@ pub fn is_collator_publish_task() -> Result<(), Error> {
         },
     };
 
-    for x in 3..output_count {
-        TaskCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
-    }
-
-    Ok(())
+    TaskCellData::range_check(3.., Source::Output, &global)
 }
 pub fn is_collator_submit_task() -> Result<(), Error> {
     /*
@@ -181,10 +161,7 @@ pub fn is_collator_submit_task() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count < 4 || output_count < 4 || input_count != output_count {
+    if is_cell_count_smaller(4, Source::Input) || is_cell_count_smaller(4, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -201,15 +178,7 @@ pub fn is_collator_submit_task() -> Result<(), Error> {
         },
     };
 
-    for x in 3..input_count {
-        CheckerInfoCellData::check(CellOrigin(x as usize, Source::Input), &global)?;
-    }
-
-    for x in 3..output_count {
-        CheckerInfoCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
-    }
-
-    Ok(())
+    CheckerInfoCellData::one_to_one_check(3, &global)
 }
 
 pub fn is_collator_submit_challenge() -> Result<(), Error> {
@@ -228,10 +197,7 @@ pub fn is_collator_submit_challenge() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count < 5 || output_count < 5 {
+    if is_cell_count_smaller(5, Source::Input) || is_cell_count_smaller(5, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -249,15 +215,8 @@ pub fn is_collator_submit_challenge() -> Result<(), Error> {
         },
     };
 
-    for x in 4..input_count {
-        CheckerInfoCellData::check(CellOrigin(x, Source::Input), &global)?;
-    }
-
-    for x in 4..output_count {
-        CheckerInfoCellData::check(CellOrigin(x, Source::Output), &global)?;
-    }
-
-    Ok(())
+    CheckerInfoCellData::range_check(4.., Source::Input, &global)?;
+    CheckerInfoCellData::range_check(4.., Source::Output, &global)
 }
 
 pub fn is_collator_refresh_task() -> Result<(), Error> {
@@ -274,10 +233,7 @@ pub fn is_collator_refresh_task() -> Result<(), Error> {
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count < 2 || output_count < 2 || input_count != output_count {
+    if is_cell_count_smaller(2, Source::Input) || is_cell_count_smaller(2, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -290,13 +246,5 @@ pub fn is_collator_refresh_task() -> Result<(), Error> {
         },
     };
 
-    for x in 1..input_count {
-        TaskCellData::check(CellOrigin(x as usize, Source::Input), &global)?;
-    }
-
-    for x in 1..output_count {
-        TaskCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
-    }
-
-    Ok(())
+    TaskCellData::one_to_one_check(1, &global)
 }

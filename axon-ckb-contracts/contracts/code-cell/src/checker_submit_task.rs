@@ -76,10 +76,7 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count != 2 {
+    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
