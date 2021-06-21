@@ -27,6 +27,7 @@ pub const SUDT_CODEHASH: [u8; 32] = [
 pub const SUDT_HASHTYPE: u8 = 0u8;
 pub const SUDT_MUSE_ARGS: &[u8] = &[];
 
+#[derive(Debug, Copy, Clone)]
 pub struct CellOrigin(pub usize, pub Source);
 
 pub trait LoadableCell {

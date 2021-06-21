@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![no_std]
 
+use core::convert::TryFrom;
+
 pub mod cell;
 pub mod pattern;
 pub mod witness;
@@ -63,3 +65,17 @@ SerializableNumber!(u64, 8);
 SerializableNumber!(u32, 4);
 SerializableNumber!(u16, 2);
 SerializableNumber!(u8, 1);
+
+impl FromRaw for usize {
+    fn from_raw(raw: &[u8]) -> Option<Self> {
+        u16::from_raw(raw).map(|v| v.into())
+    }
+}
+
+impl Serialize for usize {
+    type RawType = [u8; 2];
+
+    fn serialize(&self) -> Self::RawType {
+        u16::try_from(self.clone()).unwrap().serialize()
+    }
+}

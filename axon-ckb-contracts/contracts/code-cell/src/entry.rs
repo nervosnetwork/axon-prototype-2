@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task,
-    checker_take_beneficiary::checker_take_beneficiary, common::*, error::Error,
+    checker_take_beneficiary::checker_take_beneficiary, collator_unlock_bond::collator_unlock_bond, common::*, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -19,7 +19,7 @@ use ckb_std::{
 
 use crate::pattern::{
     is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_collator_publish_task,
-    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task, is_collator_unlock_bond,
+    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task,
 };
 use common_raw::{
     cell::{
@@ -38,7 +38,6 @@ use common_raw::{
         checker_submit_challenge::CheckerSubmitChallengeWitness, code_cell_witness::CodeCellTypeWitness,
         collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
         collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
-        collator_unlock_bond::CollatorUnlockBondWitness,
     },
     FromRaw,
 };
@@ -243,10 +242,7 @@ pub fn main() -> Result<(), Error> {
         Sidechain Bond Cell         ->          Sudt Cell
 
         */
-        Pattern::CollatorUnlockBond => {
-            is_collator_unlock_bond()?;
-            collator_unlock_bond(signer)
-        }
+        Pattern::CollatorUnlockBond => collator_unlock_bond(raw_witness, signer),
     }
 }
 
@@ -649,26 +645,6 @@ fn collator_refresh_task(_signer: [u8; 20]) -> Result<(), Error> {
     }) {
         return Err(Error::Wrong);
     }
-
-    Ok(())
-}
-
-fn collator_unlock_bond(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CollatorUnlockBond,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-    Dep:    2 Sidechain State Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain Bond Cell         ->          Sudt Cell
-
-    */
-
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let _witness = CollatorUnlockBondWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
     Ok(())
 }

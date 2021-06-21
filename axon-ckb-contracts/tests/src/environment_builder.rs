@@ -73,8 +73,10 @@ impl EnvironmentBuilder {
 
         global_config.checker_bond_cell_lock_codehash.copy_from_slice(a_s_codehash);
         global_config.checker_info_cell_type_codehash.copy_from_slice(a_s_codehash);
+        global_config.sidechain_bond_cell_lock_codehash.copy_from_slice(a_s_codehash);
         global_config.sidechain_config_cell_type_codehash.copy_from_slice(a_s_codehash);
         global_config.sidechain_fee_cell_lock_codehash.copy_from_slice(a_s_codehash);
+        global_config.sidechain_state_cell_type_codehash.copy_from_slice(a_s_codehash);
         global_config.task_cell_type_codehash.copy_from_slice(a_s_codehash);
 
         let global_config_dep = self_.create_dep(

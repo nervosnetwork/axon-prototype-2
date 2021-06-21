@@ -1,5 +1,5 @@
 use crate::{
-    cell::{CellOrigin, LockedTypedSudtCell, TypedCell, TypedSudtCell},
+    cell::{CellOrigin, LockedTypedSudtCell, TypedCell},
     common::*,
     error::Error,
 };
@@ -9,7 +9,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::cell::{
     checker_info::CheckerInfoCellData, code::CodeCellData, sidechain_bond::SidechainBondCellData,
     sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData, sidechain_state::SidechainStateCellData,
-    sudt_token::SudtTokenData, task::TaskCellData,
+    task::TaskCellData,
 };
 
 pub fn is_checker_publish_challenge() -> Result<(), Error> {
@@ -297,42 +297,6 @@ pub fn is_collator_refresh_task() -> Result<(), Error> {
     for x in 1..output_count {
         TaskCellData::check(CellOrigin(x as usize, Source::Output), &global)?;
     }
-
-    Ok(())
-}
-
-pub fn is_collator_unlock_bond() -> Result<(), Error> {
-    /*
-    CollatorUnlockBond,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-    Dep:    2 Sidechain State Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain Bond Cell         ->          Sudt Cell
-
-    */
-    let global = check_global_cell()?;
-
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count < 2 || output_count < 2 {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
-            SidechainStateCellData: CellOrigin(2, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            SidechainBondCellData: CellOrigin(1, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            SudtTokenData: CellOrigin(1, Source::Output),
-        },
-    };
 
     Ok(())
 }
