@@ -84,11 +84,13 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
         &global,
         {
             SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerInfoCellData: CellOrigin(1, Source::Input),
-            TaskCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            CheckerInfoCellData: CellOrigin(1, Source::Output),
+
+            CodeCellData: CODE_INPUT,
+            CheckerInfoCellData: CHECKER_INFO_INPUT,
+            TaskCellData: TASK_INPUT,
+
+            CodeCellData: CODE_OUTPUT,
+            CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },
     };
 
