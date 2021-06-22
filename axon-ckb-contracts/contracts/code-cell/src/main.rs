@@ -24,6 +24,7 @@ mod checker_join_sidechain;
 mod checker_quit_sidechain;
 mod checker_submit_task;
 mod checker_take_beneficiary;
+mod collator_refresh_task;
 mod collator_unlock_bond;
 
 use ckb_std::{debug, default_alloc};

@@ -218,33 +218,3 @@ pub fn is_collator_submit_challenge() -> Result<(), Error> {
     CheckerInfoCellData::range_check(4.., Source::Input, &global)?;
     CheckerInfoCellData::range_check(4.., Source::Output, &global)
 }
-
-pub fn is_collator_refresh_task() -> Result<(), Error> {
-    /*
-    CollatorRefreshTask,
-
-    Dep:    0 Global Config Cell
-            1 Sidechain Config Cell
-
-    Code Cell                   ->          Code Cell
-    [Task Cell]                 ->          [Task Cell]
-
-    */
-
-    let global = check_global_cell()?;
-
-    if is_cell_count_smaller(2, Source::Input) || is_cell_count_smaller(2, Source::Output) {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-        },
-    };
-
-    TaskCellData::one_to_one_check(1, &global)
-}

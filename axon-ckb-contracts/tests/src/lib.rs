@@ -23,6 +23,8 @@ mod test_join_sidechain;
 #[cfg(test)]
 mod test_quit_sidechain;
 #[cfg(test)]
+mod test_refresh_task;
+#[cfg(test)]
 mod test_submit_task;
 #[cfg(test)]
 mod test_take_beneficiary;
