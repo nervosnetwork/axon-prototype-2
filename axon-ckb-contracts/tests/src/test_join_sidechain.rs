@@ -7,8 +7,8 @@ use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::CheckerInfoCellData,
-        sidechain_config::SidechainConfigCellData,
+        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
+        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
 };
@@ -64,13 +64,27 @@ fn test_success() {
         .build_script(&always_success_code, checker_bond_lock_args.serialize())
         .expect("script");
 
+    let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
+    checker_info_type_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+
+    let checker_info_script = builder
+        .context
+        .build_script(&always_success_code, checker_info_type_args.serialize())
+        .expect("script");
+
+    let config_type_args = SidechainConfigCellTypeArgs::default();
+    let config_script = builder
+        .context
+        .build_script(&always_success_code, config_type_args.serialize())
+        .expect("script");
+
     // prepare inputs
     let mut config_input_data = SidechainConfigCellData::default();
     config_input_data.minimal_bond = 100;
     config_input_data.update_interval = 100;
 
     let config_input_out_point = builder.context.create_cell(
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &config_script),
         config_input_data.serialize(),
     );
     let config_input = CellInput::new_builder().previous_output(config_input_out_point.clone()).build();
@@ -97,14 +111,13 @@ fn test_success() {
     ];
 
     let checker_bond_output = checker_bond_input_data.clone();
-    let mut checker_info_output = CheckerInfoCellData::default();
-    checker_info_output.checker_public_key_hash.copy_from_slice(&pubkey_hash);
+    let checker_info_output = CheckerInfoCellData::default();
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
         new_type_cell_output(1000, &always_success, &always_success),
         new_type_cell_output(1000, &checker_bond_lock_output_script, &always_success),
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
     ];
     let outputs_data: Vec<Bytes> = vec![
         Bytes::new(),

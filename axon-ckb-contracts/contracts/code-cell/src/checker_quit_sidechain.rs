@@ -3,9 +3,9 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
+        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellData,
-        sidechain_config::SidechainConfigCellData,
+        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
     },
     witness::checker_quit_sidechain::CheckerQuitSidechainWitness,
     FromRaw,
@@ -36,10 +36,19 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
 
     let witness = CheckerQuitSidechainWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
-    let (config_input, checker_bond_input_lock_args, checker_bond_input, checker_info_input) = load_entities! {
+    let (
+        config_input_type_args,
+        config_input,
+        checker_bond_input_lock_args,
+        checker_bond_input,
+        checker_info_input_type_args,
+        checker_info_input,
+    ) = load_entities! {
+        SidechainConfigCellTypeArgs: CONFIG_INPUT,
         SidechainConfigCellData: CONFIG_INPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_INPUT,
         CheckerBondCellData: CHECKER_BOND_INPUT,
+        CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCellData: CHECKER_INFO_INPUT,
     };
     let (config_output, checker_bond_output_lock_args, checker_bond_output) = load_entities! {
@@ -60,7 +69,7 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
         bit_map_remove(checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id).ok_or(Error::CheckerBondMismatch)?;
 
     has_sidechain_config_passed_update_interval(config_input, CONFIG_INPUT)?;
-    if config_res.chain_id != witness.chain_id || config_res != config_output {
+    if config_input_type_args.chain_id != witness.chain_id || config_res != config_output {
         return Err(Error::SidechainConfigMismatch);
     }
     if checker_bond_res_lock_args != checker_bond_output_lock_args
@@ -69,9 +78,9 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     {
         return Err(Error::CheckerBondMismatch);
     }
-    if checker_info_input.chain_id != witness.chain_id
+    if checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input.checker_id != witness.checker_id
-        || checker_info_input.checker_public_key_hash != signer
+        || checker_info_input_type_args.checker_lock_arg != signer
         || checker_info_input.mode != CheckerInfoCellMode::Idle
     {
         return Err(Error::CheckerInfoMismatch);

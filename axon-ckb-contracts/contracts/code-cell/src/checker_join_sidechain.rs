@@ -3,9 +3,9 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
+        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellData,
-        sidechain_config::SidechainConfigCellData,
+        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
     FromRaw,
@@ -36,20 +36,21 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
 
     let witness = CheckerJoinSidechainWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
-    let (config_input, checker_bond_input_lock_args, checker_bond_input) = load_entities! {
+    let (config_input_type_args, config_input, checker_bond_input_lock_args, checker_bond_input) = load_entities! {
+        SidechainConfigCellTypeArgs: CONFIG_INPUT,
         SidechainConfigCellData: CONFIG_INPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_INPUT,
         CheckerBondCellData: CHECKER_BOND_INPUT,
     };
-    let (config_output, checker_bond_output_lock_args, checker_bond_output, checker_info_output) = load_entities! {
+    let (config_output, checker_bond_output_lock_args, checker_bond_output, checker_info_output_type_args, checker_info_output) = load_entities! {
         SidechainConfigCellData: CONFIG_OUTPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_OUTPUT,
         CheckerBondCellData: CHECKER_BOND_OUTPUT,
+        CheckerInfoCellTypeArgs: CHECKER_INFO_OUTPUT,
         CheckerInfoCellData: CHECKER_INFO_OUTPUT,
     };
 
     let mut config_res = config_input.clone();
-
     config_res.checker_total_count += 1;
     config_res.checker_bitmap = bit_map_add(&config_res.checker_bitmap, witness.checker_id).ok_or(Error::SidechainConfigMismatch)?;
 
@@ -58,14 +59,16 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
         bit_map_add(&checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id).ok_or(Error::CheckerBondMismatch)?;
 
     let mut checker_info_res = checker_info_output.clone();
-    checker_info_res.chain_id = witness.chain_id;
     checker_info_res.checker_id = witness.checker_id;
     checker_info_res.unpaid_fee = 0;
-    checker_info_res.checker_public_key_hash = signer;
     checker_info_res.mode = CheckerInfoCellMode::Idle;
 
+    let mut checker_info_res_type_args = checker_info_output_type_args.clone();
+    checker_info_res_type_args.chain_id = witness.chain_id;
+    checker_info_res_type_args.checker_lock_arg = signer;
+
     has_sidechain_config_passed_update_interval(config_input, CONFIG_INPUT)?;
-    if config_res.chain_id != witness.chain_id || config_res != config_output {
+    if config_input_type_args.chain_id != witness.chain_id || config_res != config_output {
         return Err(Error::SidechainConfigMismatch);
     }
     if checker_bond_res_lock_args != checker_bond_output_lock_args
@@ -75,7 +78,7 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     {
         return Err(Error::CheckerBondMismatch);
     }
-    if checker_info_res != checker_info_output {
+    if checker_info_res != checker_info_output || checker_info_res_type_args != checker_info_output_type_args {
         return Err(Error::CheckerInfoMismatch);
     }
 

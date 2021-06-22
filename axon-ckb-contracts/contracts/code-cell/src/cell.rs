@@ -7,7 +7,7 @@ use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
-        code::{CodeCellData, CodeCellLockArgs, CodeCellTypeArgs},
+        code::{CodeCellData, CodeCellLockArgs},
         global_config::GlobalConfigCellData,
         muse_token::MuseTokenData,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
@@ -79,8 +79,7 @@ pub trait LoadableTypeArgs {
     }
 }
 
-impl LoadableLockArgs for CheckerInfoCellTypeArgs {}
-impl LoadableTypeArgs for CodeCellTypeArgs {}
+impl LoadableTypeArgs for CheckerInfoCellTypeArgs {}
 impl LoadableTypeArgs for SidechainConfigCellTypeArgs {}
 impl LoadableTypeArgs for SidechainStateCellTypeArgs {}
 impl LoadableTypeArgs for TaskCellTypeArgs {}

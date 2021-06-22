@@ -2,10 +2,10 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
+        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellData,
         sidechain_config::SidechainConfigCellData,
-        task::{TaskCellData, TaskCellMode},
+        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
     FromRaw,
@@ -36,8 +36,10 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     is_checker_submit_task(&witness)?;
 
     let config_dep = SidechainConfigCellData::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
-    let (checker_info_input, task_input) = load_entities! {
+    let (checker_info_input_type_args, checker_info_input, task_input_type_args, task_input) = load_entities! {
+        CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCellData: CHECKER_INFO_INPUT,
+        TaskCellTypeArgs: TASK_INPUT,
         TaskCellData: TASK_INPUT,
     };
     let checker_info_output = CheckerInfoCellData::load(CHECKER_INFO_OUTPUT)?;
@@ -47,14 +49,14 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     checker_info_res.unpaid_fee += u128::from(config_dep.check_fee_rate) * task_input.check_data_size;
 
     if checker_info_res != checker_info_output
-        || checker_info_input.checker_public_key_hash != signer
-        || checker_info_input.chain_id != witness.chain_id
+        || checker_info_input_type_args.checker_lock_arg != signer
+        || checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input.checker_id != witness.checker_id
     {
         return Err(Error::CheckerInfoMismatch);
     }
 
-    if task_input.chain_id != witness.chain_id || task_input.mode != TaskCellMode::Task {
+    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskCellMode::Task {
         return Err(Error::TaskMismatch);
     }
 

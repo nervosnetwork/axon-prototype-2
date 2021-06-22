@@ -1,6 +1,6 @@
 use crate::{check_args_len, FromRaw, Serialize};
 
-const GLOBAL_CONFIG_DATA_LEN: usize = 296;
+const GLOBAL_CONFIG_DATA_LEN: usize = 284;
 
 /**
 
@@ -18,7 +18,7 @@ const GLOBAL_CONFIG_DATA_LEN: usize = 296;
 */
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct GlobalConfigCellData {
-    pub admin_public_key:        [u8; 32],
+    pub admin_lock_arg:          [u8; 20],
     /* this is the authenticated admin for
      * sidechain config cell */
     pub code_cell_type_codehash: [u8; 32],
@@ -50,43 +50,43 @@ impl FromRaw for GlobalConfigCellData {
     fn from_raw(cell_raw_data: &[u8]) -> Option<GlobalConfigCellData> {
         check_args_len(cell_raw_data.len(), GLOBAL_CONFIG_DATA_LEN)?;
 
-        let mut admin_public_key = [0u8; 32];
-        admin_public_key.copy_from_slice(&cell_raw_data[0..32]);
+        let mut admin_lock_arg = [0u8; 20];
+        admin_lock_arg.copy_from_slice(&cell_raw_data[0..20]);
 
         let mut code_cell_type_codehash = [0u8; 32];
-        code_cell_type_codehash.copy_from_slice(&cell_raw_data[32..64]);
-        let code_cell_type_hashtype = u8::from_raw(&cell_raw_data[64..65])?;
+        code_cell_type_codehash.copy_from_slice(&cell_raw_data[20..52]);
+        let code_cell_type_hashtype = u8::from_raw(&cell_raw_data[52..53])?;
 
         let mut sidechain_config_cell_type_codehash = [0u8; 32];
-        sidechain_config_cell_type_codehash.copy_from_slice(&cell_raw_data[65..97]);
-        let sidechain_config_cell_type_hashtype = u8::from_raw(&cell_raw_data[97..98])?;
+        sidechain_config_cell_type_codehash.copy_from_slice(&cell_raw_data[53..85]);
+        let sidechain_config_cell_type_hashtype = u8::from_raw(&cell_raw_data[85..86])?;
 
         let mut sidechain_state_cell_type_codehash = [0u8; 32];
-        sidechain_state_cell_type_codehash.copy_from_slice(&cell_raw_data[98..130]);
-        let sidechain_state_cell_type_hashtype = u8::from_raw(&cell_raw_data[130..131])?;
+        sidechain_state_cell_type_codehash.copy_from_slice(&cell_raw_data[86..118]);
+        let sidechain_state_cell_type_hashtype = u8::from_raw(&cell_raw_data[118..119])?;
 
         let mut checker_info_cell_type_codehash = [0u8; 32];
-        checker_info_cell_type_codehash.copy_from_slice(&cell_raw_data[131..163]);
-        let checker_info_cell_type_hashtype = u8::from_raw(&cell_raw_data[163..164])?;
+        checker_info_cell_type_codehash.copy_from_slice(&cell_raw_data[119..151]);
+        let checker_info_cell_type_hashtype = u8::from_raw(&cell_raw_data[151..152])?;
 
         let mut checker_bond_cell_lock_codehash = [0u8; 32];
-        checker_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[164..196]);
-        let checker_bond_cell_lock_hashtype = u8::from_raw(&cell_raw_data[196..197])?;
+        checker_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[152..184]);
+        let checker_bond_cell_lock_hashtype = u8::from_raw(&cell_raw_data[184..185])?;
 
         let mut task_cell_type_codehash = [0u8; 32];
-        task_cell_type_codehash.copy_from_slice(&cell_raw_data[197..229]);
-        let task_cell_type_hashtype = u8::from_raw(&cell_raw_data[229..230])?;
+        task_cell_type_codehash.copy_from_slice(&cell_raw_data[185..217]);
+        let task_cell_type_hashtype = u8::from_raw(&cell_raw_data[217..218])?;
 
         let mut sidechain_fee_cell_lock_codehash = [0u8; 32];
-        sidechain_fee_cell_lock_codehash.copy_from_slice(&cell_raw_data[230..262]);
-        let sidechain_fee_cell_lock_hashtype = u8::from_raw(&cell_raw_data[262..263])?;
+        sidechain_fee_cell_lock_codehash.copy_from_slice(&cell_raw_data[218..250]);
+        let sidechain_fee_cell_lock_hashtype = u8::from_raw(&cell_raw_data[250..251])?;
 
         let mut sidechain_bond_cell_lock_codehash = [0u8; 32];
-        sidechain_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[263..295]);
-        let sidechain_bond_cell_lock_hashtype = u8::from_raw(&cell_raw_data[295..296])?;
+        sidechain_bond_cell_lock_codehash.copy_from_slice(&cell_raw_data[251..283]);
+        let sidechain_bond_cell_lock_hashtype = u8::from_raw(&cell_raw_data[283..284])?;
 
         Some(GlobalConfigCellData {
-            admin_public_key,
+            admin_lock_arg,
             code_cell_type_codehash,
             code_cell_type_hashtype,
             sidechain_config_cell_type_codehash,
@@ -113,32 +113,32 @@ impl Serialize for GlobalConfigCellData {
     fn serialize(&self) -> Self::RawType {
         let mut buf = [0u8; GLOBAL_CONFIG_DATA_LEN];
 
-        buf[0..32].copy_from_slice(&self.admin_public_key);
+        buf[0..20].copy_from_slice(&self.admin_lock_arg);
 
-        buf[32..64].copy_from_slice(&self.code_cell_type_codehash);
+        buf[20..52].copy_from_slice(&self.code_cell_type_codehash);
 
-        buf[64..65].copy_from_slice(&self.code_cell_type_hashtype.serialize());
+        buf[52..53].copy_from_slice(&self.code_cell_type_hashtype.serialize());
 
-        buf[65..97].copy_from_slice(&self.sidechain_config_cell_type_codehash);
-        buf[97..98].copy_from_slice(&self.sidechain_config_cell_type_hashtype.serialize());
+        buf[53..85].copy_from_slice(&self.sidechain_config_cell_type_codehash);
+        buf[85..86].copy_from_slice(&self.sidechain_config_cell_type_hashtype.serialize());
 
-        buf[98..130].copy_from_slice(&self.sidechain_state_cell_type_codehash);
-        buf[130..131].copy_from_slice(&self.sidechain_state_cell_type_hashtype.serialize());
+        buf[86..118].copy_from_slice(&self.sidechain_state_cell_type_codehash);
+        buf[118..119].copy_from_slice(&self.sidechain_state_cell_type_hashtype.serialize());
 
-        buf[131..163].copy_from_slice(&self.checker_info_cell_type_codehash);
-        buf[163..164].copy_from_slice(&self.checker_info_cell_type_hashtype.serialize());
+        buf[119..151].copy_from_slice(&self.checker_info_cell_type_codehash);
+        buf[151..152].copy_from_slice(&self.checker_info_cell_type_hashtype.serialize());
 
-        buf[164..196].copy_from_slice(&self.checker_bond_cell_lock_codehash);
-        buf[196..197].copy_from_slice(&self.checker_bond_cell_lock_hashtype.serialize());
+        buf[152..184].copy_from_slice(&self.checker_bond_cell_lock_codehash);
+        buf[184..185].copy_from_slice(&self.checker_bond_cell_lock_hashtype.serialize());
 
-        buf[197..229].copy_from_slice(&self.task_cell_type_codehash);
-        buf[229..230].copy_from_slice(&self.task_cell_type_hashtype.serialize());
+        buf[185..217].copy_from_slice(&self.task_cell_type_codehash);
+        buf[217..218].copy_from_slice(&self.task_cell_type_hashtype.serialize());
 
-        buf[230..262].copy_from_slice(&self.sidechain_fee_cell_lock_codehash);
-        buf[262..263].copy_from_slice(&self.sidechain_fee_cell_lock_hashtype.serialize());
+        buf[218..250].copy_from_slice(&self.sidechain_fee_cell_lock_codehash);
+        buf[250..251].copy_from_slice(&self.sidechain_fee_cell_lock_hashtype.serialize());
 
-        buf[263..295].copy_from_slice(&self.sidechain_bond_cell_lock_codehash);
-        buf[295..296].copy_from_slice(&self.sidechain_bond_cell_lock_hashtype.serialize());
+        buf[251..283].copy_from_slice(&self.sidechain_bond_cell_lock_codehash);
+        buf[283..284].copy_from_slice(&self.sidechain_bond_cell_lock_hashtype.serialize());
 
         buf
     }
