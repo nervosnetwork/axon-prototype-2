@@ -1,4 +1,7 @@
+use crate::{FromRaw, Serialize};
 use core::convert::TryFrom;
+
+const PATTERN_LEN: usize = 1;
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialOrd, PartialEq)]
@@ -42,5 +45,19 @@ impl TryFrom<u8> for Pattern {
             12u8 => Self::CollatorUnlockBond,
             _ => return Err(()),
         });
+    }
+}
+
+impl FromRaw for Pattern {
+    fn from_raw(raw: &[u8]) -> Option<Self> {
+        Pattern::try_from(u8::from_raw(raw)?).ok()
+    }
+}
+
+impl Serialize for Pattern {
+    type RawType = [u8; PATTERN_LEN];
+
+    fn serialize(&self) -> Self::RawType {
+        (self.clone() as u8).serialize()
     }
 }

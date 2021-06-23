@@ -1,5 +1,3 @@
-use core::convert::TryInto;
-
 use crate::{pattern::Pattern, FromRaw, Serialize};
 
 const CHECKER_TAKE_BENEFICIARY_WITNESS_LEN: usize = 19;
@@ -28,7 +26,7 @@ impl FromRaw for CheckerTakeBeneficiaryWitness {
             return None;
         }
 
-        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
         let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
         let checker_id = u8::from_raw(&witness_raw_data[2..3])?;
         let fee = u128::from_raw(&witness_raw_data[3..19])?;
@@ -48,7 +46,7 @@ impl Serialize for CheckerTakeBeneficiaryWitness {
     fn serialize(&self) -> Self::RawType {
         let mut buf = [0u8; CHECKER_TAKE_BENEFICIARY_WITNESS_LEN];
 
-        buf[0..1].copy_from_slice(&(self.pattern as u8).serialize());
+        buf[0..1].copy_from_slice(&self.pattern.serialize());
         buf[1..2].copy_from_slice(&self.chain_id.serialize());
         buf[2..3].copy_from_slice(&self.checker_id.serialize());
         buf[3..19].copy_from_slice(&self.fee.serialize());

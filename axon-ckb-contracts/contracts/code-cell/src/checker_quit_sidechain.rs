@@ -83,10 +83,7 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
 fn is_checker_quit_sidechain() -> Result<(), Error> {
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 4 || output_count != 3 {
+    if is_cell_count_not_equals(4, Source::Input) || is_cell_count_not_equals(3, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 

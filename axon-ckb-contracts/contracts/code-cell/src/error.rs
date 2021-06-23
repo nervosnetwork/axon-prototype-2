@@ -28,8 +28,10 @@ pub enum Error {
     #[allow(dead_code)]
     TypeScriptMissed,
     Wrong,
+    SidechainBondMismatch,
     SidechainConfigMismatch,
     SidechainFeeMismatch,
+    SidechainStateMismatch,
     CheckerBondMismatch,
     CheckerInfoMismatch,
     MuseTokenMismatch,

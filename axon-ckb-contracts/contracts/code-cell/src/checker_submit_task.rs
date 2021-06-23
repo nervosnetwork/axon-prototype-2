@@ -76,10 +76,7 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
 
     let global = check_global_cell()?;
 
-    let input_count = get_input_cell_count();
-    let output_count = get_output_cell_count();
-
-    if input_count != 3 || output_count != 2 {
+    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -87,11 +84,13 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
         &global,
         {
             SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerInfoCellData: CellOrigin(1, Source::Input),
-            TaskCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            CheckerInfoCellData: CellOrigin(1, Source::Output),
+
+            CodeCellData: CODE_INPUT,
+            CheckerInfoCellData: CHECKER_INFO_INPUT,
+            TaskCellData: TASK_INPUT,
+
+            CodeCellData: CODE_OUTPUT,
+            CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },
     };
 

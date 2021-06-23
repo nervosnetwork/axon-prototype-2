@@ -1,5 +1,3 @@
-use core::convert::TryInto;
-
 use crate::{pattern::Pattern, FromRaw};
 
 #[derive(Debug)]
@@ -17,7 +15,7 @@ impl FromRaw for CollatorSubmitChallengeWitness {
             return None;
         }
 
-        let pattern = u8::from_raw(&witness_raw_data[0..1])?.try_into().ok()?;
+        let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
         let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
         let fee = u128::from_raw(&witness_raw_data[2..18])?;
         let fee_per_checker = u128::from_raw(&witness_raw_data[18..34])?;

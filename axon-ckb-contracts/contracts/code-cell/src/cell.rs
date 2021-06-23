@@ -27,6 +27,7 @@ pub const SUDT_CODEHASH: [u8; 32] = [
 pub const SUDT_HASHTYPE: u8 = 0u8;
 pub const SUDT_MUSE_ARGS: &[u8] = &[];
 
+#[derive(Debug, Copy, Clone)]
 pub struct CellOrigin(pub usize, pub Source);
 
 pub trait LoadableCell {
@@ -111,6 +112,45 @@ macro_rules! check_script {
     };
 }
 
+macro_rules! CheckableHelpers {
+    () => {
+        fn range_check<T: Iterator<Item = usize>>(range: T, source: Source, global: &GlobalConfigCellData) -> Result<(), Error> {
+            for x in range {
+                match Self::check(CellOrigin(x, source), &global) {
+                    Ok(_) => (),
+                    Err(Error::IndexOutOfBound) => break,
+                    Err(err) => return Err(err),
+                }
+            }
+
+            Ok(())
+        }
+
+        fn one_to_one_check(start: usize, global: &GlobalConfigCellData) -> Result<(), Error> {
+            for x in start.. {
+                let input_ended = match Self::check(CellOrigin(x, Source::Input), &global) {
+                    Ok(_) => false,
+                    Err(Error::IndexOutOfBound) => true,
+                    Err(err) => return Err(err),
+                };
+                let output_ended = match TaskCellData::check(CellOrigin(x, Source::Output), &global) {
+                    Ok(_) => false,
+                    Err(Error::IndexOutOfBound) => true,
+                    Err(err) => return Err(err),
+                };
+                if input_ended && output_ended {
+                    break;
+                }
+                if input_ended || output_ended {
+                    return Err(Error::CellNumberMismatch);
+                }
+            }
+
+            Ok(())
+        }
+    };
+}
+
 pub trait TypedCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8);
 
@@ -124,6 +164,8 @@ pub trait TypedCell {
 
         Ok(())
     }
+
+    CheckableHelpers! {}
 }
 
 impl TypedCell for CodeCellData {
@@ -172,6 +214,8 @@ pub trait TypedSudtCell {
 
         check_sudt_type_script(index, source)
     }
+
+    CheckableHelpers! {}
 }
 
 impl TypedSudtCell for MuseTokenData {}
@@ -191,6 +235,8 @@ pub trait LockedTypedSudtCell {
 
         Ok(())
     }
+
+    CheckableHelpers! {}
 }
 
 impl LockedTypedSudtCell for CheckerBondCellData {
