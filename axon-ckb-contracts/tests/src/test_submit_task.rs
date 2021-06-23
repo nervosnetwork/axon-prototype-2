@@ -6,9 +6,9 @@ use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
-        sidechain_config::SidechainConfigCellData,
-        task::TaskCellData,
+        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        task::{TaskCellData, TaskCellTypeArgs},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
 };
@@ -26,29 +26,49 @@ fn test_success() {
     let (
         mut builder,
         AxonScripts {
+            always_success_code,
             always_success_script: always_success,
             code_cell_script,
             ..
         },
     ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
 
+    // prepare scripts
+    let config_type_args = SidechainConfigCellTypeArgs::default();
+    let config_script = builder
+        .context
+        .build_script(&always_success_code, config_type_args.serialize())
+        .expect("script");
+
+    let task_type_args = TaskCellTypeArgs::default();
+    let task_script = builder
+        .context
+        .build_script(&always_success_code, task_type_args.serialize())
+        .expect("script");
+
+    let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
+    checker_info_type_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+
+    let checker_info_script = builder
+        .context
+        .build_script(&always_success_code, checker_info_type_args.serialize())
+        .expect("script");
+
     // prepare cell deps
     let mut config_dep_data = SidechainConfigCellData::default();
     config_dep_data.check_fee_rate = 100;
 
     let config_dep_out_point = builder.context.create_cell(
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &config_script),
         config_dep_data.serialize(),
     );
     let config_dep = CellDep::new_builder().out_point(config_dep_out_point).build();
     let mut builder = builder.cell_dep(config_dep);
 
     // prepare inputs
-    let mut checker_info_input_data = CheckerInfoCellData::default();
-    checker_info_input_data.checker_public_key_hash.copy_from_slice(&pubkey_hash);
-
+    let checker_info_input_data = CheckerInfoCellData::default();
     let checker_info_input = builder.create_input(
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
         checker_info_input_data.serialize(),
     );
 
@@ -56,7 +76,7 @@ fn test_success() {
     task_input_data.check_data_size = 100;
 
     let task_input = builder.create_input(
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &task_script),
         task_input_data.serialize(),
     );
 
@@ -69,7 +89,7 @@ fn test_success() {
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
     ];
     let outputs_data: Vec<Bytes> = vec![Bytes::new(), checker_info_output.serialize()];
 

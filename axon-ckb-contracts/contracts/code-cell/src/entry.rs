@@ -24,14 +24,14 @@ use crate::pattern::{
 };
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode},
+        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellLockArgs,
         sidechain_bond::SidechainBondCellData,
-        sidechain_config::SidechainConfigCellData,
+        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
         sidechain_fee::SidechainFeeCellData,
         sidechain_state::SidechainStateCellTypeArgs,
         sudt_token::SudtTokenData,
-        task::{TaskCellData, TaskCellMode},
+        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
     },
     pattern::Pattern,
     witness::{
@@ -51,7 +51,7 @@ pub fn main() -> Result<(), Error> {
     thus code cell's lock script must be secp256k1
      */
     // of cause, the signer is correct
-    let signer = CodeCellLockArgs::load(CODE_INPUT)?.public_key_hash;
+    let signer = CodeCellLockArgs::load(CODE_INPUT)?.lock_arg;
 
     let witness = load_witness_args(0, Source::GroupInput)?;
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
@@ -227,7 +227,7 @@ pub fn main() -> Result<(), Error> {
         [Task Cell]                 ->          [Task Cell]
 
         */
-        Pattern::CollatorRefreshTask => collator_refresh_task(),
+        Pattern::CollatorRefreshTask => collator_refresh_task(raw_witness),
 
         /*
         CollatorUnlockBond,
@@ -264,30 +264,36 @@ fn checker_publish_challenge(_signer: [u8; 20]) -> Result<(), Error> {
     let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
     let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
+    let checker_info_input_type_args = CheckerInfoCellTypeArgs::load(CellOrigin(1, Source::Input))?;
+
     let task_cell_data_input = load_cell_data(2, Source::Input)?;
     let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
+
+    let task_cell_input_type_args = TaskCellTypeArgs::load(CellOrigin(2, Source::Input))?;
 
     let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
     let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
+    let checker_info_output_type_args = CheckerInfoCellTypeArgs::load(CellOrigin(1, Source::Output))?;
+
     let mut checker_info_res = checker_info_input.clone();
 
-    checker_info_res.chain_id = witness.chain_id;
-    checker_info_res.checker_id = witness.checker_id;
     checker_info_res.mode = CheckerInfoCellMode::ChallengeRejected;
 
     let mut task_cell_res = task_cell_input.clone();
-
-    if checker_info_res != checker_info_output {
-        return Err(Error::Wrong);
-    }
-
-    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Task {
-        return Err(Error::Wrong);
-    }
-
-    task_cell_res.chain_id = witness.chain_id;
     task_cell_res.mode = TaskCellMode::Challenge;
+
+    if checker_info_input.checker_id != witness.checker_id
+        || checker_info_input_type_args.chain_id != witness.chain_id
+        || checker_info_input_type_args != checker_info_output_type_args
+        || checker_info_res != checker_info_output
+    {
+        return Err(Error::Wrong);
+    }
+
+    if task_cell_input_type_args.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Task {
+        return Err(Error::Wrong);
+    }
 
     if !QueryIter::new(load_cell_data, Source::Output).skip(2).all(|task_cell_data_input| {
         let task_cell_output = TaskCellData::from_raw(task_cell_data_input.as_slice());
@@ -323,22 +329,30 @@ fn checker_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
     let checker_info_cell_data_input = load_cell_data(1, Source::Input)?;
     let checker_info_input = CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
 
+    let checker_info_input_type_args = CheckerInfoCellTypeArgs::load(CellOrigin(1, Source::Input))?;
+
     let task_cell_data_input = load_cell_data(2, Source::Input)?;
     let task_cell_input = TaskCellData::from_raw(task_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
+
+    let task_cell_input_type_args = TaskCellTypeArgs::load(CellOrigin(2, Source::Input))?;
 
     let checker_info_cell_data_output = load_cell_data(1, Source::Output)?;
     let checker_info_output = CheckerInfoCellData::from_raw(checker_info_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
 
+    let checker_info_output_type_args = CheckerInfoCellTypeArgs::load(CellOrigin(1, Source::Output))?;
+
     let mut checker_info_res = checker_info_input.clone();
-    checker_info_res.chain_id = witness.chain_id;
-    checker_info_res.checker_id = witness.checker_id;
     checker_info_res.mode = CheckerInfoCellMode::ChallengeRejected;
 
-    if checker_info_res != checker_info_output {
+    if checker_info_input_type_args.chain_id != witness.chain_id
+        || checker_info_input_type_args == checker_info_output_type_args
+        || checker_info_input.checker_id != witness.checker_id
+        || checker_info_res != checker_info_output
+    {
         return Err(Error::Wrong);
     }
 
-    if task_cell_input.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Challenge {
+    if task_cell_input_type_args.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Challenge {
         return Err(Error::Wrong);
     }
 
@@ -360,12 +374,11 @@ fn admin_create_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
     let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
     let witness = AdminCreateSidechainWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
 
-    let sidechain_config_cell_data_output = load_cell_data(1, Source::Output)?;
-    let sidechain_config_output = SidechainConfigCellData::from_raw(sidechain_config_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
+    let sidechain_config_output_type_args = SidechainConfigCellTypeArgs::load(CellOrigin(1, Source::Output))?;
 
     let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(2, Source::Output))?;
 
-    if sidechain_config_output.chain_id != witness.chain_id {
+    if sidechain_config_output_type_args.chain_id != witness.chain_id {
         return Err(Error::Wrong);
     }
 
@@ -409,19 +422,25 @@ fn collator_publish_task(_signer: [u8; 20]) -> Result<(), Error> {
     let _sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice()).ok_or(Error::Encoding)?;
 
     let mut task_cell_res = TaskCellData::default();
-    task_cell_res.chain_id = witness.chain_id;
     task_cell_res.mode = TaskCellMode::Challenge;
     //todo calc heights and block hashs from sidechain state cell
 
-    if !QueryIter::new(load_cell_data, Source::Output).skip(3).all(|task_cell_data_output| {
-        let task_cell_output = TaskCellData::from_raw(task_cell_data_output.as_slice());
-        if let Some(task_cell_output) = task_cell_output {
-            task_cell_output == task_cell_res
-        } else {
-            false
+    let mut task_cell_res_type_args = TaskCellTypeArgs::default();
+    task_cell_res_type_args.chain_id = witness.chain_id;
+
+    for i in 3.. {
+        let task_cell_output = match TaskCellData::load(CellOrigin(i, Source::Output)) {
+            Ok(data) => data,
+            Err(Error::IndexOutOfBound) => break,
+            Err(err) => return Err(err),
+        };
+        let task_cell_output_type_args = match TaskCellTypeArgs::load(CellOrigin(i, Source::Output)) {
+            Ok(data) => data,
+            Err(err) => return Err(err),
+        };
+        if task_cell_output != task_cell_res || task_cell_output_type_args != task_cell_res_type_args {
+            return Err(Error::Wrong);
         }
-    }) {
-        return Err(Error::Wrong);
     }
 
     if sidechain_state_input_type_args.chain_id != witness.chain_id || sidechain_state_input_type_args != sidechain_state_output_type_args {
@@ -494,13 +513,27 @@ fn collator_submit_task(_signer: [u8; 20]) -> Result<(), Error> {
 
     if !checker_info_inputs.into_iter().zip(checker_info_outputs).all(|(input, output)| {
         let mut res = input;
-        res.chain_id = witness.chain_id;
         res.unpaid_fee += witness.fee_per_checker;
         res.mode = CheckerInfoCellMode::Idle;
 
         res == output
     }) {
         return Err(Error::Wrong);
+    }
+    for i in 3.. {
+        let checker_info_input_type_args = match CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Input)) {
+            Ok(data) => data,
+            Err(Error::IndexOutOfBound) => break,
+            Err(err) => return Err(err),
+        };
+        let checker_info_output_type_args = match CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Output)) {
+            Ok(data) => data,
+            Err(err) => return Err(err),
+        };
+
+        if checker_info_input_type_args.chain_id != witness.chain_id || checker_info_input_type_args != checker_info_output_type_args {
+            return Err(Error::Wrong);
+        }
     }
 
     Ok(())
@@ -579,13 +612,27 @@ fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
         .collect::<Vec<_>>();
 
     if !checker_info_res.into_iter().zip(checker_info_outputs).all(|(mut res, output)| {
-        res.chain_id = witness.chain_id;
         res.unpaid_fee += witness.fee_per_checker;
         res.mode = CheckerInfoCellMode::Idle;
 
         res == output
     }) {
         return Err(Error::Wrong);
+    }
+    for i in 3.. {
+        let checker_info_input_type_args = match CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Input)) {
+            Ok(data) => data,
+            Err(Error::IndexOutOfBound) => break,
+            Err(err) => return Err(err),
+        };
+        let checker_info_output_type_args = match CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Output)) {
+            Ok(data) => data,
+            Err(err) => return Err(err),
+        };
+
+        if checker_info_input_type_args.chain_id != witness.chain_id || checker_info_input_type_args != checker_info_output_type_args {
+            return Err(Error::Wrong);
+        }
     }
 
     Ok(())

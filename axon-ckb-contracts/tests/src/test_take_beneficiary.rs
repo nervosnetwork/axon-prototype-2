@@ -6,7 +6,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_info::CheckerInfoCellData,
+        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
         muse_token::MuseTokenData,
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
     },
@@ -40,13 +40,20 @@ fn test_success() {
         .build_script(&always_success_code, sidechain_fee_lock_args.serialize())
         .expect("script");
 
+    let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
+    checker_info_type_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+
+    let checker_info_script = builder
+        .context
+        .build_script(&always_success_code, checker_info_type_args.serialize())
+        .expect("script");
+
     // prepare inputs
     let mut checker_info_input_data = CheckerInfoCellData::default();
-    checker_info_input_data.checker_public_key_hash.copy_from_slice(&pubkey_hash);
     checker_info_input_data.unpaid_fee = 100;
 
     let checker_info_input = builder.create_input(
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
         checker_info_input_data.serialize(),
     );
 
@@ -78,7 +85,7 @@ fn test_success() {
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
         new_type_cell_output(1000, &sidechain_fee_script, &always_success),
         new_type_cell_output(1000, &always_success, &always_success),
     ];

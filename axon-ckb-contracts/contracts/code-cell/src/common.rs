@@ -45,7 +45,7 @@ pub fn has_sidechain_config_passed_update_interval(config: SidechainConfigCellDa
     Ok(())
 }
 
-pub fn has_task_passed_update_interval(config: SidechainConfigCellData, origin: CellOrigin) -> Result<(), Error> {
+pub fn has_task_passed_update_interval(config: &SidechainConfigCellData, origin: CellOrigin) -> Result<(), Error> {
     let CellOrigin(index, source) = origin;
     let config_number = u64::from_raw(load_header(index, source)?.as_reader().raw().number().raw_data()).unwrap();
     let number_proof = QueryIter::new(load_header, Source::HeaderDep).find(|header| {

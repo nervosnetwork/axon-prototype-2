@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        checker_info::CheckerInfoCellData,
+        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
         code::CodeCellData,
         muse_token::MuseTokenData,
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
@@ -38,7 +38,8 @@ pub fn checker_take_beneficiary(raw_witness: &[u8], signer: [u8; 20]) -> Result<
 
     let witness = CheckerTakeBeneficiaryWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
-    let (checker_info_input, sidechain_fee_input_lock_args, sidechain_fee_input, muse_token_input) = load_entities! {
+    let (checker_info_input_type_args, checker_info_input, sidechain_fee_input_lock_args, sidechain_fee_input, muse_token_input) = load_entities! {
+        CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCellData: CHECKER_INFO_INPUT,
         SidechainFeeCellLockArgs: FEE_INPUT,
         SidechainFeeCellData: FEE_INPUT,
@@ -68,9 +69,9 @@ pub fn checker_take_beneficiary(raw_witness: &[u8], signer: [u8; 20]) -> Result<
     let mut muse_token_res = muse_token_input.clone();
     muse_token_res.amount += witness.fee;
 
-    if checker_info_input.chain_id != witness.chain_id
+    if checker_info_input_type_args.chain_id != witness.chain_id
+        || checker_info_input_type_args.checker_lock_arg != signer
         || checker_info_input.checker_id != witness.checker_id
-        || checker_info_input.checker_public_key_hash != signer
         || checker_info_res != checker_info_output
     {
         return Err(Error::CheckerInfoMismatch);
