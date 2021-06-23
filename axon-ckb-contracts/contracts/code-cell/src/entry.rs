@@ -8,7 +8,8 @@ use alloc::vec::Vec;
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task,
-    checker_take_beneficiary::checker_take_beneficiary, collator_unlock_bond::collator_unlock_bond, common::*, error::Error,
+    checker_take_beneficiary::checker_take_beneficiary, collator_refresh_task::collator_refresh_task,
+    collator_unlock_bond::collator_unlock_bond, common::*, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -19,7 +20,7 @@ use ckb_std::{
 
 use crate::pattern::{
     is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_collator_publish_task,
-    is_collator_refresh_task, is_collator_submit_challenge, is_collator_submit_task,
+    is_collator_submit_challenge, is_collator_submit_task,
 };
 use common_raw::{
     cell::{
@@ -36,8 +37,8 @@ use common_raw::{
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_publish_challenge::CheckerPublishChallengeWitness,
         checker_submit_challenge::CheckerSubmitChallengeWitness, code_cell_witness::CodeCellTypeWitness,
-        collator_publish_task::CollatorPublishTaskWitness, collator_refresh_task::CollatorRefreshTaskWitness,
-        collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
+        collator_publish_task::CollatorPublishTaskWitness, collator_submit_challenge::CollatorSubmitChallengeWitness,
+        collator_submit_task::CollatorSubmitTaskWitness,
     },
     FromRaw,
 };
@@ -226,10 +227,7 @@ pub fn main() -> Result<(), Error> {
         [Task Cell]                 ->          [Task Cell]
 
         */
-        Pattern::CollatorRefreshTask => {
-            is_collator_refresh_task()?;
-            collator_refresh_task(signer)
-        }
+        Pattern::CollatorRefreshTask => collator_refresh_task(),
 
         /*
         CollatorUnlockBond,
@@ -585,43 +583,6 @@ fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
         res.unpaid_fee += witness.fee_per_checker;
         res.mode = CheckerInfoCellMode::Idle;
 
-        res == output
-    }) {
-        return Err(Error::Wrong);
-    }
-
-    Ok(())
-}
-
-fn collator_refresh_task(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CollatorRefreshTask,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->          Code Cell
-    [Task Cell]                 ->          [Task Cell]
-
-    */
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let _witness = CollatorRefreshTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
-
-    let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
-        .skip(1)
-        .map(|task_cell_data_input| TaskCellData::from_raw(task_cell_data_input.as_slice()))
-        .collect::<Option<Vec<_>>>()
-        .ok_or(Error::Encoding)?;
-
-    let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
-        .skip(1)
-        .map(|task_cell_data_output| TaskCellData::from_raw(task_cell_data_output.as_slice()))
-        .collect::<Option<Vec<_>>>()
-        .ok_or(Error::Encoding)?;
-
-    if !checker_info_inputs.into_iter().zip(checker_info_outputs).all(|(input, output)| {
-        let res = input;
         res == output
     }) {
         return Err(Error::Wrong);
