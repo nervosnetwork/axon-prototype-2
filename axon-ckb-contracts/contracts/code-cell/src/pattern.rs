@@ -7,9 +7,8 @@ use crate::{
 use ckb_std::ckb_constants::Source;
 
 use common_raw::cell::{
-    checker_info::CheckerInfoCellData, code::CodeCellData, sidechain_bond::SidechainBondCellData,
-    sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData, sidechain_state::SidechainStateCellData,
-    task::TaskCellData,
+    checker_info::CheckerInfoCellData, code::CodeCellData, sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData,
+    sidechain_state::SidechainStateCellData, task::TaskCellData,
 };
 
 pub fn is_checker_publish_challenge() -> Result<(), Error> {
@@ -111,40 +110,6 @@ pub fn is_admin_create_sidechain() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn is_collator_publish_task() -> Result<(), Error> {
-    /*
-    CollatorPublishTask,
-
-    Dep:    0 Global Config Cell
-            1 Sidechain Config Cell
-    Code Cell                   ->          Code Cell
-    Sidechain State Cell        ->          Sidechain State Cell
-    Sidechain Bond Cell/Sudt    ->          Sidechain Bond Cell
-    Null                        ->          [Task Cell]
-
-    */
-
-    let global = check_global_cell()?;
-
-    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_smaller(4, Source::Output) {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            SidechainStateCellData: CellOrigin(1, Source::Input),
-            SidechainBondCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            SidechainStateCellData: CellOrigin(1, Source::Output),
-            SidechainBondCellData: CellOrigin(2, Source::Output),
-        },
-    };
-
-    TaskCellData::range_check(3.., Source::Output, &global)
-}
 pub fn is_collator_submit_task() -> Result<(), Error> {
     /*
     CollatorSubmitTask,

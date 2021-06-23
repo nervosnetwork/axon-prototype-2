@@ -8,8 +8,8 @@ use alloc::vec::Vec;
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_quit_sidechain::checker_quit_sidechain, checker_submit_task::checker_submit_task,
-    checker_take_beneficiary::checker_take_beneficiary, collator_refresh_task::collator_refresh_task,
-    collator_unlock_bond::collator_unlock_bond, common::*, error::Error,
+    checker_take_beneficiary::checker_take_beneficiary, collator_publish_task::collator_publish_task,
+    collator_refresh_task::collator_refresh_task, collator_unlock_bond::collator_unlock_bond, common::*, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -19,26 +19,23 @@ use ckb_std::{
 };
 
 use crate::pattern::{
-    is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_collator_publish_task,
-    is_collator_submit_challenge, is_collator_submit_task,
+    is_admin_create_sidechain, is_checker_publish_challenge, is_checker_submit_challenge, is_collator_submit_challenge,
+    is_collator_submit_task,
 };
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellLockArgs,
-        sidechain_bond::SidechainBondCellData,
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
         sidechain_fee::SidechainFeeCellData,
         sidechain_state::SidechainStateCellTypeArgs,
-        sudt_token::SudtTokenData,
         task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
     },
     pattern::Pattern,
     witness::{
         admin_create_sidechain::AdminCreateSidechainWitness, checker_publish_challenge::CheckerPublishChallengeWitness,
         checker_submit_challenge::CheckerSubmitChallengeWitness, code_cell_witness::CodeCellTypeWitness,
-        collator_publish_task::CollatorPublishTaskWitness, collator_submit_challenge::CollatorSubmitChallengeWitness,
-        collator_submit_task::CollatorSubmitTaskWitness,
+        collator_submit_challenge::CollatorSubmitChallengeWitness, collator_submit_task::CollatorSubmitTaskWitness,
     },
     FromRaw,
 };
@@ -178,10 +175,7 @@ pub fn main() -> Result<(), Error> {
         Null                        ->          [Task Cell]
 
         */
-        Pattern::CollatorPublishTask => {
-            is_collator_publish_task()?;
-            collator_publish_task(signer)
-        }
+        Pattern::CollatorPublishTask => collator_publish_task(raw_witness, signer),
 
         /*
         CollatorSubmitTask,
@@ -383,71 +377,6 @@ fn admin_create_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
     }
 
     if sidechain_state_output_type_args.chain_id != witness.chain_id {
-        return Err(Error::Wrong);
-    }
-
-    Ok(())
-}
-
-fn collator_publish_task(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CollatorPublishTask,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain State Cell        ->          Sidechain State Cell
-    Sidechain Bond Cell/Sudt    ->          Sidechain Bond Cell
-    Null                        ->          [Task Cell]
-
-    */
-
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorPublishTaskWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
-
-    let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let sidechain_config_celldep =
-        SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
-
-    let sidechain_state_input_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Input))?;
-
-    let sudt_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sudt_input = SudtTokenData::from_raw(sudt_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Output))?;
-
-    let sidechain_bond_data_output = load_cell_data(2, Source::Output)?;
-    let _sidechain_bond_output = SidechainBondCellData::from_raw(sidechain_bond_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let mut task_cell_res = TaskCellData::default();
-    task_cell_res.mode = TaskCellMode::Challenge;
-    //todo calc heights and block hashs from sidechain state cell
-
-    let mut task_cell_res_type_args = TaskCellTypeArgs::default();
-    task_cell_res_type_args.chain_id = witness.chain_id;
-
-    for i in 3.. {
-        let task_cell_output = match TaskCellData::load(CellOrigin(i, Source::Output)) {
-            Ok(data) => data,
-            Err(Error::IndexOutOfBound) => break,
-            Err(err) => return Err(err),
-        };
-        let task_cell_output_type_args = match TaskCellTypeArgs::load(CellOrigin(i, Source::Output)) {
-            Ok(data) => data,
-            Err(err) => return Err(err),
-        };
-        if task_cell_output != task_cell_res || task_cell_output_type_args != task_cell_res_type_args {
-            return Err(Error::Wrong);
-        }
-    }
-
-    if sidechain_state_input_type_args.chain_id != witness.chain_id || sidechain_state_input_type_args != sidechain_state_output_type_args {
-        return Err(Error::Wrong);
-    }
-
-    if sudt_input.amount < sidechain_config_celldep.minimal_bond {
         return Err(Error::Wrong);
     }
 
