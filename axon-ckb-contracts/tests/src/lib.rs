@@ -17,6 +17,8 @@ mod test_always_success;
 #[cfg(test)]
 mod test_checker_withdraw;
 #[cfg(test)]
+mod test_collator_publish_task;
+#[cfg(test)]
 mod test_collator_unlock;
 #[cfg(test)]
 mod test_join_sidechain;
