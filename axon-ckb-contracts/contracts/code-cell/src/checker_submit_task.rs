@@ -42,14 +42,20 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         TaskCellTypeArgs: TASK_INPUT,
         TaskCellData: TASK_INPUT,
     };
-    let checker_info_output = CheckerInfoCellData::load(CHECKER_INFO_OUTPUT)?;
+
+    let (checker_info_output, checker_info_output_type_args) = load_entities! {
+        CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+        CheckerInfoCellTypeArgs: CHECKER_INFO_OUTPUT,
+    };
 
     let mut checker_info_res = checker_info_input.clone();
     checker_info_res.mode = CheckerInfoCellMode::TaskPassed;
     checker_info_res.unpaid_fee += u128::from(config_dep.check_fee_rate) * task_input.check_data_size;
 
-    if checker_info_res != checker_info_output
+    if checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input_type_args.checker_lock_arg != signer
+        || checker_info_input_type_args != checker_info_output_type_args
+        || checker_info_res != checker_info_output
         || checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input.checker_id != witness.checker_id
     {
@@ -64,18 +70,6 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
 }
 
 fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Error> {
-    /*
-    CheckerSubmitTask,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          Null
-
-    */
-
     let global = check_global_cell()?;
 
     if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
