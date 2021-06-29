@@ -26,6 +26,7 @@ mod checker_submit_task;
 mod checker_take_beneficiary;
 mod collator_publish_task;
 mod collator_refresh_task;
+mod collator_submit_task;
 mod collator_unlock_bond;
 
 use ckb_std::{debug, default_alloc};
