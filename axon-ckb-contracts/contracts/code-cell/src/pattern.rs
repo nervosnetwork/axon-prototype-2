@@ -8,42 +8,8 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::cell::{
     checker_info::CheckerInfoCellData, code::CodeCellData, sidechain_config::SidechainConfigCellData, sidechain_fee::SidechainFeeCellData,
-    sidechain_state::SidechainStateCellData, task::TaskCellData,
+    sidechain_state::SidechainStateCellData,
 };
-
-pub fn is_checker_publish_challenge() -> Result<(), Error> {
-    /*
-    CheckerPublishChallenge,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          [Task Cell]
-
-    */
-
-    let global = check_global_cell()?;
-
-    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_smaller(3, Source::Output) {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerInfoCellData: CellOrigin(1, Source::Input),
-            TaskCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            CheckerInfoCellData: CellOrigin(1, Source::Output),
-        },
-    };
-
-    TaskCellData::range_check(2.., Source::Output, &global)
-}
 
 pub fn is_admin_create_sidechain() -> Result<(), Error> {
     /*

@@ -21,6 +21,7 @@ mod pattern;
 
 mod checker_bond_withdraw;
 mod checker_join_sidechain;
+mod checker_publish_challenge;
 mod checker_quit_sidechain;
 mod checker_submit_challenge;
 mod checker_submit_task;
