@@ -110,42 +110,6 @@ pub fn is_admin_create_sidechain() -> Result<(), Error> {
     Ok(())
 }
 
-pub fn is_collator_submit_task() -> Result<(), Error> {
-    /*
-    CollatorSubmitTask,
-
-    Dep:    0 Global Config Cell
-            1 Sidechain Config Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain State Cell        ->          Sidechain State Cell
-    Sidechain Fee Cell          ->          Sidechain Fee Cell
-    [Checker Info Cell]         ->          [Checker Info Cell]
-
-    */
-
-    let global = check_global_cell()?;
-
-    if is_cell_count_smaller(4, Source::Input) || is_cell_count_smaller(4, Source::Output) {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            SidechainStateCellData: CellOrigin(1, Source::Input),
-            SidechainFeeCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            SidechainStateCellData: CellOrigin(1, Source::Output),
-            SidechainFeeCellData: CellOrigin(2, Source::Output),
-        },
-    };
-
-    CheckerInfoCellData::one_to_one_check(3, &global)
-}
-
 pub fn is_collator_submit_challenge() -> Result<(), Error> {
     /*
     CollatorSubmitChallenge,

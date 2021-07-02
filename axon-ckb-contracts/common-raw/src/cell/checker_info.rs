@@ -3,7 +3,7 @@ use core::result::Result;
 
 use crate::{check_args_len, FromRaw, Serialize};
 
-const CHECKER_INFO_DATA_LEN: usize = 530;
+const CHECKER_INFO_DATA_LEN: usize = 546;
 const CHECKER_INFO_TYPE_ARGS_LEN: usize = 21;
 
 /**
@@ -43,19 +43,21 @@ impl TryFrom<u8> for CheckerInfoCellMode {
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
 pub struct CheckerInfoCellData {
-    pub checker_id: u8,
-    pub unpaid_fee: u128,
-    pub rpc_url:    [u8; 512],
-    pub mode:       CheckerInfoCellMode,
+    pub checker_id:             u8,
+    pub unpaid_fee:             u128,
+    pub rpc_url:                [u8; 512],
+    pub mode:                   CheckerInfoCellMode,
+    pub unpaid_check_data_size: u128,
 }
 
 impl Default for CheckerInfoCellData {
     fn default() -> Self {
         CheckerInfoCellData {
-            checker_id: 0u8,
-            unpaid_fee: 0u128,
-            rpc_url:    [0u8; 512],
-            mode:       CheckerInfoCellMode::Idle,
+            checker_id:             0u8,
+            unpaid_fee:             0u128,
+            rpc_url:                [0u8; 512],
+            mode:                   CheckerInfoCellMode::Idle,
+            unpaid_check_data_size: 0u128,
         }
     }
 }
@@ -73,11 +75,13 @@ impl FromRaw for CheckerInfoCellData {
         let mode_u8 = u8::from_raw(&cell_raw_data[529..530])?;
         let mode: CheckerInfoCellMode = mode_u8.try_into().ok()?;
 
+        let unpaid_check_data_size = u128::from_raw(&cell_raw_data[530..546])?;
         Some(CheckerInfoCellData {
             checker_id,
             unpaid_fee,
             rpc_url,
             mode,
+            unpaid_check_data_size,
         })
     }
 }
@@ -94,7 +98,7 @@ impl Serialize for CheckerInfoCellData {
         buf[17..529].copy_from_slice(&self.rpc_url);
 
         buf[529..530].copy_from_slice(&(self.mode as u8).serialize());
-
+        buf[530..546].copy_from_slice(&self.unpaid_check_data_size.serialize());
         buf
     }
 }
