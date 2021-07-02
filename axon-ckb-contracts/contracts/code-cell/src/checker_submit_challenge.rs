@@ -4,10 +4,9 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellData,
-        sidechain_config::SidechainConfigCellData,
         task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
     },
-    witness::checker_submit_task::CheckerSubmitTaskWitness,
+    witness::checker_submit_challenge::CheckerSubmitChallengeWitness,
     FromRaw,
 };
 
@@ -18,9 +17,9 @@ const TASK_INPUT: CellOrigin = CellOrigin(2, Source::Input);
 
 const CHECKER_INFO_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 
-pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
+pub fn checker_submit_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
     /*
-    CheckerSubmitTask,
+    CheckerSubmitChallenge,
 
     Dep:    0 Global Config Cell
     Dep:    1 Sidechain Config Cell
@@ -31,16 +30,15 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
 
     */
 
-    let witness = CheckerSubmitTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
+    is_checker_submit_challenge()?;
 
-    is_checker_submit_task(&witness)?;
+    let witness = CheckerSubmitChallengeWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
-    let config_dep = SidechainConfigCellData::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
-    let (checker_info_input_type_args, checker_info_input, task_input_type_args, task_input) = load_entities! {
-        CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
+    let (checker_info_input, checker_info_input_type_args, task_cell_input, task_cell_input_type_args) = load_entities! {
         CheckerInfoCellData: CHECKER_INFO_INPUT,
-        TaskCellTypeArgs: TASK_INPUT,
+        CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         TaskCellData: TASK_INPUT,
+        TaskCellTypeArgs: TASK_INPUT,
     };
 
     let (checker_info_output, checker_info_output_type_args) = load_entities! {
@@ -49,27 +47,27 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     };
 
     let mut checker_info_res = checker_info_input.clone();
-    checker_info_res.mode = CheckerInfoCellMode::TaskPassed;
-    checker_info_res.unpaid_fee += u128::from(config_dep.check_fee_rate) * task_input.check_data_size;
+    checker_info_res.mode = checker_info_output.mode;
 
     if checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input_type_args.checker_lock_arg != signer
         || checker_info_input_type_args != checker_info_output_type_args
-        || checker_info_res != checker_info_output
-        || checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input.checker_id != witness.checker_id
+        || (checker_info_output.mode != CheckerInfoCellMode::ChallengeRejected
+            && checker_info_output.mode != CheckerInfoCellMode::ChallengePassed)
+        || checker_info_res != checker_info_output
     {
         return Err(Error::CheckerInfoMismatch);
     }
 
-    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskCellMode::Task {
+    if task_cell_input_type_args.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Challenge {
         return Err(Error::TaskMismatch);
     }
 
     Ok(())
 }
 
-fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Error> {
+fn is_checker_submit_challenge() -> Result<(), Error> {
     let global = check_global_cell()?;
 
     if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
@@ -79,8 +77,6 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
-
             CodeCellData: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
             TaskCellData: TASK_INPUT,

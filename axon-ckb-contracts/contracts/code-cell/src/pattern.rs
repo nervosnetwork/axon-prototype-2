@@ -45,40 +45,6 @@ pub fn is_checker_publish_challenge() -> Result<(), Error> {
     TaskCellData::range_check(2.., Source::Output, &global)
 }
 
-pub fn is_checker_submit_challenge() -> Result<(), Error> {
-    /*
-    CheckerSubmitChallenge,
-
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
-
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          Null
-
-    */
-
-    let global = check_global_cell()?;
-
-    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
-        return Err(Error::CellNumberMismatch);
-    }
-
-    check_cells! {
-        &global,
-        {
-            SidechainConfigCellData: CellOrigin(1, Source::CellDep),
-            CodeCellData: CellOrigin(0, Source::Input),
-            CheckerInfoCellData: CellOrigin(1, Source::Input),
-            TaskCellData: CellOrigin(2, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            CheckerInfoCellData: CellOrigin(1, Source::Output),
-        },
-    };
-
-    Ok(())
-}
-
 pub fn is_admin_create_sidechain() -> Result<(), Error> {
     /*
     AdminCreateSidechain,
