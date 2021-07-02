@@ -25,6 +25,8 @@ mod test_collator_unlock;
 #[cfg(test)]
 mod test_join_sidechain;
 #[cfg(test)]
+mod test_publish_challenge;
+#[cfg(test)]
 mod test_quit_sidechain;
 #[cfg(test)]
 mod test_refresh_task;
