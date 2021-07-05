@@ -24,7 +24,6 @@ dependencies {
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.20'
 
     //implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
-
 }
 
 

@@ -13,7 +13,7 @@ fn main() {
     if read_file_path.exists() {
         println!("cargo:rustc-cfg=gcc_type_hash")
     } else {
-        panic!("{}", a);
+        //panic!("{}", a);
         //r#"cargo:rerun-if-changed=build.rs"#
     };
 }
