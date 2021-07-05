@@ -19,7 +19,9 @@ mod test_checker_withdraw;
 #[cfg(test)]
 mod test_collator_publish_task;
 #[cfg(test)]
-mod test_collator_submit_task;
+mod test_collator_submit_faild_challenge;
+#[cfg(test)]
+mod test_collator_submit_success_challenge;
 #[cfg(test)]
 mod test_collator_unlock;
 #[cfg(test)]

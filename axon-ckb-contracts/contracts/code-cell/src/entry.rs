@@ -1,39 +1,24 @@
 // Import from `core` instead of from `std` since we are in no-std mode
 use core::result::Result;
 
-// Import heap related library from `alloc`
-// https://doc.rust-lang.org/alloc/index.html
-use alloc::vec::Vec;
-
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_publish_challenge::checker_publish_challenge, checker_quit_sidechain::checker_quit_sidechain,
     checker_submit_challenge::checker_submit_challenge, checker_submit_task::checker_submit_task,
     checker_take_beneficiary::checker_take_beneficiary, collator_publish_task::collator_publish_task,
-    collator_refresh_task::collator_refresh_task, collator_submit_task::collator_submit_task, collator_unlock_bond::collator_unlock_bond,
-    common::*, error::Error,
+    collator_refresh_task::collator_refresh_task, collator_submit_faild_challenge::collator_submit_faild_challenge,
+    collator_submit_success_challenge::collator_submit_success_challenge, collator_submit_task::collator_submit_task,
+    collator_unlock_bond::collator_unlock_bond, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
-use ckb_std::{
-    ckb_types::prelude::*,
-    high_level::{load_cell_data, load_witness_args, QueryIter},
-};
+use ckb_std::{ckb_types::prelude::*, high_level::load_witness_args};
 
-use crate::pattern::{is_admin_create_sidechain, is_collator_submit_challenge};
+use crate::pattern::is_admin_create_sidechain;
 use common_raw::{
-    cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellLockArgs,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-        sidechain_fee::SidechainFeeCellData,
-        sidechain_state::SidechainStateCellTypeArgs,
-    },
+    cell::{code::CodeCellLockArgs, sidechain_config::SidechainConfigCellTypeArgs, sidechain_state::SidechainStateCellTypeArgs},
     pattern::Pattern,
-    witness::{
-        admin_create_sidechain::AdminCreateSidechainWitness, code_cell_witness::CodeCellTypeWitness,
-        collator_submit_challenge::CollatorSubmitChallengeWitness,
-    },
+    witness::{admin_create_sidechain::AdminCreateSidechainWitness, code_cell_witness::CodeCellTypeWitness},
     FromRaw,
 };
 
@@ -190,13 +175,25 @@ pub fn main() -> Result<(), Error> {
         Sidechain Config Cell       ->          Sidechain Config Cell
         Sidechain State Cell        ->          Sidechain State Cell
         Sidechain Fee Cell          ->          Sidechain Fee Cell
+        Muse Token Cell
         [Checker Info Cell]         ->          [Checker Info Cell]
 
         */
-        Pattern::CollatorSubmitChallenge => {
-            is_collator_submit_challenge()?;
-            collator_submit_challenge(signer)
-        }
+        Pattern::CollatorSubmitFaildChallenge => collator_submit_faild_challenge(raw_witness, signer),
+
+        /*
+        CollatorSubmitChallenge,
+
+        Dep:    0 Global Config Cell
+
+        Code Cell                   ->          Code Cell
+        Sidechain Config Cell       ->          Sidechain Config Cell
+        Sidechain Fee Cell          ->          Sidechain Fee Cell
+        Sidechain Bond Cell
+        [Checker Info Cell]         ->          [Checker Info Cell]
+
+        */
+        Pattern::CollatorSubmitSuccessChallenge => collator_submit_success_challenge(raw_witness),
 
         /*
         CollatorRefreshTask,
@@ -250,105 +247,6 @@ fn admin_create_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
 
     if sidechain_state_output_type_args.chain_id != witness.chain_id {
         return Err(Error::Wrong);
-    }
-
-    Ok(())
-}
-
-fn collator_submit_challenge(_signer: [u8; 20]) -> Result<(), Error> {
-    /*
-    CollatorSubmitChallenge,
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain Config Cell       ->          Sidechain Config Cell
-    Sidechain State Cell        ->          Sidechain State Cell
-    Sidechain Fee Cell          ->          Sidechain Fee Cell
-    [Checker Info Cell]         ->          [Checker Info Cell]
-
-    */
-
-    let witness = load_witness_args(0, Source::Input)?;
-    let witness = witness.input_type().to_opt().ok_or(Error::MissingWitness)?;
-    let witness = CollatorSubmitChallengeWitness::from_raw(&witness.as_slice()[..]).ok_or(Error::Encoding)?;
-
-    let sidechain_config_cell_data_celldep = load_cell_data(1, Source::CellDep)?;
-    let _sidechain_config_celldep =
-        SidechainConfigCellData::from_raw(sidechain_config_cell_data_celldep.as_slice()).ok_or(Error::Encoding)?;
-
-    //==============
-
-    let sidechain_state_input_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Input))?;
-
-    let sidechain_fee_cell_data_input = load_cell_data(2, Source::Input)?;
-    let sidechain_fee_input = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_input.as_slice()).ok_or(Error::Encoding)?;
-
-    let checker_info_inputs = QueryIter::new(load_cell_data, Source::Input)
-        .skip(3)
-        .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
-        .collect::<Option<Vec<_>>>()
-        .ok_or(Error::Encoding)?;
-
-    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(1, Source::Output))?;
-
-    let sidechain_fee_cell_data_output = load_cell_data(2, Source::Output)?;
-    let sidechain_fee_output = SidechainFeeCellData::from_raw(sidechain_fee_cell_data_output.as_slice()).ok_or(Error::Encoding)?;
-
-    let checker_info_outputs = QueryIter::new(load_cell_data, Source::Output)
-        .skip(3)
-        .map(|checker_info_cell_data_input| CheckerInfoCellData::from_raw(checker_info_cell_data_input.as_slice()))
-        .collect::<Option<Vec<_>>>()
-        .ok_or(Error::Encoding)?;
-
-    let _sidechain_state_cell_data_ouput = load_cell_data(1, Source::Output)?;
-
-    let mut sidechain_fee_res = sidechain_fee_input;
-    sidechain_fee_res.amount -= witness.fee;
-
-    if sidechain_state_input_type_args.chain_id != witness.chain_id || sidechain_state_input_type_args != sidechain_state_output_type_args {
-        return Err(Error::Wrong);
-    }
-
-    if sidechain_fee_res != sidechain_fee_output {
-        return Err(Error::Wrong);
-    }
-
-    let checker_info_res = checker_info_inputs
-        .into_iter()
-        .filter_map(|checker_info_input| {
-            let result = bit_map_marked(witness.punish_checker_bitmap, checker_info_input.checker_id);
-
-            if result.is_some() {
-                return Some(checker_info_input);
-            } else {
-                return None;
-            }
-        })
-        .collect::<Vec<_>>();
-
-    if !checker_info_res.into_iter().zip(checker_info_outputs).all(|(mut res, output)| {
-        res.unpaid_fee += witness.fee_per_checker;
-        res.mode = CheckerInfoCellMode::Idle;
-
-        res == output
-    }) {
-        return Err(Error::Wrong);
-    }
-    for i in 3.. {
-        let checker_info_input_type_args = match CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Input)) {
-            Ok(data) => data,
-            Err(Error::IndexOutOfBound) => break,
-            Err(err) => return Err(err),
-        };
-        let checker_info_output_type_args = match CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Output)) {
-            Ok(data) => data,
-            Err(err) => return Err(err),
-        };
-
-        if checker_info_input_type_args.chain_id != witness.chain_id || checker_info_input_type_args != checker_info_output_type_args {
-            return Err(Error::Wrong);
-        }
     }
 
     Ok(())

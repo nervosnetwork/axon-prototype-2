@@ -9,6 +9,7 @@ use common_raw::{
 };
 
 use bit_vec::*;
+use core::convert::TryInto;
 
 pub const CODE_INPUT: CellOrigin = CellOrigin(0, Source::Input);
 pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
@@ -96,6 +97,27 @@ pub fn bit_map_remove(input: [u8; 32], checker_id: u8) -> Option<[u8; 32]> {
     ret.copy_from_slice(&input.to_bytes().as_slice()[0..32]);
 
     Some(ret)
+}
+
+pub fn bit_map_remove_by_batch(input: [u8; 32], batch: [u8; 32]) -> Option<[u8; 32]> {
+    let input = BitVec::from_bytes(&input);
+    let batch = BitVec::from_bytes(&batch);
+    let mut res_vec = input.clone();
+
+    res_vec.xor(&batch);
+    res_vec.or(&input);
+    if res_vec != input {
+        return None;
+    }
+    res_vec.xor(&batch);
+    let mut res = [0u8; 32];
+    res.copy_from_slice(res_vec.to_bytes().as_slice());
+    Some(res)
+}
+
+pub fn bit_map_count(input: [u8; 32]) -> Option<u8> {
+    let input = BitVec::from_bytes(&input);
+    input.into_iter().filter(|&x| x).count().try_into().ok()
 }
 
 //check if given number is bit-marked in input array
