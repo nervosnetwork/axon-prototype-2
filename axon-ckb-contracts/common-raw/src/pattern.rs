@@ -18,9 +18,10 @@ pub enum Pattern {
 
     CollatorPublishTask = 8u8,
     CollatorSubmitTask,
-    CollatorSubmitChallenge,
+    CollatorSubmitFaildChallenge,
     CollatorRefreshTask,
     CollatorUnlockBond,
+    CollatorSubmitSuccessChallenge,
 }
 
 impl TryFrom<u8> for Pattern {
@@ -40,9 +41,10 @@ impl TryFrom<u8> for Pattern {
 
             8u8 => Self::CollatorPublishTask,
             9u8 => Self::CollatorSubmitTask,
-            10u8 => Self::CollatorSubmitChallenge,
+            10u8 => Self::CollatorSubmitFaildChallenge,
             11u8 => Self::CollatorRefreshTask,
             12u8 => Self::CollatorUnlockBond,
+            13u8 => Self::CollatorSubmitSuccessChallenge,
             _ => return Err(()),
         });
     }
