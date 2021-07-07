@@ -10,7 +10,8 @@
     "build:dev": "cross-env NODE_ENV=development lerna run build:dev",
     "build:prod": "cross-env NODE_ENV=production lerna run build:prod",
     "clean": "npx rimraf lib && npx rimraf tsconfig.tsbuildinfo",
-    "format": ""
+    "lint": "eslint */src/*",
+    "format": "eslint */src/* --fix"
   },
   "workspaces": {
     "packages": [
@@ -20,6 +21,14 @@
     ]
   },
   "devDependencies": {
-    "lerna": "^4.0.0"
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
+    "eslint": "^7.30.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-deprecation": "^1.2.1",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-prettier": "^3.4.0",
+    "lerna": "^4.0.0",
+    "prettier": "^2.3.2"
   }
 }
