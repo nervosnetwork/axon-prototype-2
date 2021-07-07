@@ -1,440 +1,440 @@
 export interface CastToArrayBuffer {
-    toArrayBuffer(): ArrayBuffer
+  toArrayBuffer(): ArrayBuffer;
 }
 
-export type CanCastToArrayBuffer = ArrayBuffer | CastToArrayBuffer
+export type CanCastToArrayBuffer = ArrayBuffer | CastToArrayBuffer;
 
 export interface CreateOptions {
-    validate?: boolean
+  validate?: boolean;
 }
 
 export interface UnionType {
-    type: string
-    value: any
+  type: string;
+  value: any;
 }
 
-export function SerializeUint32(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeUint32(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Uint32 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    toBigEndianUint32(): number
+  toBigEndianUint32(): number;
 
-    toLittleEndianUint32(): number
+  toLittleEndianUint32(): number;
 
-    static size(): Number
+  static size(): number;
 }
 
-export function SerializeUint64(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeUint64(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Uint64 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    toBigEndianUint64(): BigInt
+  toBigEndianUint64(): BigInt;
 
-    toLittleEndianUint64(): BigInt
+  toLittleEndianUint64(): BigInt;
 
-    static size(): Number
+  static size(): number;
 }
 
-export function SerializeUint128(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeUint128(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Uint128 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    static size(): Number
+  static size(): number;
 }
 
-export function SerializeByte32(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeByte32(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Byte32 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    static size(): Number
+  static size(): number;
 }
 
-export function SerializeUint256(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeUint256(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Uint256 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    static size(): Number
+  static size(): number;
 }
 
-export function SerializeBytes(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeBytes(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Bytes {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeBytesOpt(value: CanCastToArrayBuffer | null): ArrayBuffer
+export function SerializeBytesOpt(value: CanCastToArrayBuffer | null): ArrayBuffer;
 
 export class BytesOpt {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    value(): Bytes
+  value(): Bytes;
 
-    hasValue(): boolean
+  hasValue(): boolean;
 }
 
-export function SerializeBytesVec(value: Array<CanCastToArrayBuffer>): ArrayBuffer
+export function SerializeBytesVec(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
 
 export class BytesVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): Bytes
+  indexAt(i: number): Bytes;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeByte32Vec(value: Array<CanCastToArrayBuffer>): ArrayBuffer
+export function SerializeByte32Vec(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
 
 export class Byte32Vec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): Byte32
+  indexAt(i: number): Byte32;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeScriptOpt(value: object | null): ArrayBuffer
+export function SerializeScriptOpt(value: unknown | null): ArrayBuffer;
 
 export class ScriptOpt {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    value(): Script
+  value(): Script;
 
-    hasValue(): boolean
+  hasValue(): boolean;
 }
 
-export function SerializeProposalShortId(value: CanCastToArrayBuffer): ArrayBuffer
+export function SerializeProposalShortId(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class ProposalShortId {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer
+  raw(): ArrayBuffer;
 
-    static size(): Number
+  static size(): number;
 }
 
-export function SerializeUncleBlockVec(value: Array<object>): ArrayBuffer
+export function SerializeUncleBlockVec(value: Array<unknown>): ArrayBuffer;
 
 export class UncleBlockVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): UncleBlock
+  indexAt(i: number): UncleBlock;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeTransactionVec(value: Array<object>): ArrayBuffer
+export function SerializeTransactionVec(value: Array<unknown>): ArrayBuffer;
 
 export class TransactionVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): Transaction
+  indexAt(i: number): Transaction;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeProposalShortIdVec(value: Array<CanCastToArrayBuffer>): ArrayBuffer
+export function SerializeProposalShortIdVec(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
 
 export class ProposalShortIdVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): ProposalShortId
+  indexAt(i: number): ProposalShortId;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeCellDepVec(value: Array<object>): ArrayBuffer
+export function SerializeCellDepVec(value: Array<unknown>): ArrayBuffer;
 
 export class CellDepVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): CellDep
+  indexAt(i: number): CellDep;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeCellInputVec(value: Array<object>): ArrayBuffer
+export function SerializeCellInputVec(value: Array<unknown>): ArrayBuffer;
 
 export class CellInputVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): CellInput
+  indexAt(i: number): CellInput;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeCellOutputVec(value: Array<object>): ArrayBuffer
+export function SerializeCellOutputVec(value: Array<unknown>): ArrayBuffer;
 
 export class CellOutputVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): CellOutput
+  indexAt(i: number): CellOutput;
 
-    length(): number
+  length(): number;
 }
 
-export function SerializeScript(value: object): ArrayBuffer
+export function SerializeScript(value: unknown): ArrayBuffer;
 
 export class Script {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getCodeHash(): Byte32
+  getCodeHash(): Byte32;
 
-    getHashType(): number
+  getHashType(): number;
 
-    getArgs(): Bytes
+  getArgs(): Bytes;
 }
 
-export function SerializeOutPoint(value: object): ArrayBuffer
+export function SerializeOutPoint(value: unknown): ArrayBuffer;
 
 export class OutPoint {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    static size(): Number
+  static size(): number;
 
-    getTxHash(): Byte32
+  getTxHash(): Byte32;
 
-    getIndex(): Uint32
+  getIndex(): Uint32;
 }
 
-export function SerializeCellInput(value: object): ArrayBuffer
+export function SerializeCellInput(value: unknown): ArrayBuffer;
 
 export class CellInput {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    static size(): Number
+  static size(): number;
 
-    getSince(): Uint64
+  getSince(): Uint64;
 
-    getPreviousOutput(): OutPoint
+  getPreviousOutput(): OutPoint;
 }
 
-export function SerializeCellOutput(value: object): ArrayBuffer
+export function SerializeCellOutput(value: unknown): ArrayBuffer;
 
 export class CellOutput {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getCapacity(): Uint64
+  getCapacity(): Uint64;
 
-    getLock(): Script
+  getLock(): Script;
 
-    getType(): ScriptOpt
+  getType(): ScriptOpt;
 }
 
-export function SerializeCellDep(value: object): ArrayBuffer
+export function SerializeCellDep(value: unknown): ArrayBuffer;
 
 export class CellDep {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    static size(): Number
+  static size(): number;
 
-    getOutPoint(): OutPoint
+  getOutPoint(): OutPoint;
 
-    getDepType(): number
+  getDepType(): number;
 }
 
-export function SerializeRawTransaction(value: object): ArrayBuffer
+export function SerializeRawTransaction(value: unknown): ArrayBuffer;
 
 export class RawTransaction {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getVersion(): Uint32
+  getVersion(): Uint32;
 
-    getCellDeps(): CellDepVec
+  getCellDeps(): CellDepVec;
 
-    getHeaderDeps(): Byte32Vec
+  getHeaderDeps(): Byte32Vec;
 
-    getInputs(): CellInputVec
+  getInputs(): CellInputVec;
 
-    getOutputs(): CellOutputVec
+  getOutputs(): CellOutputVec;
 
-    getOutputsData(): BytesVec
+  getOutputsData(): BytesVec;
 }
 
-export function SerializeTransaction(value: object): ArrayBuffer
+export function SerializeTransaction(value: unknown): ArrayBuffer;
 
 export class Transaction {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getRaw(): RawTransaction
+  getRaw(): RawTransaction;
 
-    getWitnesses(): BytesVec
+  getWitnesses(): BytesVec;
 }
 
-export function SerializeRawHeader(value: object): ArrayBuffer
+export function SerializeRawHeader(value: unknown): ArrayBuffer;
 
 export class RawHeader {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    static size(): Number
+  static size(): number;
 
-    getVersion(): Uint32
+  getVersion(): Uint32;
 
-    getCompactTarget(): Uint32
+  getCompactTarget(): Uint32;
 
-    getTimestamp(): Uint64
+  getTimestamp(): Uint64;
 
-    getNumber(): Uint64
+  getNumber(): Uint64;
 
-    getEpoch(): Uint64
+  getEpoch(): Uint64;
 
-    getParentHash(): Byte32
+  getParentHash(): Byte32;
 
-    getTransactionsRoot(): Byte32
+  getTransactionsRoot(): Byte32;
 
-    getProposalsHash(): Byte32
+  getProposalsHash(): Byte32;
 
-    getUnclesHash(): Byte32
+  getUnclesHash(): Byte32;
 
-    getDao(): Byte32
+  getDao(): Byte32;
 }
 
-export function SerializeHeader(value: object): ArrayBuffer
+export function SerializeHeader(value: unknown): ArrayBuffer;
 
 export class Header {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    static size(): Number
+  static size(): number;
 
-    getRaw(): RawHeader
+  getRaw(): RawHeader;
 
-    getNonce(): Uint128
+  getNonce(): Uint128;
 }
 
-export function SerializeUncleBlock(value: object): ArrayBuffer
+export function SerializeUncleBlock(value: unknown): ArrayBuffer;
 
 export class UncleBlock {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getHeader(): Header
+  getHeader(): Header;
 
-    getProposals(): ProposalShortIdVec
+  getProposals(): ProposalShortIdVec;
 }
 
-export function SerializeBlock(value: object): ArrayBuffer
+export function SerializeBlock(value: unknown): ArrayBuffer;
 
 export class Block {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getHeader(): Header
+  getHeader(): Header;
 
-    getUncles(): UncleBlockVec
+  getUncles(): UncleBlockVec;
 
-    getTransactions(): TransactionVec
+  getTransactions(): TransactionVec;
 
-    getProposals(): ProposalShortIdVec
+  getProposals(): ProposalShortIdVec;
 }
 
-export function SerializeCellbaseWitness(value: object): ArrayBuffer
+export function SerializeCellbaseWitness(value: unknown): ArrayBuffer;
 
 export class CellbaseWitness {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getLock(): Script
+  getLock(): Script;
 
-    getMessage(): Bytes
+  getMessage(): Bytes;
 }
 
-export function SerializeWitnessArgs(value: object): ArrayBuffer
+export function SerializeWitnessArgs(value: unknown): ArrayBuffer;
 
 export class WitnessArgs {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions)
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void
+  validate(compatible?: boolean): void;
 
-    getLock(): BytesOpt
+  getLock(): BytesOpt;
 
-    getInputType(): BytesOpt
+  getInputType(): BytesOpt;
 
-    getOutputType(): BytesOpt
+  getOutputType(): BytesOpt;
 }

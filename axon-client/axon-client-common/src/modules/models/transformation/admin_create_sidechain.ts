@@ -1,10 +1,10 @@
-import {Transformation} from './interfaces/transformation'
-import {GlobalConfig} from "../cells/global_config";
-import {SidechainConfig} from "../cells/sidechain_config";
-import {Code} from "../cells/code";
-import {SidechainState} from "../cells/sidechain_state";
-import {Ckb} from "../cells/ckb";
-import {AdminCreateSidechainWitness} from "../witnesses/admin_create_sidechain_witness";
+import { Transformation } from "./interfaces/transformation";
+import { GlobalConfig } from "../cells/global_config";
+import { SidechainConfig } from "../cells/sidechain_config";
+import { Code } from "../cells/code";
+import { SidechainState } from "../cells/sidechain_state";
+import { Ckb } from "../cells/ckb";
+import { AdminCreateSidechainWitness } from "../witnesses/admin_create_sidechain_witness";
 
 /*
 AdminCreateSidechain,
@@ -18,70 +18,52 @@ Null                        ->          Sidechain State Cell
 */
 
 export class AdminCreateSidechainTransformation implements Transformation {
+  depGlobalConfig: GlobalConfig;
 
-    depGlobalConfig: GlobalConfig
+  //use outpoint to refer as input
+  //update cell and use it as output
+  inputCode: Code;
+  inputCkb: Ckb;
+  outputConfig: SidechainConfig | null;
+  outputState: SidechainState | null;
 
-    //use outpoint to refer as input
-    //update cell and use it as output
-    inputCode: Code
-    inputCkb: Ckb
-    outputConfig: SidechainConfig | null
-    outputState: SidechainState | null
+  patternTypeWitness: AdminCreateSidechainWitness | null;
 
-    patternTypeWitness: AdminCreateSidechainWitness | null
+  processed = false;
+  skip = false;
+  composedTx?: CKBComponents.RawTransaction = undefined;
+  composedTxHash?: string = undefined;
 
+  constructor(depGlobalConfig: GlobalConfig, inputCode: Code, inputCkb: Ckb) {
+    this.depGlobalConfig = depGlobalConfig;
+    this.inputCode = inputCode;
+    this.inputCkb = inputCkb;
+    this.outputConfig = null;
+    this.outputState = null;
+    this.patternTypeWitness = null;
+  }
 
-    processed: boolean = false;
-    skip: boolean = false;
-    composedTx?: CKBComponents.RawTransaction = undefined
-    composedTxHash?: string = undefined
+  toCellDeps(): Array<CKBComponents.CellDep> {
+    return [this.depGlobalConfig.toCellDep()];
+  }
 
-    constructor(depGlobalConfig: GlobalConfig,
-                inputCode: Code,
-                inputCkb: Ckb,) {
-        this.depGlobalConfig = depGlobalConfig;
-        this.inputCode = inputCode;
-        this.inputCkb = inputCkb;
-        this.outputConfig = null;
-        this.outputState = null;
-        this.patternTypeWitness = null;
-    }
+  toCellInput(): Array<CKBComponents.CellInput> {
+    return [this.inputCode.toCellInput(), this.inputCkb.toCellInput()];
+  }
 
-    toCellDeps(): Array<CKBComponents.CellDep> {
-        return [
-            this.depGlobalConfig.toCellDep(),
-        ];
-    }
+  toCellOutput(): Array<CKBComponents.CellOutput> {
+    return [this.inputCode.toCellOutput(), this.outputConfig!.toCellOutput(), this.outputState!.toCellOutput()];
+  }
 
-    toCellInput(): Array<CKBComponents.CellInput> {
-        return [
-            this.inputCode.toCellInput(),
-            this.inputCkb.toCellInput(),
-        ]
-    }
+  toCellOutputData(): Array<string> {
+    return [
+      this.inputCode.toCellOutputData(),
+      this.outputConfig!.toCellOutputData(),
+      this.outputState!.toCellOutputData(),
+    ];
+  }
 
-    toCellOutput(): Array<CKBComponents.CellOutput> {
-        return [
-            this.inputCode.toCellOutput(),
-            this.outputConfig!.toCellOutput(),
-            this.outputState!.toCellOutput(),
-        ]
-    }
-
-    toCellOutputData(): Array<string> {
-
-        return [
-            this.inputCode.toCellOutputData(),
-            this.outputConfig!.toCellOutputData(),
-            this.outputState!.toCellOutputData(),
-        ]
-    }
-
-    toWitness(): Array<CKBComponents.WitnessArgs> {
-        return [
-            this.patternTypeWitness!.toWitness()
-        ];
-    }
-
-
+  toWitness(): Array<CKBComponents.WitnessArgs> {
+    return [this.patternTypeWitness!.toWitness()];
+  }
 }
