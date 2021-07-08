@@ -32,6 +32,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        mavenLocal()//for local plugin/dep loaded
     }
 
     dependencies {

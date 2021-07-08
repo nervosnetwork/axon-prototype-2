@@ -4,6 +4,11 @@ plugins {
     id 'com.github.sherter.google-java-format' version '0.8'
 }
 
+repositories {
+    mavenCentral()
+    mavenLocal()//for local plugin/dep loaded
+}
+
 description 'deploy tool'
 
 compileJava.dependsOn(tasks.googleJavaFormat)
@@ -12,11 +17,17 @@ googleJavaFormat {
     options style: 'AOSP'
 }
 
+repositories {
+    mavenLocal()
+}
+
 dependencies {
     //this strange example contains ckb-indexer json rpc api, ridiculous
-    implementation 'org.nervos.ckb:example:0.42.0'
-    implementation 'org.nervos.ckb:ckb:0.42.0'
-    implementation 'org.nervos.ckb:utils:0.42.0'
+    implementation 'org.nervos.ckb:example:0.42.2'
+    implementation 'org.nervos.ckb:ckb:0.42.2'
+//    implementation 'org.nervos.ckb:utils:0.42.2'
+    //implementation 'org.nervos.ckb:all:0.42.2'
+
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
     implementation group: 'commons-io', name: 'commons-io', version: '2.10.0'
 

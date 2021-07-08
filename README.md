@@ -3,5 +3,9 @@
 A side-chain solution oc CKB
 
 
+cargo install ckb-capsule --git https://github.com/LycrusHamster/capsule.git --tag axon
 
-cargo install ckb-capsule --git https://github.com/nervosnetwork/capsule.git --rev 36d59e0
+do not use this commit
+cargo install ckb-capsule --git https://github.com/nervosnetwork/capsule.git --tag v0.4.6
+
+

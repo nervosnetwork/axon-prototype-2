@@ -13,6 +13,7 @@ import org.bouncycastle.crypto.digests.Blake2bDigest;
 import org.bouncycastle.util.encoders.Hex;
 import org.nervos.ckb.indexer.CkbIndexerApi;
 import org.nervos.ckb.indexer.CkbIndexerCells;
+import org.nervos.ckb.indexer.CkbIndexerTip;
 import org.nervos.ckb.indexer.SearchKey;
 import org.nervos.ckb.service.Api;
 import org.nervos.ckb.transaction.ScriptGroup;
@@ -56,6 +57,10 @@ public class Tools {
             throws IOException, InterruptedException {
         Api api = new Api(ckbUrl);
         CkbIndexerApi indexerApi = new CkbIndexerApi(ckbIndexerUrl);
+
+        CkbIndexerTip indexerTip = indexerApi.getTip();
+
+        System.out.println(indexerTip);
 
         // wait the indexer to catch up with node
         //        BigInteger apiTip = api.getTipBlockNumber();
