@@ -1,15 +1,8 @@
-import {Cell, OutPoint} from '@ckb-lumos/base'
-import {
-    defaultOutPoint,
-    leHexToBigIntUint8,
-    Uint64BigIntToLeHex,
-} from '../../../utils/tools'
-import {CellOutputType} from './interfaces/cell_output_type'
-import {CellInputType} from './interfaces/cell_input_type'
-import {
-    CODE_LOCK_SCRIPT,
-    CODE_TYPE_SCRIPT
-} from "../../../utils/environment";
+import { Cell, OutPoint } from "@ckb-lumos/base";
+import { defaultOutPoint, leHexToBigIntUint8, Uint64BigIntToLeHex } from "../../../utils/tools";
+import { CellOutputType } from "./interfaces/cell_output_type";
+import { CellInputType } from "./interfaces/cell_input_type";
+import { CODE_LOCK_SCRIPT, CODE_TYPE_SCRIPT } from "../../../utils/environment";
 
 /*
 code
@@ -28,78 +21,75 @@ lock: - 65 bytes
 
  */
 export class Code implements CellInputType, CellOutputType {
+  capacity: bigint;
 
+  chainId: bigint;
+  checkerPublicKeyHash: string;
 
-    capacity: bigint
+  outPoint: OutPoint;
 
-    chainId: bigint
-    checkerPublicKeyHash: string
+  constructor(capacity: bigint, chainId: bigint, checkerPublicKeyHash: string, outPoint: OutPoint) {
+    this.capacity = capacity;
+    this.chainId = chainId;
+    this.checkerPublicKeyHash = checkerPublicKeyHash;
+    this.outPoint = outPoint;
+  }
 
-    outPoint: OutPoint
-
-
-    constructor(capacity: bigint, chainId: bigint, checkerPublicKeyHash: string, outPoint: OutPoint) {
-        this.capacity = capacity;
-        this.chainId = chainId;
-        this.checkerPublicKeyHash = checkerPublicKeyHash;
-        this.outPoint = outPoint;
+  static validate(cell: Cell): boolean {
+    if (!cell.out_point) {
+      return false;
     }
 
-    static validate(cell: Cell): boolean {
-        if (!cell.out_point) {
-            return false
-        }
+    return true;
+  }
 
-        return true
+  static fromCell(cell: Cell): Code | null {
+    if (!Code.validate(cell)) {
+      return null;
     }
+    const capacity = BigInt(cell.cell_output.capacity);
 
-    static fromCell(cell: Cell): Code | null {
-        if (!Code.validate(cell)) {
-            return null
-        }
-        let capacity = BigInt(cell.cell_output.capacity)
+    const lockArgs = cell.cell_output.lock.args.substring(2);
 
-        let lockArgs = cell.cell_output.lock.args.substring(2)
+    const chainId = leHexToBigIntUint8(lockArgs.substring(0, 2));
+    const checkerPublicKeyHash = lockArgs.substring(2, 42);
 
-        let chainId = leHexToBigIntUint8(lockArgs.substring(0, 2))
-        let checkerPublicKeyHash = lockArgs.substring(2, 42)
+    const outPoint = cell.out_point!;
 
-        let outPoint = cell.out_point!
+    return new Code(capacity, chainId, checkerPublicKeyHash, outPoint);
+  }
 
-        return new Code(capacity, chainId, checkerPublicKeyHash,outPoint)
-    }
+  static default(): Code {
+    return new Code(0n, 0n, ``, defaultOutPoint());
+  }
 
-    static default(): Code {
-        return new Code(0n, 0n,  ``, defaultOutPoint())
-    }
+  toCellInput(): CKBComponents.CellInput {
+    return {
+      previousOutput: {
+        txHash: this.outPoint.tx_hash,
+        index: this.outPoint.index,
+      },
+      since: "0x0",
+    };
+  }
 
-    toCellInput(): CKBComponents.CellInput {
-        return {
-            previousOutput: {
-                txHash: this.outPoint.tx_hash,
-                index: this.outPoint.index,
-            },
-            since: '0x0',
-        }
-    }
+  toCellOutput(): CKBComponents.CellOutput {
+    return {
+      capacity: Uint64BigIntToLeHex(this.capacity),
+      type: CODE_TYPE_SCRIPT,
+      lock: CODE_LOCK_SCRIPT,
+    };
+  }
 
-    toCellOutput(): CKBComponents.CellOutput {
-        return {
-            capacity: Uint64BigIntToLeHex(this.capacity),
-            type: CODE_TYPE_SCRIPT,
-            lock: CODE_LOCK_SCRIPT,
-        }
-    }
+  toCellOutputData(): string {
+    return `0x`;
+  }
 
-    toCellOutputData(): string {
-        return `0x`
-    }
+  getOutPoint(): string {
+    return `${this.outPoint.tx_hash}-${this.outPoint.index}`;
+  }
 
-    getOutPoint(): string {
-        return `${this.outPoint.tx_hash}-${this.outPoint.index}`
-    }
-
-    static fromJSON(source: Object): Code {
-        return Object.assign(Code.default(), source);
-    }
+  static fromJSON(source: unknown): Code {
+    return Object.assign(Code.default(), source);
+  }
 }

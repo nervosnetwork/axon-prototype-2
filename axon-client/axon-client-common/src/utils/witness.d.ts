@@ -1,132 +1,130 @@
 export interface CastToArrayBuffer {
-    toArrayBuffer(): ArrayBuffer;
+  toArrayBuffer(): ArrayBuffer;
 }
 
 export type CanCastToArrayBuffer = ArrayBuffer | CastToArrayBuffer;
 
 export interface CreateOptions {
-    validate?: boolean;
+  validate?: boolean;
 }
 
 export interface UnionType {
-    type: string;
-    value: any;
+  type: string;
+  value: any;
 }
 
-export function SerializeMintTokenWitness(value: object): ArrayBuffer;
+export function SerializeMintTokenWitness(value: unknown): ArrayBuffer;
 
 export class MintTokenWitness {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    getMode(): number;
+  getMode(): number;
 
-    getSpvProof(): Bytes;
+  getSpvProof(): Bytes;
 
-    getCellDepIndexList(): Bytes;
+  getCellDepIndexList(): Bytes;
 
-    getMerkleProof(): Bytes;
+  getMerkleProof(): Bytes;
 }
 
-export function SerializeETHSPVProof(value: object): ArrayBuffer;
+export function SerializeETHSPVProof(value: unknown): ArrayBuffer;
 
 export class ETHSPVProof {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    getLogIndex(): Uint64;
+  getLogIndex(): Uint64;
 
-    getReceiptIndex(): Uint64;
+  getReceiptIndex(): Uint64;
 
-    getReceiptData(): Bytes;
+  getReceiptData(): Bytes;
 
-    getHeaderData(): Bytes;
+  getHeaderData(): Bytes;
 
-    getProof(): BytesVec;
+  getProof(): BytesVec;
 }
 
 export function SerializeBytes(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Bytes {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number;
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer;
+  raw(): ArrayBuffer;
 
-    length(): number;
+  length(): number;
 }
 
 export function SerializeByte32(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Byte32 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number;
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer;
+  raw(): ArrayBuffer;
 
-    static size(): Number;
+  static size(): number;
 }
 
 export function SerializeETHAddress(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class ETHAddress {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number;
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer;
+  raw(): ArrayBuffer;
 
-    static size(): Number;
+  static size(): number;
 }
 
 export function SerializeBytesVec(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
 
 export class BytesVec {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): Bytes;
+  indexAt(i: number): Bytes;
 
-    length(): number;
+  length(): number;
 }
 
 export function SerializeUint64(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Uint64 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number;
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer;
+  raw(): ArrayBuffer;
 
-    static size(): Number;
+  static size(): number;
 }
 
 export function SerializeUint128(value: CanCastToArrayBuffer): ArrayBuffer;
 
 export class Uint128 {
-    constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
 
-    validate(compatible?: boolean): void;
+  validate(compatible?: boolean): void;
 
-    indexAt(i: number): number;
+  indexAt(i: number): number;
 
-    raw(): ArrayBuffer;
+  raw(): ArrayBuffer;
 
-    static size(): Number;
+  static size(): number;
 }
-
-

@@ -1,16 +1,16 @@
-import {Cell, OutPoint} from '@ckb-lumos/base'
+import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
-    defaultOutPoint,
-    leHexToBigIntUint128,
-    leHexToBigIntUint8,
-    remove0xPrefix,
-    Uint128BigIntToLeHex,
-    Uint64BigIntToLeHex,
-    Uint8BigIntToLeHex
-} from '../../../utils/tools'
-import {CellOutputType} from './interfaces/cell_output_type'
-import {CellInputType} from './interfaces/cell_input_type'
-import {CHECKER_INFO_LOCK_SCRIPT, CHECKER_INFO_TYPE_SCRIPT} from "../../../utils/environment";
+  defaultOutPoint,
+  leHexToBigIntUint128,
+  leHexToBigIntUint8,
+  remove0xPrefix,
+  Uint128BigIntToLeHex,
+  Uint64BigIntToLeHex,
+  Uint8BigIntToLeHex,
+} from "../../../utils/tools";
+import { CellOutputType } from "./interfaces/cell_output_type";
+import { CellInputType } from "./interfaces/cell_input_type";
+import { CHECKER_INFO_LOCK_SCRIPT, CHECKER_INFO_TYPE_SCRIPT } from "../../../utils/environment";
 
 /*
 checker info
@@ -31,113 +31,112 @@ lock: - A.S. 33 bytes
 
  */
 export class CheckerInfo implements CellInputType, CellOutputType {
+  static CHECKER_IDLE = 0n;
+  static TASK_PASSED = 1n;
+  static CHALLENGE_PASSED = 2n;
+  static CHALLENGE_REJECTED = 3n;
 
+  capacity: bigint;
 
-    static CHECKER_IDLE = 0n
-    static TASK_PASSED = 1n
-    static CHALLENGE_PASSED = 2n
-    static CHALLENGE_REJECTED = 3n
+  chainId: bigint;
+  checkId: bigint;
+  unpaidFee: bigint;
+  rpcUrl: string;
+  checkerPublicKeyHash: string;
+  mode: bigint;
 
+  outPoint: OutPoint;
 
-    capacity: bigint
+  //type args for lumos
+  //checkId:bigint
+  //checkerPublicKeyHash:string
 
-    chainId: bigint
-    checkId: bigint
-    unpaidFee: bigint
-    rpcUrl: string
-    checkerPublicKeyHash: string
-    mode: bigint
+  constructor(
+    capacity: bigint,
+    chainId: bigint,
+    checkId: bigint,
+    unpaidFee: bigint,
+    rpcUrl: string,
+    checkerPublicKeyHash: string,
+    mode: bigint,
+    outPoint: OutPoint,
+  ) {
+    this.capacity = capacity;
+    this.chainId = chainId;
+    this.checkId = checkId;
+    this.unpaidFee = unpaidFee;
+    this.rpcUrl = rpcUrl;
+    this.checkerPublicKeyHash = checkerPublicKeyHash;
+    this.mode = mode;
+    this.outPoint = outPoint;
+  }
 
-    outPoint: OutPoint
-
-    //type args for lumos
-    //checkId:bigint
-    //checkerPublicKeyHash:string
-
-
-    constructor(capacity: bigint, chainId: bigint, checkId: bigint, unpaidFee: bigint, rpcUrl: string, checkerPublicKeyHash: string, mode: bigint, outPoint: OutPoint) {
-        this.capacity = capacity;
-        this.chainId = chainId;
-        this.checkId = checkId;
-        this.unpaidFee = unpaidFee;
-        this.rpcUrl = rpcUrl;
-        this.checkerPublicKeyHash = checkerPublicKeyHash;
-        this.mode = mode;
-        this.outPoint = outPoint;
+  static validate(cell: Cell): boolean {
+    if (!cell.out_point) {
+      return false;
     }
 
-    static validate(cell: Cell): boolean {
-        if (!cell.out_point) {
-            return false
-        }
+    return true;
+  }
 
-        return true
+  static fromCell(cell: Cell): CheckerInfo | null {
+    if (!CheckerInfo.validate(cell)) {
+      return null;
     }
+    const capacity = BigInt(cell.cell_output.capacity);
 
-    static fromCell(cell: Cell): CheckerInfo | null {
-        if (!CheckerInfo.validate(cell)) {
-            return null
-        }
-        let capacity = BigInt(cell.cell_output.capacity)
+    const data = cell.data.substring(2);
 
-        let data = cell.data.substring(2)
+    const chainId = leHexToBigIntUint8(data.substring(0, 2));
+    const checkId = leHexToBigIntUint8(data.substring(2, 4));
+    const unpaidFee = leHexToBigIntUint128(data.substring(4, 68));
+    const rpcUrl = data.substring(68, 1092);
+    const checkerPublicKeyHash = data.substring(1092, 1132);
+    const mode = leHexToBigIntUint8(data.substring(1132, 1134));
 
-        let chainId = leHexToBigIntUint8(data.substring(0, 2))
-        let checkId = leHexToBigIntUint8(data.substring(2, 4))
-        let unpaidFee = leHexToBigIntUint128(data.substring(4, 68))
-        let rpcUrl = data.substring(68, 1092);
-        let checkerPublicKeyHash = data.substring(1092, 1132);
-        let mode = leHexToBigIntUint8(data.substring(1132, 1134));
+    const outPoint = cell.out_point!;
 
+    return new CheckerInfo(capacity, chainId, checkId, unpaidFee, rpcUrl, checkerPublicKeyHash, mode, outPoint);
+  }
 
-        let outPoint = cell.out_point!
+  static default(): CheckerInfo {
+    return new CheckerInfo(0n, 0n, 0n, 0n, ``, ``, 0n, defaultOutPoint());
+  }
 
-        return new CheckerInfo(capacity, chainId, checkId, unpaidFee, rpcUrl, checkerPublicKeyHash, mode, outPoint)
-    }
+  toCellInput(): CKBComponents.CellInput {
+    return {
+      previousOutput: {
+        txHash: this.outPoint.tx_hash,
+        index: this.outPoint.index,
+      },
+      since: "0x0",
+    };
+  }
 
-    static default(): CheckerInfo {
-        return new CheckerInfo(0n, 0n, 0n, 0n, ``, ``, 0n, defaultOutPoint())
-    }
+  toCellOutput(): CKBComponents.CellOutput {
+    const type = CHECKER_INFO_TYPE_SCRIPT;
+    type.args = `0x${remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${remove0xPrefix(this.checkerPublicKeyHash)}`;
 
-    toCellInput(): CKBComponents.CellInput {
-        return {
-            previousOutput: {
-                txHash: this.outPoint.tx_hash,
-                index: this.outPoint.index,
-            },
-            since: '0x0',
-        }
-    }
+    return {
+      capacity: Uint64BigIntToLeHex(this.capacity),
+      type,
+      lock: CHECKER_INFO_LOCK_SCRIPT,
+    };
+  }
 
-    toCellOutput(): CKBComponents.CellOutput {
+  toCellOutputData(): string {
+    return `${Uint8BigIntToLeHex(this.chainId)}${remove0xPrefix(Uint8BigIntToLeHex(this.checkId))}${remove0xPrefix(
+      Uint128BigIntToLeHex(this.unpaidFee),
+    )}${remove0xPrefix(this.rpcUrl)}${remove0xPrefix(this.checkerPublicKeyHash)}${remove0xPrefix(
+      Uint8BigIntToLeHex(this.mode),
+    )}`;
+  }
 
-        let type = CHECKER_INFO_TYPE_SCRIPT
-        type.args = `0x${
-            remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${
-            remove0xPrefix(this.checkerPublicKeyHash)}`
+  getOutPoint(): string {
+    return `${this.outPoint.tx_hash}-${this.outPoint.index}`;
+  }
 
-        return {
-            capacity: Uint64BigIntToLeHex(this.capacity),
-            type,
-            lock: CHECKER_INFO_LOCK_SCRIPT,
-        }
-    }
-
-    toCellOutputData(): string {
-        return `${
-            Uint8BigIntToLeHex(this.chainId)}${
-            remove0xPrefix(Uint8BigIntToLeHex(this.checkId))}${
-            remove0xPrefix(Uint128BigIntToLeHex(this.unpaidFee))}${
-            remove0xPrefix(this.rpcUrl)}${
-            remove0xPrefix(this.checkerPublicKeyHash)}${
-            remove0xPrefix(Uint8BigIntToLeHex(this.mode))}`
-    }
-
-    getOutPoint(): string {
-        return `${this.outPoint.tx_hash}-${this.outPoint.index}`
-    }
-
-    static fromJSON(source: Object): CheckerInfo {
-        return Object.assign(CheckerInfo.default(), source);
-    }
+  static fromJSON(source: unknown): CheckerInfo {
+    return Object.assign(CheckerInfo.default(), source);
+  }
 }

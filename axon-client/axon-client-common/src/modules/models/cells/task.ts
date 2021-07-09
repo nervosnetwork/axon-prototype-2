@@ -1,19 +1,18 @@
-import {Cell, OutPoint} from '@ckb-lumos/base'
+import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
-    defaultOutPoint,
-    leHexToBigIntUint128, leHexToBigIntUint16,
-    leHexToBigIntUint8,
-    remove0xPrefix,
-    Uint128BigIntToLeHex, Uint16BigIntToLeHex,
-    Uint64BigIntToLeHex,
-    Uint8BigIntToLeHex
-} from '../../../utils/tools'
-import {CellOutputType} from './interfaces/cell_output_type'
-import {CellInputType} from './interfaces/cell_input_type'
-import {
-    TASK_STATE_LOCK_SCRIPT,
-    TASK_TYPE_SCRIPT
-} from "../../../utils/environment";
+  defaultOutPoint,
+  leHexToBigIntUint128,
+  leHexToBigIntUint16,
+  leHexToBigIntUint8,
+  remove0xPrefix,
+  Uint128BigIntToLeHex,
+  Uint16BigIntToLeHex,
+  Uint64BigIntToLeHex,
+  Uint8BigIntToLeHex,
+} from "../../../utils/tools";
+import { CellOutputType } from "./interfaces/cell_output_type";
+import { CellInputType } from "./interfaces/cell_input_type";
+import { TASK_STATE_LOCK_SCRIPT, TASK_TYPE_SCRIPT } from "../../../utils/environment";
 
 /*
 task
@@ -36,111 +35,128 @@ lock: - A.S. 33 bytes
 
  */
 export class Task implements CellInputType, CellOutputType {
+  static TASK = BigInt(0);
+  static CHALLENGE = BigInt(1);
 
-    static TASK = BigInt(0)
-    static CHALLENGE = BigInt(1)
+  capacity: bigint;
 
-    capacity: bigint
+  chainId: bigint;
+  version: bigint;
+  checkBlockHeightFrom: bigint;
+  checkBlockHeightTo: bigint;
+  checkBlockHashTo: string;
+  checkDataSize: bigint;
+  refreshInterval: bigint;
+  mode: bigint;
+  assignedCheckerAddress: string;
 
-    chainId: bigint
-    version: bigint
-    checkBlockHeightFrom: bigint
-    checkBlockHeightTo: bigint
-    checkBlockHashTo: string
-    checkDataSize: bigint
-    refreshInterval: bigint
-    mode: bigint
-    assignedCheckerAddress : string
+  outPoint: OutPoint;
 
-    outPoint: OutPoint
+  constructor(
+    capacity: bigint,
+    chainId: bigint,
+    version: bigint,
+    checkBlockHeightFrom: bigint,
+    checkBlockHeightTo: bigint,
+    checkBlockHashTo: string,
+    checkDataSize: bigint,
+    refreshInterval: bigint,
+    mode: bigint,
+    assignedCheckerAddress: string,
+    outPoint: OutPoint,
+  ) {
+    this.capacity = capacity;
+    this.chainId = chainId;
+    this.version = version;
+    this.checkBlockHeightFrom = checkBlockHeightFrom;
+    this.checkBlockHeightTo = checkBlockHeightTo;
+    this.checkBlockHashTo = checkBlockHashTo;
+    this.checkDataSize = checkDataSize;
+    this.refreshInterval = refreshInterval;
+    this.mode = mode;
+    this.assignedCheckerAddress = assignedCheckerAddress;
+    this.outPoint = outPoint;
+  }
 
-
-    constructor(capacity: bigint, chainId: bigint, version: bigint, checkBlockHeightFrom: bigint, checkBlockHeightTo: bigint, checkBlockHashTo: string, checkDataSize: bigint, refreshInterval: bigint, mode: bigint, assignedCheckerAddress:string,outPoint: OutPoint) {
-        this.capacity = capacity;
-        this.chainId = chainId;
-        this.version = version;
-        this.checkBlockHeightFrom = checkBlockHeightFrom;
-        this.checkBlockHeightTo = checkBlockHeightTo;
-        this.checkBlockHashTo = checkBlockHashTo;
-        this.checkDataSize = checkDataSize;
-        this.refreshInterval = refreshInterval;
-        this.mode = mode;
-        this.assignedCheckerAddress = assignedCheckerAddress;
-        this.outPoint = outPoint;
+  static validate(cell: Cell): boolean {
+    if (!cell.out_point) {
+      return false;
     }
 
-    static validate(cell: Cell): boolean {
-        if (!cell.out_point) {
-            return false
-        }
+    return true;
+  }
 
-        return true
+  static fromCell(cell: Cell): Task | null {
+    if (!Task.validate(cell)) {
+      return null;
     }
+    const capacity = BigInt(cell.cell_output.capacity);
 
-    static fromCell(cell: Cell): Task | null {
-        if (!Task.validate(cell)) {
-            return null
-        }
-        let capacity = BigInt(cell.cell_output.capacity)
+    const data = cell.data.substring(2);
 
-        let data = cell.data.substring(2)
+    const chainId = leHexToBigIntUint8(data.substring(0, 2));
+    const version = leHexToBigIntUint8(data.substring(2, 4));
+    const checkBlockHeightFrom = leHexToBigIntUint128(data.substring(4, 36));
+    const checkBlockHeightTo = leHexToBigIntUint128(data.substring(36, 68));
+    const checkBlockHashTo = data.substring(68, 132);
+    const checkDataSize = leHexToBigIntUint128(data.substring(132, 164));
+    const refreshInterval = leHexToBigIntUint16(data.substring(164, 196));
+    const mode = leHexToBigIntUint8(data.substring(196, 198));
+    const assignedCheckerAddress = data.substring(198, 238);
+    const outPoint = cell.out_point!;
 
-        let chainId = leHexToBigIntUint8(data.substring(0, 2))
-        let version = leHexToBigIntUint8(data.substring(2, 4))
-        let checkBlockHeightFrom = leHexToBigIntUint128(data.substring(4, 36))
-        let checkBlockHeightTo = leHexToBigIntUint128(data.substring(36, 68))
-        let checkBlockHashTo = data.substring(68, 132)
-        let checkDataSize = leHexToBigIntUint128(data.substring(132, 164))
-        let refreshInterval = leHexToBigIntUint16(data.substring(164, 196))
-        let mode = leHexToBigIntUint8(data.substring(196, 198))
-        let assignedCheckerAddress = data.substring(198, 238)
-        let outPoint = cell.out_point!
+    return new Task(
+      capacity,
+      chainId,
+      version,
+      checkBlockHeightFrom,
+      checkBlockHeightTo,
+      checkBlockHashTo,
+      checkDataSize,
+      refreshInterval,
+      mode,
+      assignedCheckerAddress,
+      outPoint,
+    );
+  }
 
-        return new Task(capacity, chainId, version, checkBlockHeightFrom, checkBlockHeightTo, checkBlockHashTo,
-            checkDataSize, refreshInterval,mode, assignedCheckerAddress,outPoint)
-    }
+  static default(): Task {
+    return new Task(0n, 0n, 0n, 0n, 0n, ``, 0n, 0n, 0n, ``, defaultOutPoint());
+  }
 
-    static default(): Task {
-        return new Task(0n, 0n, 0n, 0n, 0n, ``,
-            0n,0n,0n, ``,defaultOutPoint())
-    }
+  toCellInput(): CKBComponents.CellInput {
+    return {
+      previousOutput: {
+        txHash: this.outPoint.tx_hash,
+        index: this.outPoint.index,
+      },
+      since: "0x0",
+    };
+  }
 
-    toCellInput(): CKBComponents.CellInput {
-        return {
-            previousOutput: {
-                txHash: this.outPoint.tx_hash,
-                index: this.outPoint.index,
-            },
-            since: '0x0',
-        }
-    }
+  toCellOutput(): CKBComponents.CellOutput {
+    return {
+      capacity: Uint64BigIntToLeHex(this.capacity),
+      type: TASK_TYPE_SCRIPT,
+      lock: TASK_STATE_LOCK_SCRIPT,
+    };
+  }
 
-    toCellOutput(): CKBComponents.CellOutput {
+  toCellOutputData(): string {
+    return `0x${remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${remove0xPrefix(
+      Uint8BigIntToLeHex(this.version),
+    )}${remove0xPrefix(Uint128BigIntToLeHex(this.checkBlockHeightFrom))}${remove0xPrefix(
+      Uint128BigIntToLeHex(this.checkBlockHeightTo),
+    )}${remove0xPrefix(this.checkBlockHashTo)}${remove0xPrefix(
+      Uint128BigIntToLeHex(this.checkDataSize),
+    )}${remove0xPrefix(Uint16BigIntToLeHex(this.refreshInterval))}${remove0xPrefix(Uint8BigIntToLeHex(this.mode))}`;
+  }
 
-        return {
-            capacity: Uint64BigIntToLeHex(this.capacity),
-            type: TASK_TYPE_SCRIPT,
-            lock: TASK_STATE_LOCK_SCRIPT,
-        }
-    }
+  getOutPoint(): string {
+    return `${this.outPoint.tx_hash}-${this.outPoint.index}`;
+  }
 
-    toCellOutputData(): string {
-        return `0x${
-            remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${
-            remove0xPrefix(Uint8BigIntToLeHex(this.version))}${
-            remove0xPrefix(Uint128BigIntToLeHex(this.checkBlockHeightFrom))}${
-            remove0xPrefix(Uint128BigIntToLeHex(this.checkBlockHeightTo))}${
-            remove0xPrefix(this.checkBlockHashTo)}${
-            remove0xPrefix(Uint128BigIntToLeHex(this.checkDataSize))}${
-            remove0xPrefix(Uint16BigIntToLeHex(this.refreshInterval))}${
-            remove0xPrefix(Uint8BigIntToLeHex(this.mode))}`
-    }
-
-    getOutPoint(): string {
-        return `${this.outPoint.tx_hash}-${this.outPoint.index}`
-    }
-
-    static fromJSON(source: Object): Task {
-        return Object.assign(Task.default(), source);
-    }
+  static fromJSON(source: unknown): Task {
+    return Object.assign(Task.default(), source);
+  }
 }

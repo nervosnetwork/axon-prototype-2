@@ -1,7 +1,7 @@
 // mark a cell could be a CellInput while Transformation
 export interface CellInputType {
-    toCellInput(): CKBComponents.CellInput
+  toCellInput(): CKBComponents.CellInput;
 
-    // 0x???-0x?
-    getOutPoint(): string
+  // 0x???-0x?
+  getOutPoint(): string;
 }

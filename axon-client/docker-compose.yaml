@@ -1,0 +1,11 @@
+version: "3"
+services:
+  dev:
+    image: "node:12-buster"
+    volumes:
+      - "..:/root/axon"
+      - "axon-client-npm-cache:/root/.npm"
+    working_dir: "/root/axon/axon-client"
+volumes:
+  axon-client-npm-cache:
+    external: false

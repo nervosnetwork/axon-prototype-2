@@ -1,11 +1,11 @@
-import {Transformation} from './interfaces/transformation'
-import {GlobalConfig} from "../cells/global_config";
-import {SidechainConfig} from "../cells/sidechain_config";
-import {Code} from "../cells/code";
-import {SidechainState} from "../cells/sidechain_state";
-import {SidechainBond} from "../cells/sidechain_bond";
-import {Task} from "../cells/task";
-import {CollatorPublishTaskWitness} from "../witnesses/collator_publish_task_witness";
+import { Transformation } from "./interfaces/transformation";
+import { GlobalConfig } from "../cells/global_config";
+import { SidechainConfig } from "../cells/sidechain_config";
+import { Code } from "../cells/code";
+import { SidechainState } from "../cells/sidechain_state";
+import { SidechainBond } from "../cells/sidechain_bond";
+import { Task } from "../cells/task";
+import { CollatorPublishTaskWitness } from "../witnesses/collator_publish_task_witness";
 
 /*
 CollatorPublishTask,
@@ -21,79 +21,67 @@ Null                        ->          [Task Cell]
 */
 
 export class CollatorPublishTaskTransformation implements Transformation {
+  depGlobalConfig: GlobalConfig;
+  depConfig: SidechainConfig;
 
-    depGlobalConfig: GlobalConfig
-    depConfig: SidechainConfig
+  //use outpoint to refer as input
+  //update cell and use it as output
+  inputCode: Code;
+  inputState: SidechainState;
+  inputBond: SidechainBond;
 
-    //use outpoint to refer as input
-    //update cell and use it as output
-    inputCode: Code
-    inputState: SidechainState
-    inputBond: SidechainBond
+  outputTask: Array<Task>;
 
-    outputTask: Array<Task>
+  patternTypeWitness: CollatorPublishTaskWitness | null;
 
-    patternTypeWitness: CollatorPublishTaskWitness | null
+  processed = false;
+  skip = false;
+  composedTx?: CKBComponents.RawTransaction = undefined;
+  composedTxHash?: string = undefined;
 
+  constructor(
+    depGlobalConfig: GlobalConfig,
+    depSidechainConfig: SidechainConfig,
+    inputCode: Code,
+    inputState: SidechainState,
+    inputBond: SidechainBond,
+  ) {
+    this.depGlobalConfig = depGlobalConfig;
+    this.depConfig = depSidechainConfig;
+    this.inputCode = inputCode;
+    this.inputState = inputState;
+    this.inputBond = inputBond;
+    this.outputTask = [];
+    this.patternTypeWitness = null;
+  }
 
-    processed: boolean = false;
-    skip: boolean = false;
-    composedTx?: CKBComponents.RawTransaction = undefined
-    composedTxHash?: string = undefined
+  toCellDeps(): Array<CKBComponents.CellDep> {
+    return [this.depGlobalConfig.toCellDep(), this.depConfig.toCellDep()];
+  }
 
-    constructor(depGlobalConfig: GlobalConfig,
-                depSidechainConfig: SidechainConfig,
-                inputCode: Code,
-                inputState: SidechainState,
-                inputBond: SidechainBond) {
-        this.depGlobalConfig = depGlobalConfig;
-        this.depConfig = depSidechainConfig;
-        this.inputCode = inputCode;
-        this.inputState = inputState;
-        this.inputBond = inputBond;
-        this.outputTask = [];
-        this.patternTypeWitness = null;
-    }
+  toCellInput(): Array<CKBComponents.CellInput> {
+    return [this.inputCode.toCellInput(), this.inputState.toCellInput(), this.inputBond.toCellInput()];
+  }
 
-    toCellDeps(): Array<CKBComponents.CellDep> {
-        return [
-            this.depGlobalConfig.toCellDep(),
-            this.depConfig.toCellDep(),
-        ];
-    }
+  toCellOutput(): Array<CKBComponents.CellOutput> {
+    return [
+      this.inputCode.toCellOutput(),
+      this.inputState.toCellOutput(),
+      this.inputBond.toCellOutput(),
+      ...this.outputTask.map((task) => task.toCellOutput()),
+    ];
+  }
 
-    toCellInput(): Array<CKBComponents.CellInput> {
-        return [
-            this.inputCode.toCellInput(),
-            this.inputState.toCellInput(),
-            this.inputBond.toCellInput(),
-        ]
-    }
+  toCellOutputData(): Array<string> {
+    return [
+      this.inputCode.toCellOutputData(),
+      this.inputState.toCellOutputData(),
+      this.inputBond.toCellOutputData(),
+      ...this.outputTask.map((task) => task.toCellOutputData()),
+    ];
+  }
 
-    toCellOutput(): Array<CKBComponents.CellOutput> {
-        return [
-            this.inputCode.toCellOutput(),
-            this.inputState.toCellOutput(),
-            this.inputBond.toCellOutput(),
-            ...this.outputTask.map(task => task.toCellOutput())
-        ]
-    }
-
-    toCellOutputData(): Array<string> {
-
-        return [
-            this.inputCode.toCellOutputData(),
-            this.inputState.toCellOutputData(),
-            this.inputBond.toCellOutputData(),
-            ...this.outputTask.map(task => task.toCellOutputData())
-        ]
-    }
-
-    toWitness(): Array<CKBComponents.WitnessArgs> {
-        return [
-            this.patternTypeWitness!.toWitness()
-        ];
-    }
-
-
+  toWitness(): Array<CKBComponents.WitnessArgs> {
+    return [this.patternTypeWitness!.toWitness()];
+  }
 }
