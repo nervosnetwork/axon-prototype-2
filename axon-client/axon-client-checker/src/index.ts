@@ -26,7 +26,7 @@ export default class AxonCollator {
 
     await this.#bootstrap();
 
-    const taskService = container.get<TaskService>(modules[TaskService.name]);
+    const taskService = container.get<TaskService>(modules.TaskService);
     await taskService.start();
     this.#log("started");
   };
