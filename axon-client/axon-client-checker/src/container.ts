@@ -1,35 +1,28 @@
 import { Container } from "inversify";
-import path from "path";
-import { promisify } from "util";
-import fs from "fs";
-import { logger } from "axon-client-common/src/utils/logger";
 
-export const modules: Record<string, symbol> = {};
+import OnchainCrossChainService from "./modules/services/onchainCrossChainService";
+import OnchainEngineService from "./modules/services/onchainEngineService";
+import OnchainRpcService from "./modules/services/onchainRpcService";
+import OnchainScanService from "./modules/services/onchainScanService";
+import OnchainTransactionService from "./modules/services/onchainTransactionService";
+import OnchainTaskService from "./modules/services/onchainTaskService";
+
+export const modules: Record<string, symbol> = {
+  CrossChainService: Symbol("CrossChainService"),
+  EngineService: Symbol("EngineService"),
+  RpcService: Symbol("RpcService"),
+  ScanService: Symbol("ScanService"),
+  TransactionService: Symbol("TransactionService"),
+  TaskService: Symbol("TaskService"),
+};
 
 export const container = new Container({ defaultScope: "Singleton" });
 
-async function registerModule(modulePath: string) {
-  const { default: m } = await import(modulePath);
-  modules[m.name] = Symbol(m.name);
-  container.bind(modules[m.name]).to(m);
-}
-
-export async function bootstrap() {
-  // register module
-  const modulesDir = path.join(__dirname, "modules");
-  const servicesDir = path.join(modulesDir, "services");
-
-  for (const injectableDir of [servicesDir]) {
-    const injectablePaths = await promisify(fs.readdir)(injectableDir, "utf8").then((injectableNames) =>
-      injectableNames.map((injectableName) => path.join(injectableDir, injectableName)),
-    );
-    for (const injectablePath of injectablePaths) {
-      try {
-        await registerModule(injectablePath);
-        logger.info(`inversify: registered module: ${injectablePath}`);
-      } catch (e) {
-        // we just skip for files don't have injectables :)
-      }
-    }
-  }
+export function bootstrap(): void {
+  container.bind(modules.CrossChainService).to(OnchainCrossChainService);
+  container.bind(modules.EngineService).to(OnchainEngineService);
+  container.bind(modules.RpcService).to(OnchainRpcService);
+  container.bind(modules.ScanService).to(OnchainScanService);
+  container.bind(modules.TransactionService).to(OnchainTransactionService);
+  container.bind(modules.TaskService).to(OnchainTaskService);
 }

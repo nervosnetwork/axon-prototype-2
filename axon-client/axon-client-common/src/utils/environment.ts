@@ -3,6 +3,9 @@ import { HashType, QueryOptions } from "@ckb-lumos/base";
 import { scriptCamelToSnake } from "./tools";
 import { logger } from "./logger";
 import { blake160, privateKeyToPublicKey } from "@nervosnetwork/ckb-sdk-utils";
+import JSONbig from "json-bigint";
+
+const jsonbig = JSONbig({ useNativeBigInt: true, alwaysParseAsBig: true });
 
 function log(msg: string) {
   logger.info(`workEnv: ${msg}`);
@@ -525,17 +528,17 @@ export const TASK_QUERY_OPTION: QueryOptions = {
 export const INSTANCE_NAME: string = process.env.INSTANCE_NAME!;
 log(`INSTANCE_NAME:${INSTANCE_NAME}`);
 
-log("GLOBAL_CONFIG_QUERY_OPTION: " + JSONbig.stringify(GLOBAL_CONFIG_QUERY_OPTION, null, 2));
-log("SUDT_QUERY_OPTION: " + JSONbig.stringify(SUDT_QUERY_OPTION, null, 2));
-log("MUSE_QUERY_OPTION: " + JSONbig.stringify(MUSE_QUERY_OPTION, null, 2));
-log("CHECKER_BOND_QUERY_OPTION: " + JSONbig.stringify(CHECKER_BOND_QUERY_OPTION, null, 2));
-log("CHECKER_INFO_QUERY_OPTION: " + JSONbig.stringify(CHECKER_INFO_QUERY_OPTION, null, 2));
-log("CODE_QUERY_OPTION: " + JSONbig.stringify(CODE_QUERY_OPTION, null, 2));
-log("SIDECHAIN_BOND_QUERY_OPTION: " + JSONbig.stringify(SIDECHAIN_BOND_QUERY_OPTION, null, 2));
-log("SIDECHAIN_CONFIG_QUERY_OPTION: " + JSONbig.stringify(SIDECHAIN_CONFIG_QUERY_OPTION, null, 2));
-log("SIDECHAIN_FEE_QUERY_OPTION: " + JSONbig.stringify(SIDECHAIN_FEE_QUERY_OPTION, null, 2));
-log("SIDECHAIN_STATE_QUERY_OPTION: " + JSONbig.stringify(SIDECHAIN_STATE_QUERY_OPTION, null, 2));
-log("TASK_QUERY_OPTION: " + JSONbig.stringify(TASK_QUERY_OPTION, null, 2));
+log("GLOBAL_CONFIG_QUERY_OPTION: " + jsonbig.stringify(GLOBAL_CONFIG_QUERY_OPTION, null, 2));
+log("SUDT_QUERY_OPTION: " + jsonbig.stringify(SUDT_QUERY_OPTION, null, 2));
+log("MUSE_QUERY_OPTION: " + jsonbig.stringify(MUSE_QUERY_OPTION, null, 2));
+log("CHECKER_BOND_QUERY_OPTION: " + jsonbig.stringify(CHECKER_BOND_QUERY_OPTION, null, 2));
+log("CHECKER_INFO_QUERY_OPTION: " + jsonbig.stringify(CHECKER_INFO_QUERY_OPTION, null, 2));
+log("CODE_QUERY_OPTION: " + jsonbig.stringify(CODE_QUERY_OPTION, null, 2));
+log("SIDECHAIN_BOND_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_BOND_QUERY_OPTION, null, 2));
+log("SIDECHAIN_CONFIG_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_CONFIG_QUERY_OPTION, null, 2));
+log("SIDECHAIN_FEE_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_FEE_QUERY_OPTION, null, 2));
+log("SIDECHAIN_STATE_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_STATE_QUERY_OPTION, null, 2));
+log("TASK_QUERY_OPTION: " + jsonbig.stringify(TASK_QUERY_OPTION, null, 2));
 
 export const CELL_DEPS = [
   {
