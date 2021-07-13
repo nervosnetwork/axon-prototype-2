@@ -37,7 +37,6 @@ export default class OnchainEngineService implements EngineService {
 
     //do state transfer work
     if (xfer.depConfig.checkerTotalCount < xfer.depConfig.checkerThreshold) {
-      xfer.skip = true;
       return;
     }
 
@@ -45,7 +44,6 @@ export default class OnchainEngineService implements EngineService {
 
     xfer.patternTypeWitness = new CheckerSubmitTaskWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
 
-    xfer.processed = true;
     //compose tx
 
     await this.#transactionService.composeTransaction(xfer);
