@@ -13,7 +13,7 @@
     "lint": "eslint */src/*",
     "format": "eslint */src/* --fix",
     "prepare": "cd .. && husky install",
-    "test:unit": "nyc jest"
+    "test:unit": "DOTENV_CONFIG_PATH=./unitTest.env nyc jest"
   },
   "workspaces": {
     "packages": [
@@ -34,10 +34,13 @@
     "eslint-plugin-prettier": "^3.4.0",
     "husky": "^7.0.0",
     "jest": "^27.0.6",
+    "jest-ts-auto-mock": "^2.0.0",
     "lerna": "^4.0.0",
     "nyc": "^15.1.0",
     "prettier": "^2.3.2",
-    "ts-jest": "^27.0.3"
+    "ts-auto-mock": "^3.3.0",
+    "ts-jest": "^27.0.3",
+    "ttypescript": "^1.5.12"
   },
   "nyc": {
     "all": true,
