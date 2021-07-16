@@ -9,4 +9,10 @@ module.exports = {
       "compiler": "ttypescript"
     }
   },
+  collectCoverage: true,
+  collectCoverageFrom: [
+    "axon-client-checker/**/*.ts",
+    "axon-client-collator/**/*.ts",
+    "axon-client-common/**/*.ts",
+  ],
 };
