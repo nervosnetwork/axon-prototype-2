@@ -18,7 +18,7 @@ Task Cell                   ->          Null
 
 */
 
-export class CheckSubmitChallengeTransformation implements Transformation {
+export class CheckerSubmitChallengeTransformation implements Transformation {
   depGlobalConfig: GlobalConfig;
   depConfig: SidechainConfig;
 

@@ -12,8 +12,12 @@ import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker
 import { Task } from "axon-client-common/src/modules/models/cells/task";
 
 import { CheckerSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_task";
+import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
+import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
 
 import { CheckerSubmitTaskWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_task_witness";
+import { CheckerSubmitChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_challenge_witness";
+import { CheckerPublishChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_public_challenge_witness";
 
 import { createMock } from "ts-auto-mock";
 
@@ -40,18 +44,44 @@ function prepareContext(): Context {
   );
 }
 
-function isSubmitTaskSuccess(xfer: CheckerSubmitTaskTransformation, context: Context): void {
+function testSending(
+  xfer: CheckerSubmitTaskTransformation | CheckerSubmitChallengeTransformation | CheckerPublishChallengeTransformation,
+  context: Context,
+): void {
   const composeTransaction = context.transactionService.composeTransaction as jest.Mock;
   const sendTransaction = context.rpcService.sendTransaction as jest.Mock;
 
-  expect(xfer.inputCheckerInfo.mode).toBe(CheckerInfo.TASK_PASSED);
-  expect(xfer.patternTypeWitness).toEqual(
-    new CheckerSubmitTaskWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId),
-  );
   expect(composeTransaction).toHaveBeenCalledTimes(1);
   expect(composeTransaction).toHaveBeenCalledWith(xfer);
   expect(sendTransaction).toHaveBeenCalledTimes(1);
   expect(sendTransaction).toHaveBeenCalledWith(xfer.composedTx);
+}
+
+function testSubmittingTask(xfer: CheckerSubmitTaskTransformation, context: Context) {
+  expect(xfer.inputCheckerInfo.mode).toBe(CheckerInfo.TASK_PASSED);
+  expect(xfer.patternTypeWitness).toEqual(
+    new CheckerSubmitTaskWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId),
+  );
+
+  testSending(xfer, context);
+}
+
+function testSubmittingChallenge(xfer: CheckerSubmitChallengeTransformation, context: Context) {
+  expect(xfer.inputCheckerInfo.mode).toBe(CheckerInfo.CHALLENGE_PASSED);
+  expect(xfer.patternTypeWitness).toEqual(
+    new CheckerSubmitChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId),
+  );
+
+  testSending(xfer, context);
+}
+
+function testPublishingChallenge(xfer: CheckerPublishChallengeTransformation, context: Context) {
+  expect(xfer.inputCheckerInfo.mode).toBe(CheckerInfo.CHALLENGE_REJECTED);
+  expect(xfer.patternTypeWitness).toEqual(
+    new CheckerPublishChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId),
+  );
+
+  testSending(xfer, context);
 }
 
 describe("OnchainEngineService", () => {
@@ -71,7 +101,7 @@ describe("OnchainEngineService", () => {
 
     await context.engineService.checkerSubmitTask(xfer);
 
-    expect(() => isSubmitTaskSuccess(xfer, context)).toThrow();
+    expect(() => testSubmittingTask(xfer, context)).toThrow();
   });
 
   test("checkerSubmitTask should success", async () => {
@@ -89,6 +119,80 @@ describe("OnchainEngineService", () => {
 
     await context.engineService.checkerSubmitTask(xfer);
 
-    expect(() => isSubmitTaskSuccess(xfer, context)).not.toThrow();
+    expect(() => testSubmittingTask(xfer, context)).not.toThrow();
+  });
+
+  test("checkerSubmitChallenge should failed if total checkers count is less than checker threshold", async () => {
+    const context = prepareContext();
+
+    const config = SidechainConfig.default();
+    config.checkerThreshold = 1n;
+
+    const xfer = new CheckerSubmitChallengeTransformation(
+      GlobalConfig.default(),
+      config,
+      Code.default(),
+      CheckerInfo.default(),
+      Task.default(),
+    );
+
+    await context.engineService.checkerSubmitChallenge(xfer);
+
+    expect(() => testSubmittingChallenge(xfer, context)).toThrow();
+  });
+
+  test("checkerSubmitChallenge should success", async () => {
+    const context = prepareContext();
+
+    const config = SidechainConfig.default();
+
+    const xfer = new CheckerSubmitChallengeTransformation(
+      GlobalConfig.default(),
+      config,
+      Code.default(),
+      CheckerInfo.default(),
+      Task.default(),
+    );
+
+    await context.engineService.checkerSubmitChallenge(xfer);
+
+    expect(() => testSubmittingChallenge(xfer, context)).not.toThrow();
+  });
+
+  test("checkerPublishChallenge should failed if total checkers count is less than checker threshold", async () => {
+    const context = prepareContext();
+
+    const config = SidechainConfig.default();
+    config.checkerThreshold = 1n;
+
+    const xfer = new CheckerPublishChallengeTransformation(
+      GlobalConfig.default(),
+      config,
+      Code.default(),
+      CheckerInfo.default(),
+      Task.default(),
+    );
+
+    await context.engineService.checkerPublishChallenge(xfer);
+
+    expect(() => testPublishingChallenge(xfer, context)).toThrow();
+  });
+
+  test("checkerPublishChallenge should success", async () => {
+    const context = prepareContext();
+
+    const config = SidechainConfig.default();
+
+    const xfer = new CheckerPublishChallengeTransformation(
+      GlobalConfig.default(),
+      config,
+      Code.default(),
+      CheckerInfo.default(),
+      Task.default(),
+    );
+
+    await context.engineService.checkerPublishChallenge(xfer);
+
+    expect(() => testPublishingChallenge(xfer, context)).not.toThrow();
   });
 });
