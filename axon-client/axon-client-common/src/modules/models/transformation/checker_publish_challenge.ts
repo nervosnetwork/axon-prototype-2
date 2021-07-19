@@ -18,7 +18,7 @@ Task Cell                   ->          [Task Cell]
 
 */
 
-export class CheckPublishChallengeTransformation implements Transformation {
+export class CheckerPublishChallengeTransformation implements Transformation {
   depGlobalConfig: GlobalConfig;
   depConfig: SidechainConfig;
 

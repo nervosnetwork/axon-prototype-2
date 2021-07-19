@@ -5,9 +5,9 @@ import { logger } from "axon-client-common/src/utils/logger";
 import ScanService from "./scanService";
 import EngineService from "./engineService";
 import { CheckerSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_task";
-import { CheckPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
+import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
 import { Task } from "axon-client-common/src/modules/models/cells/task";
-import { CheckSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
+import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
 import TaskService from "./taskService";
 
 @injectable()
@@ -83,7 +83,7 @@ export default class OnchainTaskService implements TaskService {
       const challenge = task.mode === Task.CHALLENGE;
       if (challenge) {
         //submit challenge
-        const xfer = new CheckSubmitChallengeTransformation(globalConfig, config, code, checkerInfo, task);
+        const xfer = new CheckerSubmitChallengeTransformation(globalConfig, config, code, checkerInfo, task);
 
         await this.#engineService.checkerSubmitChallenge(xfer);
       } else {
@@ -93,7 +93,7 @@ export default class OnchainTaskService implements TaskService {
 
         if (raiseChallenge) {
           //publish challenge
-          const xfer = new CheckPublishChallengeTransformation(globalConfig, config, code, checkerInfo, task);
+          const xfer = new CheckerPublishChallengeTransformation(globalConfig, config, code, checkerInfo, task);
           await this.#engineService.checkerPublishChallenge(xfer);
         } else {
           //submit task
