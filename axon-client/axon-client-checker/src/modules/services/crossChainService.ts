@@ -1,3 +1,3 @@
 export default interface CrossChainService {
-  getCrossChainInfo(): Promise<[bigint, string]>;
+  getCrossChainInfo(): Promise<{ latestBlockHeight: bigint; latestBlockHash: string }>;
 }
