@@ -1,8 +1,8 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
+import { modules } from "../../container";
 import Rpc from "@nervosnetwork/ckb-sdk-rpc";
 import JSONbig from "json-bigint";
 import { logger } from "axon-client-common/src/utils/logger";
-import { CKB_NODE_URL } from "axon-client-common/src/utils/environment";
 import RpcService from "./rpcService";
 
 @injectable()
@@ -10,15 +10,17 @@ export default class OnchainRpcService implements RpcService {
   #client: Rpc;
 
   // @ts-expect-error Unused
-  #info = (msg: string) => {
+  // istanbul ignore next
+  private info(msg: string): void {
     logger.info(`RpcService: ${msg}`);
-  };
-  #error = (msg: string) => {
-    logger.error(`RpcService: ${msg}`);
-  };
+  }
 
-  constructor() {
-    this.#client = new Rpc(CKB_NODE_URL);
+  private error(msg: string): void {
+    logger.error(`RpcService: ${msg}`);
+  }
+
+  constructor(@inject(modules.CKBRpc) client: Rpc) {
+    this.#client = client;
   }
 
   sendTransaction = async (rawTx: CKBComponents.RawTransaction): Promise<boolean> => {
@@ -27,24 +29,26 @@ export default class OnchainRpcService implements RpcService {
       await this.#client.sendTransaction(rawTx);
       return true;
     } catch (e) {
-      this.#error("sendTransaction error: " + e);
-      this.#error("rawTx: " + JSONbig.stringify(rawTx, null, 2));
+      this.error("sendTransaction error: " + e);
+      this.error("rawTx: " + JSONbig.stringify(rawTx, null, 2));
       return false;
     }
   };
 
   // @ts-expect-error Unused
-  private toArrayBuffer = (buf: Buffer): ArrayBuffer => {
+  // istanbul ignore next
+  private toArrayBuffer(buf: Buffer): ArrayBuffer {
     const ab = new ArrayBuffer(buf.length);
     const view = new Uint8Array(ab);
     for (let i = 0; i < buf.length; ++i) {
       view[i] = buf[i];
     }
     return ab;
-  };
+  }
 
   // @ts-expect-error Unused
-  private toBuffer = (arrayBuffer: ArrayBuffer): Buffer => {
+  // istanbul ignore next
+  private toBuffer(arrayBuffer: ArrayBuffer): Buffer {
     const b = Buffer.alloc(arrayBuffer.byteLength);
     const view = new Uint8Array(arrayBuffer);
 
@@ -52,5 +56,5 @@ export default class OnchainRpcService implements RpcService {
       b[i] = view[i];
     }
     return b;
-  };
+  }
 }
