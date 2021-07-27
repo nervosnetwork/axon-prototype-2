@@ -5,6 +5,7 @@ export const modules: Record<string, symbol> = {
   ScanService: Symbol("ScanService"),
   TransactionService: Symbol("TransactionService"),
   TaskService: Symbol("TaskService"),
+  CKBCKB: Symbol("CKBCKB"),
   CKBRpc: Symbol("CKBRpc"),
 };
 
@@ -17,11 +18,18 @@ import OnchainScanService from "./modules/services/onchainScanService";
 import OnchainTransactionService from "./modules/services/onchainTransactionService";
 import OnchainTaskService from "./modules/services/onchainTaskService";
 
+import CKB from "@nervosnetwork/ckb-sdk-core";
 import Rpc from "@nervosnetwork/ckb-sdk-rpc";
 
 import { CKB_NODE_URL } from "axon-client-common/src/utils/environment";
 
 class CKBRpc extends Rpc {
+  constructor() {
+    super(CKB_NODE_URL);
+  }
+}
+
+class CKBCKB extends CKB {
   constructor() {
     super(CKB_NODE_URL);
   }
@@ -37,5 +45,6 @@ export function bootstrap(): void {
   container.bind(modules.TransactionService).to(OnchainTransactionService);
   container.bind(modules.TaskService).to(OnchainTaskService);
 
+  container.bind(modules.CKBCKB).to(CKBCKB);
   container.bind(modules.CKBRpc).to(CKBRpc);
 }
