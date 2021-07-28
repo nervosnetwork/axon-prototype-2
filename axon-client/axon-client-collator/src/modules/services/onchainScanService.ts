@@ -29,6 +29,7 @@ import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker
 import { GlobalConfig } from "axon-client-common/src/modules/models/cells/global_config";
 import { Task } from "axon-client-common/src/modules/models/cells/task";
 import ScanService from "./scanService";
+import { QueryOptions } from "@ckb-lumos/base";
 
 @injectable()
 export default class OnchainScanService implements ScanService {
@@ -37,13 +38,15 @@ export default class OnchainScanService implements ScanService {
   readonly #knex: knex;
 
   // @ts-expect-error Unused
-  #info = (msg: string) => {
+  // istanbul ignore next
+  private info(msg: string) {
     logger.info(`ScanService: ${msg}`);
-  };
+  }
   // @ts-expect-error Unused
-  #error = (msg: string) => {
+  // istanbul ignore next
+  private error(msg: string) {
     logger.error(`ScanService: ${msg}`);
-  };
+  }
 
   constructor() {
     this.#knex = knex({
@@ -60,17 +63,23 @@ export default class OnchainScanService implements ScanService {
     this.#indexer = new Indexer(INDEXER_URL, this.#knex);
   }
 
+  // istanbul ignore next
+  public createCollector(options: QueryOptions, tip?: string): CellCollector {
+    return new CellCollector(this.#knex, {
+      toBlock: tip,
+      ...options,
+      order: "desc",
+    });
+  }
+
+  // istanbul ignore next
   public getTip = async (): Promise<bigint> => {
     return BigInt((await this.#indexer.tip()).block_number);
   };
 
   // be careful that the tip is hexicalDecimal
   public scanSidechainState = async (tip?: string): Promise<SidechainState> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_STATE_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(SIDECHAIN_STATE_QUERY_OPTION, tip);
 
     let sidechainState: SidechainState | null = null;
 
@@ -88,11 +97,7 @@ export default class OnchainScanService implements ScanService {
   };
 
   public scanCode = async (tip?: string): Promise<Code> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...CODE_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(CODE_QUERY_OPTION, tip);
 
     let code: Code | null = null;
 
@@ -110,11 +115,7 @@ export default class OnchainScanService implements ScanService {
   };
 
   public scanSidechainConfig = async (tip?: string): Promise<SidechainConfig> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_CONFIG_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(SIDECHAIN_CONFIG_QUERY_OPTION, tip);
 
     let sidechainConfig: SidechainConfig | null = null;
 
@@ -132,11 +133,7 @@ export default class OnchainScanService implements ScanService {
   };
 
   public scanSidechainFee = async (tip?: string): Promise<SidechainFee> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_FEE_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(SIDECHAIN_FEE_QUERY_OPTION, tip);
 
     let sidechainFee: SidechainFee | null = null;
 
@@ -154,11 +151,7 @@ export default class OnchainScanService implements ScanService {
   };
 
   public scanSidechainBond = async (tip?: string): Promise<SidechainBond> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_BOND_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(SIDECHAIN_BOND_QUERY_OPTION, tip);
 
     let sidechainBond: SidechainBond | null = null;
 
@@ -176,11 +169,7 @@ export default class OnchainScanService implements ScanService {
   };
 
   public scanCheckerInfo = async (tip?: string): Promise<Array<CheckerInfo>> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...CHECKER_INFO_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(CHECKER_INFO_QUERY_OPTION, tip);
 
     const checkerInfos: Array<CheckerInfo> = [];
 
@@ -193,15 +182,14 @@ export default class OnchainScanService implements ScanService {
       checkerInfos.push(checkerInfo!);
     }
 
+    if (checkerInfos.length === 0) {
+      throw new Error("info or pool not found");
+    }
     return checkerInfos;
   };
 
   public scanGlobalConfig = async (tip?: string): Promise<GlobalConfig> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...GLOBAL_CONFIG_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(GLOBAL_CONFIG_QUERY_OPTION, tip);
 
     let globalConfig: GlobalConfig | null = null;
 
@@ -219,11 +207,7 @@ export default class OnchainScanService implements ScanService {
   };
 
   public scanTask = async (tip?: string): Promise<Array<Task>> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...TASK_QUERY_OPTION,
-      order: "desc",
-    });
+    const collector = this.createCollector(TASK_QUERY_OPTION, tip);
 
     const tasks: Array<Task> = [];
 
@@ -236,28 +220,9 @@ export default class OnchainScanService implements ScanService {
       tasks.push(task!);
     }
 
-    return tasks;
-  };
-
-  public scanFee = async (tip?: string): Promise<SidechainFee> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_FEE_QUERY_OPTION,
-      order: "desc",
-    });
-
-    let fee: SidechainFee | null = null;
-
-    for await (const cell of collector.collect()) {
-      fee = SidechainFee.fromCell(cell);
-      if (fee) {
-        break;
-      }
-    }
-
-    if (!fee) {
+    if (tasks.length === 0) {
       throw new Error("info or pool not found");
     }
-    return fee!;
+    return tasks;
   };
 }
