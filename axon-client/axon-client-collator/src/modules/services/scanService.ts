@@ -26,6 +26,4 @@ export default interface ScanService {
   scanGlobalConfig(tip?: string): Promise<GlobalConfig>;
 
   scanTask(tip?: string): Promise<Array<Task>>;
-
-  scanFee(tip?: string): Promise<SidechainFee>;
 }

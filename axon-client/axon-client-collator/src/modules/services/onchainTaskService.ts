@@ -78,7 +78,10 @@ export default class OnchainTaskService implements TaskService {
       //if the interval is timed out, do refresh
       //if()
 
-      const [checkerInfos, fee] = await Promise.all([this.#scanService.scanCheckerInfo(), this.#scanService.scanFee()]);
+      const [checkerInfos, fee] = await Promise.all([
+        this.#scanService.scanCheckerInfo(),
+        this.#scanService.scanSidechainFee(),
+      ]);
 
       if (checkerInfos.some((checkerInfo) => checkerInfo.mode === Task.CHALLENGE)) {
         const xfer = new CollatorSubmitChallengeTransformation(globalConfig, code, config, state, fee, checkerInfos);
