@@ -1,0 +1,23 @@
+import ../common;
+
+array TaskMode [byte; 1];
+array TaskStatus [byte; 1];
+vector SidechainBlockHeaders <BlockHeader>;
+
+table TaskCell {
+    version: Uint8,
+    sidechain_block_height_from: BlockHeight,
+    sidechain_block_height_to: BlockHeight,
+    refresh_sidechain_height: BlockHeight,
+    check_data_size: Uint128,
+    mode: TaskMode,
+    status: TaskStatus,
+    reveal: RandomSeed,
+    commit: CommittedHash,
+    sidechain_block_header: SidechainBlockHeaders,
+}
+
+struct TaskCellTypeArgs {
+    chain_id: ChainId,
+    checker_lock_arg: PubKeyHash,
+}
