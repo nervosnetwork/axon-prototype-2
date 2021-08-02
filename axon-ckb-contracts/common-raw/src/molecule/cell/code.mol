@@ -1,0 +1,4 @@
+import ../common;
+struct CodeCellLockArgs {
+    lock_arg: PubKeyHash,
+}
