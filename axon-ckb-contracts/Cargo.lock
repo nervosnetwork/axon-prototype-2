@@ -860,6 +860,9 @@ dependencies = [
 [[package]]
 name = "common-raw"
 version = "0.1.0"
+dependencies = [
+ "molecule",
+]
 
 [[package]]
 name = "convert_case"
