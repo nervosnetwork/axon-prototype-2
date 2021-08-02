@@ -1,0 +1,6 @@
+import ../common;
+
+table CheckerBondCellLockArgs {
+  checker_lock_arg: PubKeyHash,
+  participated_chain_id: ChainIdList,
+}
