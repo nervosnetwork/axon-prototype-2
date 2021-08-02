@@ -1,0 +1,14 @@
+import ../common;
+array CheckerInfoStatus [byte; 1];
+
+table CheckerInfoCell{
+    unpaid_fee: Uint128,
+    uppaid_check_data_size: Uint128,
+    status: CheckerInfoStatus,
+    rpc_url: String,
+}
+
+struct CheckerInfoCellTypeArgs {
+    chain_id: ChainId,
+    checker_lock_arg: PubKeyHash,
+}
