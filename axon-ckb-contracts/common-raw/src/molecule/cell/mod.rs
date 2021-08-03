@@ -6,5 +6,6 @@ pub mod sidechain_bond;
 pub mod sidechain_config;
 pub mod sidechain_fee;
 pub mod sidechain_registry;
+pub mod sidechain_state;
 pub mod sudt_token;
 pub mod task;
