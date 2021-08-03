@@ -1,0 +1,4 @@
+import ../common;
+struct SidechainFeeCellLockArgs {
+    chain_id: ChainId,
+}

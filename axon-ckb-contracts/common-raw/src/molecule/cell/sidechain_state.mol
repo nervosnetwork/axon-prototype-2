@@ -1,0 +1,41 @@
+import ../common;
+
+vector Jobs <BlockSlice>;
+
+struct CommittedCheckerInfo {
+    checker_lock_arg: PubKeyHash,
+    committed_hash: CommittedHash,
+}
+
+struct PunishedChecker {
+    checker_lock_arg: PubKeyHash,
+    punish_points: Uint32,
+}
+
+vector PunishedCheckers <PunishedChecker>;
+
+vector BlockHeaders <BlockHeader>;
+
+struct CheckerLastAcceptTaskHeight{
+    checker_lock_arg: PubKeyHash,
+    height: BlockHeight,
+}
+vector CheckerLastAcceptTaskHeights <CheckerLastAcceptTaskHeight>;
+
+table SidechainStateCell {
+    version: Uint8,
+    submit_sidechain_block_height: BlockHeight,
+    waiting_jobs: Jobs,
+    confirmed_jobs: Jobs,
+    random_seed: RandomSeed,
+    random_offset: Uint8,
+    random_commit: CommittedCheckerInfo,
+    punish_checkers: PunishedCheckers,
+    recent_block_headers: BlockHeaders,
+    ancient_block_heard_merkle_root: MerkleHash,
+    checker_last_task_sidechain_heights: CheckerLastAcceptTaskHeights,
+}
+
+struct SidechainStateCellLockArgs {
+    chain_id: ChainId,
+}
