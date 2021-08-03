@@ -1,0 +1,32 @@
+import ../common;
+
+struct GlobalConfigCell {
+    admin_lock_arg: PubKeyHash,
+
+    checker_info_cell_type_codehash: CodeHash,
+    checker_info_cell_type_hashtype: HashType,
+
+    checker_bond_cell_type_codehash: CodeHash,
+    checker_bond_cell_type_hashtype: HashType,
+
+    code_cell_type_codehash: CodeHash,
+    code_cell_type_hashtype: HashType,
+
+    sidechain_bond_cell_type_codehash: CodeHash,
+    sidechain_bond_cell_type_hashtype: HashType,
+
+    sidechain_config_cell_type_codehash: CodeHash,
+    sidechain_config_cell_type_hashtype: HashType,
+
+    sidechain_fee_cell_type_codehash: CodeHash,
+    sidechain_fee_cell_type_hashtype: HashType,
+
+    sidechain_registry_cell_type_codehash: CodeHash,
+    sidechain_registry_cell_type_hashtype: HashType,
+
+    sidechain_state_cell_type_codehash: CodeHash,
+    sidechain_state_cell_type_hashtype: HashType,
+
+    task_cell_type_codehash: CodeHash,
+    task_cell_type_hashtype: HashType,
+}

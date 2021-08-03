@@ -1,0 +1,43 @@
+import ../common;
+
+array SidechainStatus [byte; 1];
+
+array CheckerStatus [byte; 1];
+struct CheckerInfo {
+    lock_arg: PubKeyHash,
+    status: CheckerStatus,
+}
+vector CheckerInfoList <CheckerInfo>;
+
+table SidechainConfigCell {
+  sidechain_status: SidechainStatus,
+
+  commit_threshold: Uint32,
+  challenge_threshold: Uint32,
+
+  checker_normal_count: Uint32,
+  checker_threshold : Uint32,
+  checker_total_count : Uint32,
+  checkers: CheckerInfoList,
+
+  refresh_punish_points: Uint32,
+  refresh_punish_release_points: Uint32,
+  refresh_punish_threshold: Uint32,
+  refresh_sidechain_height_interval: BlockHeight,
+
+  check_data_size_limit: Uint128,
+  check_fee_rate: Uint32,
+  minimal_bond: Uint128,
+  parallel_job_upper_bond: Uint8,
+  parallel_job_maximal_height_range: BlockHeight,
+
+  admin_lock_arg: PubKeyHash,
+  collator_lock_arg: PubKeyHash,
+
+  bond_sudt_typescript_codehash: CodeHash,
+  bond_sudt_typescript_hashtype: HashType,
+}
+
+struct SidechainConfigCellTypeArgs {
+    chain_id: ChainId,
+}

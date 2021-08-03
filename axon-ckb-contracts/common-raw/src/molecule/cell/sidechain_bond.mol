@@ -1,0 +1,7 @@
+import ../common;
+
+table SidechainBondCellLockArgs {
+    collator_lock_arg: PubKeyHash,
+    participated_chain: ChainIdList,
+    unlock_sidechain_height: BlockHeight,
+}

@@ -1,0 +1,5 @@
+import ../common;
+
+table SidechainRegistryCell {
+    chain_ids: ChainIdList,
+}

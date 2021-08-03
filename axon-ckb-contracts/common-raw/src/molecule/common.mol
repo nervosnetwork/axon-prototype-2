@@ -1,0 +1,29 @@
+array Uint8 [byte; 1];
+array Uint16 [byte; 2];
+array Uint32 [byte; 4];
+array Uint64 [byte; 8];
+array Uint128 [byte; 16];
+
+array Bytes16 [byte; 16];
+array Bytes32 [byte; 32];
+
+array BlockHeader [byte; 32];
+array BlockHeight [byte; 16];
+array CodeHash [byte; 32];
+array HashType [byte; 1];
+array MerkleHash [byte; 32];
+array PubKeyHash [byte; 20];
+array ScriptHash [byte; 32];
+
+struct BlockSlice {
+    from: BlockHeight,
+    to: BlockHeight,
+}
+
+array ChainId [byte; 4];
+vector ChainIdList <ChainId>;
+
+array RandomSeed [byte; 32];
+array CommittedHash [byte; 32];
+
+vector String <byte>;

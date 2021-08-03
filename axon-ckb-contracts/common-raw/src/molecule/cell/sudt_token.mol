@@ -1,0 +1,5 @@
+import ../common;
+
+struct SudtTokenCell {
+    amount: Uint128,
+}
