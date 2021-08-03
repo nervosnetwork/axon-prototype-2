@@ -6,10 +6,10 @@ import ScanService from "./scanService";
 import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
 import { CollatorPublishTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_publish_task";
 import EngineService from "./engineService";
-import { Task } from "axon-client-common/src/modules/models/cells/task";
 import { CollatorSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_challenge";
 import { CollatorSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_task";
 import TaskService from "./taskService";
+import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
 
 @injectable()
 export default class OnchainTaskService implements TaskService {
@@ -19,10 +19,11 @@ export default class OnchainTaskService implements TaskService {
   readonly #schedule = "*/5 * * * * *";
 
   #cronLock = false;
-
+  // istanbul ignore next
   #info = (msg: string) => {
     logger.info(`TaskService: ${msg}`);
   };
+  // istanbul ignore next
   #error = (msg: string) => {
     logger.error(`TaskService: ${msg}`);
   };
@@ -34,7 +35,7 @@ export default class OnchainTaskService implements TaskService {
     this.#scanService = scanService;
     this.#engineService = engineService;
   }
-
+  // istanbul ignore next
   start = async () => {
     // public task
     new CronJob(this.#schedule, this.wrapperedTask, null, true);
@@ -42,7 +43,7 @@ export default class OnchainTaskService implements TaskService {
     // refresh task
     //
   };
-
+  // istanbul ignore next
   readonly wrapperedTask = async () => {
     if (!this.#cronLock) {
       this.#cronLock = true;
@@ -83,7 +84,7 @@ export default class OnchainTaskService implements TaskService {
         this.#scanService.scanSidechainFee(),
       ]);
 
-      if (checkerInfos.some((checkerInfo) => checkerInfo.mode === Task.CHALLENGE)) {
+      if (checkerInfos.some((checkerInfo) => checkerInfo.mode === CheckerInfo.CHALLENGE_REJECTED)) {
         const xfer = new CollatorSubmitChallengeTransformation(globalConfig, code, config, state, fee, checkerInfos);
 
         await this.#engineService.collatorSubmitChallenge(xfer);
