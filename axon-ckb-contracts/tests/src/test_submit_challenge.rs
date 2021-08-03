@@ -7,7 +7,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, prelude::*};
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_challenge::CheckerSubmitChallengeWitness,
 };
@@ -54,8 +54,8 @@ fn test_success() {
         checker_info_input_data.serialize(),
     );
 
-    let mut task_input_data = TaskCellData::default();
-    task_input_data.mode = TaskCellMode::Challenge;
+    let mut task_input_data = TaskCell::default();
+    task_input_data.mode = TaskMode::Challenge;
 
     let task_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &task_script),

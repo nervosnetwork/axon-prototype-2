@@ -5,7 +5,7 @@ use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 use common_raw::cell::{
     sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-    task::{TaskCellData, TaskCellTypeArgs},
+    task::{TaskCell, TaskCellTypeArgs},
 };
 
 const MAX_CYCLES: u64 = 10_000_000;
@@ -65,7 +65,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(scc_dep);
 
     // prepare inputs
-    let task_cell_data = TaskCellData::default();
+    let task_cell_data = TaskCell::default();
     let task_cell_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &task_script),
         task_cell_data.serialize(),
@@ -79,7 +79,7 @@ fn test_success() {
     let builder = builder.input(task_cell_input);
 
     // prepare outputs
-    let task_cell_data = TaskCellData::default();
+    let task_cell_data = TaskCell::default();
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),

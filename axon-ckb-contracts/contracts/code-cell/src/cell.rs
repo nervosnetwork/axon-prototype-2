@@ -15,7 +15,7 @@ use common_raw::{
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
         sudt_token::SudtTokenData,
-        task::{TaskCellData, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs},
     },
     FromRaw,
 };
@@ -50,7 +50,7 @@ impl LoadableCell for SidechainConfigCellData {}
 impl LoadableCell for SidechainFeeCellData {}
 impl LoadableCell for SidechainStateCellData {}
 impl LoadableCell for SudtTokenData {}
-impl LoadableCell for TaskCellData {}
+impl LoadableCell for TaskCell {}
 
 pub trait LoadableLockArgs {
     fn load(origin: CellOrigin) -> Result<Self, Error>
@@ -132,7 +132,7 @@ macro_rules! CheckableHelpers {
                     Err(Error::IndexOutOfBound) => true,
                     Err(err) => return Err(err),
                 };
-                let output_ended = match TaskCellData::check(CellOrigin(x, Source::Output), &global) {
+                let output_ended = match TaskCell::check(CellOrigin(x, Source::Output), &global) {
                     Ok(_) => false,
                     Err(Error::IndexOutOfBound) => true,
                     Err(err) => return Err(err),
@@ -188,7 +188,7 @@ impl TypedCell for SidechainStateCellData {
     }
 }
 
-impl TypedCell for TaskCellData {
+impl TypedCell for TaskCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.task_cell_type_codehash, global.task_cell_type_hashtype)
     }

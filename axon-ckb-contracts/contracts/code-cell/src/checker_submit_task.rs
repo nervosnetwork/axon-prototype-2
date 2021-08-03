@@ -5,7 +5,7 @@ use common_raw::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCellData,
         sidechain_config::SidechainConfigCellData,
-        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
     FromRaw,
@@ -40,7 +40,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCellData: CHECKER_INFO_INPUT,
         TaskCellTypeArgs: TASK_INPUT,
-        TaskCellData: TASK_INPUT,
+        TaskCell: TASK_INPUT,
     };
 
     let (checker_info_output, checker_info_output_type_args) = load_entities! {
@@ -62,7 +62,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         return Err(Error::CheckerInfoMismatch);
     }
 
-    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskCellMode::Task {
+    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskMode::Task {
         return Err(Error::TaskMismatch);
     }
 
@@ -83,7 +83,7 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
 
             CodeCellData: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
-            TaskCellData: TASK_INPUT,
+            TaskCell: TASK_INPUT,
 
             CodeCellData: CODE_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,

@@ -5,7 +5,7 @@ use common_raw::{
     cell::{
         code::CodeCellData,
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-        task::{TaskCellData, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs},
     },
     witness::collator_refresh_task::CollatorRefreshTaskWitness,
     FromRaw,
@@ -36,7 +36,7 @@ pub fn collator_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
     }
 
     for i in 1.. {
-        let task_input = match TaskCellData::load(CellOrigin(i, Source::Input)) {
+        let task_input = match TaskCell::load(CellOrigin(i, Source::Input)) {
             Ok(data) => data,
             Err(Error::IndexOutOfBound) => break,
             Err(err) => return Err(err),
@@ -46,7 +46,7 @@ pub fn collator_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
             Err(err) => return Err(err),
         };
 
-        let task_output = match TaskCellData::load(CellOrigin(i, Source::Output)) {
+        let task_output = match TaskCell::load(CellOrigin(i, Source::Output)) {
             Ok(data) => data,
             Err(err) => return Err(err),
         };
@@ -76,5 +76,5 @@ fn is_collator_refresh_task() -> Result<(), Error> {
         },
     };
 
-    TaskCellData::one_to_one_check(1, &global)
+    TaskCell::one_to_one_check(1, &global)
 }

@@ -7,7 +7,7 @@ use ckb_tool::ckb_types::packed::{CellDep, CellInput};
 use ckb_tool::ckb_types::prelude::*;
 
 use common_raw::cell::sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs};
-use common_raw::cell::task::{TaskCellData, TaskCellTypeArgs};
+use common_raw::cell::task::{TaskCell, TaskCellTypeArgs};
 use common_raw::cell::{
     sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
     sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
@@ -112,9 +112,9 @@ fn test_success() {
     let mut outputs_data = vec![Bytes::new(), sidechain_state_data_output.serialize()];
 
     for _ in 0..TASK_NUMBER {
-        let mut task_data_output = TaskCellData::default();
-        task_data_output.check_block_height_from = 1;
-        task_data_output.check_block_height_to = 2;
+        let mut task_data_output = TaskCell::default();
+        task_data_output.sidechain_block_height_from = 1;
+        task_data_output.sidechain_block_height_to = 2;
         let output = new_type_cell_output(1000, &always_success, &task_type_script);
         outputs.push(output);
         outputs_data.push(task_data_output.serialize());

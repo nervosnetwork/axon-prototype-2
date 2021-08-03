@@ -6,7 +6,7 @@ use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
 use common_raw::cell::sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs};
 use common_raw::cell::task::TaskCellTypeArgs;
 use common_raw::{
-    cell::{code::CodeCellData, sidechain_config::SidechainConfigCellData, task::TaskCellData},
+    cell::{code::CodeCellData, sidechain_config::SidechainConfigCellData, task::TaskCell},
     witness::collator_publish_task::CollatorPublishTaskWitness,
     FromRaw,
 };
@@ -50,7 +50,7 @@ pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCellData)
             SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
         },
     };
-    TaskCellData::range_check(3.., Source::Output, &global)
+    TaskCell::range_check(3.., Source::Output, &global)
 }
 
 pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
@@ -115,22 +115,20 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         return Err(Error::SidechainBondMismatch);
     }
 
-    let task_cell_data = TaskCellData::load(CellOrigin(2, Source::Output))?;
+    let task_cell_data = TaskCell::load(CellOrigin(2, Source::Output))?;
     let task_cell_type_args_data = TaskCellTypeArgs::load(CellOrigin(2, Source::Output))?;
 
     if task_cell_type_args_data.chain_id != witness.chain_id
-        || sidechain_bond_lock_args_dep.unlock_sidechain_height < task_cell_data.check_block_height_to
-        || task_cell_data.check_block_hash_to != sidechain_state_output.latest_block_hash
-        || (sidechain_state_input.latest_block_height + 1) != task_cell_data.check_block_height_from
-        || sidechain_state_output.latest_block_height != task_cell_data.check_block_height_to
-        || sidechain_state_output.latest_block_hash != task_cell_data.check_block_hash_to
-        || task_cell_data.check_block_height_from >= task_cell_data.check_block_height_to
+        || sidechain_bond_lock_args_dep.unlock_sidechain_height < task_cell_data.sidechain_block_height_to
+        || (sidechain_state_input.latest_block_height + 1) != task_cell_data.sidechain_block_height_from
+        || sidechain_state_output.latest_block_height != task_cell_data.sidechain_block_height_to
+        || task_cell_data.sidechain_block_height_from >= task_cell_data.sidechain_block_height_to
     {
         return Err(Error::TaskMismatch);
     }
 
     for i in 2..(sidechain_config_dep.commit_threshold + 2) as usize {
-        let task_cell_output = TaskCellData::load(CellOrigin(i, Source::Output))?;
+        let task_cell_output = TaskCell::load(CellOrigin(i, Source::Output))?;
         let task_cell_type_args = TaskCellTypeArgs::load(CellOrigin(i, Source::Output))?;
         if task_cell_type_args != task_cell_type_args_data || task_cell_data != task_cell_output {
             return Err(Error::TaskMismatch);

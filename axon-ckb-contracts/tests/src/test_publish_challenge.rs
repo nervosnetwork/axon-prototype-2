@@ -10,7 +10,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
 };
@@ -75,7 +75,7 @@ fn test_success() {
         checker_info_input_data.serialize(),
     );
 
-    let task_input_data = TaskCellData::default();
+    let task_input_data = TaskCell::default();
     let task_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &task_script),
         task_input_data.serialize(),
@@ -87,8 +87,8 @@ fn test_success() {
     let mut checker_info_output = checker_info_input_data.clone();
     checker_info_output.mode = CheckerInfoCellMode::ChallengePassed;
 
-    let mut task_output_data = TaskCellData::default();
-    task_output_data.mode = TaskCellMode::Challenge;
+    let mut task_output_data = TaskCell::default();
+    task_output_data.mode = TaskMode::Challenge;
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),

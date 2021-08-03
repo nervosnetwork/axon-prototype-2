@@ -8,7 +8,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-        task::{TaskCellData, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
 };
@@ -72,7 +72,7 @@ fn test_success() {
         checker_info_input_data.serialize(),
     );
 
-    let mut task_input_data = TaskCellData::default();
+    let mut task_input_data = TaskCell::default();
     task_input_data.check_data_size = 100;
 
     let task_input = builder.create_input(
