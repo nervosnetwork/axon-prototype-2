@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::cell::{
     checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-    code::CodeCellData,
+    code::CodeCell,
     muse_token::MuseTokenData,
 };
 
@@ -51,9 +51,9 @@ fn is_checker_bond_withdraw() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             CheckerBondCellData: BOND_INPUT,
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             MuseTokenData: TOKEN_OUTPUT,
         },
     };

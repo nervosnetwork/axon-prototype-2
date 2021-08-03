@@ -7,7 +7,7 @@ use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
-        code::{CodeCellData, CodeCellLockArgs},
+        code::{CodeCell, CodeCellLockArgs},
         global_config::GlobalConfigCellData,
         muse_token::MuseTokenData,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
@@ -167,7 +167,7 @@ pub trait TypedCell {
     CheckableHelpers! {}
 }
 
-impl TypedCell for CodeCellData {
+impl TypedCell for CodeCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.code_cell_type_codehash, global.code_cell_type_hashtype)
     }

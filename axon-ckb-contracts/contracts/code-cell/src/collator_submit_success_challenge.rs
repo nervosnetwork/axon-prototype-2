@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
@@ -49,11 +49,11 @@ pub fn is_collator_submit_success_challenge(witness: &CollatorSubmitChallengeWit
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             SidechainConfigCellData: SIDECHAIN_CONFIG_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
             SidechainBondCellData: SIDECHAIN_BOND_INPUT,
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             SidechainConfigCellData: SIDECHAIN_CONFIG_OUTPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },

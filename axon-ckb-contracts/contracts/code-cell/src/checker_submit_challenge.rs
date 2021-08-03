@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_challenge::CheckerSubmitChallengeWitness,
@@ -77,11 +77,11 @@ fn is_checker_submit_challenge() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
             TaskCell: TASK_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },
     };

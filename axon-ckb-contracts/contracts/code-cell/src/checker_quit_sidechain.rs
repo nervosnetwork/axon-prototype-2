@@ -4,7 +4,7 @@ use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
     },
     witness::checker_quit_sidechain::CheckerQuitSidechainWitness,
@@ -99,12 +99,12 @@ fn is_checker_quit_sidechain() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             SidechainConfigCellData: CONFIG_INPUT,
             CheckerBondCellData: CHECKER_BOND_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             SidechainConfigCellData: CONFIG_OUTPUT,
             CheckerBondCellData: CHECKER_BOND_OUTPUT,
         },

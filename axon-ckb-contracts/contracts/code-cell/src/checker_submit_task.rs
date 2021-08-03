@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         sidechain_config::SidechainConfigCellData,
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
@@ -81,11 +81,11 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
         {
             SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
 
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
             TaskCell: TASK_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },
     };

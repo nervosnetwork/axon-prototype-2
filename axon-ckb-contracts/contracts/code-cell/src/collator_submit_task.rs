@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
@@ -50,11 +50,11 @@ fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCellData) -> Re
         &global,
         {
             SidechainConfigCellData: SIDECHAIN_CONFIG_DEP,
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             SidechainStateCellData: SIDECHAIN_STATE_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },

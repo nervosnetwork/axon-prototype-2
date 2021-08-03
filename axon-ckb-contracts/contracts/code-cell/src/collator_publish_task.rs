@@ -6,7 +6,7 @@ use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
 use common_raw::cell::sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs};
 use common_raw::cell::task::TaskCellTypeArgs;
 use common_raw::{
-    cell::{code::CodeCellData, sidechain_config::SidechainConfigCellData, task::TaskCell},
+    cell::{code::CodeCell, sidechain_config::SidechainConfigCellData, task::TaskCell},
     witness::collator_publish_task::CollatorPublishTaskWitness,
     FromRaw,
 };
@@ -44,9 +44,9 @@ pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCellData)
         {
             SidechainConfigCellData: SIDECHAIN_CONFIG_DEP,
             SidechainBondCellData: SIDECHAIN_BOND_DEP,
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             SidechainStateCellData: SIDECHAIN_STATE_INPUT,
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
         },
     };

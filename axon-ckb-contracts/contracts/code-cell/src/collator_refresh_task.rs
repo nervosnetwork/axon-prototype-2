@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        code::CodeCellData,
+        code::CodeCell,
         sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs},
     },
@@ -71,8 +71,8 @@ fn is_collator_refresh_task() -> Result<(), Error> {
         &global,
         {
             SidechainConfigCellData: CellOrigin(5, Source::CellDep),
-            CodeCellData: CODE_INPUT,
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_INPUT,
+            CodeCell: CODE_OUTPUT,
         },
     };
 
