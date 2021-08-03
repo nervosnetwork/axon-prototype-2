@@ -1,20 +1,17 @@
-import { CellCollector, Indexer } from "@ckb-lumos/sql-indexer";
-import knex from "knex";
-import { logger } from "axon-client-common/src/utils/logger";
+import { inject, injectable } from "inversify";
+import { modules } from "../../container";
 
-import { injectable } from "inversify";
+import { CellCollector, Indexer } from "@ckb-lumos/sql-indexer";
+import { Cell, QueryOptions } from "@ckb-lumos/base";
+
+import Knex from "knex";
+import { logger } from "axon-client-common/src/utils/logger";
 
 import {
   CHECKER_BOND_QUERY_OPTION,
   CHECKER_INFO_QUERY_OPTION,
   CODE_QUERY_OPTION,
   GLOBAL_CONFIG_QUERY_OPTION,
-  INDEXER_MYSQL_DATABASE,
-  INDEXER_MYSQL_PASSWORD,
-  INDEXER_MYSQL_URL,
-  INDEXER_MYSQL_URL_PORT,
-  INDEXER_MYSQL_USERNAME,
-  INDEXER_URL,
   SIDECHAIN_BOND_QUERY_OPTION,
   SIDECHAIN_CONFIG_QUERY_OPTION,
   SIDECHAIN_FEE_QUERY_OPTION,
@@ -32,255 +29,104 @@ import { Task } from "axon-client-common/src/modules/models/cells/task";
 import { CheckerBond } from "axon-client-common/src/modules/models/cells/checker_bond";
 import ScanService from "./scanService";
 
+interface FromCell<T> {
+  fromCell(cell: Cell): T | null;
+}
+
 @injectable()
 export default class OnchainScanService implements ScanService {
-  readonly #indexer!: Indexer;
+  private readonly _indexer!: Indexer;
 
-  readonly #knex: knex;
+  private readonly _knex: Knex;
 
   // @ts-expect-error Unused
-  #info = (msg: string) => {
+  // istanbul ignore next
+  private info(msg: string) {
     logger.info(`ScanService: ${msg}`);
-  };
+  }
+
   // @ts-expect-error Unused
-  #error = (msg: string) => {
+  // istanbul ignore next
+  private error(msg: string) {
     logger.error(`ScanService: ${msg}`);
-  };
+  }
 
-  constructor() {
-    this.#knex = knex({
-      client: "mysql",
-      connection: {
-        host: INDEXER_MYSQL_URL,
-        port: INDEXER_MYSQL_URL_PORT,
-        user: INDEXER_MYSQL_USERNAME,
-        password: INDEXER_MYSQL_PASSWORD,
-        database: INDEXER_MYSQL_DATABASE,
-      },
+  constructor(@inject(modules.Knex) { knex }: { knex: Knex }, @inject(modules.CKBIndexer) indexer: Indexer) {
+    this._knex = knex;
+    this._indexer = indexer;
+  }
+
+  // istanbul ignore next
+  public createCollector(options: QueryOptions, tip?: string): CellCollector {
+    return new CellCollector(this._knex, {
+      toBlock: tip,
+      ...options,
+      order: "desc",
     });
-
-    this.#indexer = new Indexer(INDEXER_URL, this.#knex);
   }
 
   public getTip = async (): Promise<bigint> => {
-    return BigInt((await this.#indexer.tip()).block_number);
+    return BigInt((await this._indexer.tip()).block_number);
   };
 
   // be careful that the tip is hexicalDecimal
-  public scanSidechainState = async (tip?: string): Promise<SidechainState> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_STATE_QUERY_OPTION,
-      order: "desc",
-    });
+  private static generateScanOneCell<T>(t: FromCell<T>, options: QueryOptions) {
+    return async function (this: OnchainScanService, tip?: string): Promise<T> {
+      const collector = this.createCollector(options, tip);
 
-    let sidechainState: SidechainState | null = null;
+      let result: T | null = null;
 
-    for await (const cell of collector.collect()) {
-      sidechainState = SidechainState.fromCell(cell);
-      if (sidechainState) {
-        break;
-      }
-    }
-
-    if (!sidechainState) {
-      throw new Error("info or pool not found");
-    }
-    return sidechainState!;
-  };
-
-  public scanCode = async (tip?: string): Promise<Code> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...CODE_QUERY_OPTION,
-      order: "desc",
-    });
-
-    let code: Code | null = null;
-
-    for await (const cell of collector.collect()) {
-      code = Code.fromCell(cell);
-      if (code) {
-        break;
-      }
-    }
-
-    if (!code) {
-      throw new Error("info or pool not found");
-    }
-    return code!;
-  };
-
-  public scanSidechainConfig = async (tip?: string): Promise<SidechainConfig> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_CONFIG_QUERY_OPTION,
-      order: "desc",
-    });
-
-    let sidechainConfig: SidechainConfig | null = null;
-
-    for await (const cell of collector.collect()) {
-      sidechainConfig = SidechainConfig.fromCell(cell);
-      if (sidechainConfig) {
-        break;
-      }
-    }
-
-    if (!sidechainConfig) {
-      throw new Error("info or pool not found");
-    }
-    return sidechainConfig!;
-  };
-
-  public scanSidechainFee = async (tip?: string): Promise<SidechainFee> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_FEE_QUERY_OPTION,
-      order: "desc",
-    });
-
-    let sidechainFee: SidechainFee | null = null;
-
-    for await (const cell of collector.collect()) {
-      sidechainFee = SidechainFee.fromCell(cell);
-      if (sidechainFee) {
-        break;
-      }
-    }
-
-    if (!sidechainFee) {
-      throw new Error("info or pool not found");
-    }
-    return sidechainFee!;
-  };
-
-  public scanSidechainBond = async (tip?: string): Promise<SidechainBond> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...SIDECHAIN_BOND_QUERY_OPTION,
-      order: "desc",
-    });
-
-    let sidechainBond: SidechainBond | null = null;
-
-    for await (const cell of collector.collect()) {
-      sidechainBond = SidechainBond.fromCell(cell);
-      if (sidechainBond) {
-        break;
-      }
-    }
-
-    if (!sidechainBond) {
-      throw new Error("info or pool not found");
-    }
-    return sidechainBond!;
-  };
-
-  public scanCheckerInfo = async (tip?: string): Promise<Array<CheckerInfo>> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...CHECKER_INFO_QUERY_OPTION,
-      order: "desc",
-    });
-
-    const checkerInfos: Array<CheckerInfo> = [];
-
-    for await (const cell of collector.collect()) {
-      const checkerInfo = CheckerInfo.fromCell(cell);
-      if (!checkerInfo) {
-        continue;
+      for await (const cell of collector.collect()) {
+        result = t.fromCell(cell);
+        if (result) {
+          break;
+        }
       }
 
-      checkerInfos.push(checkerInfo!);
-    }
-
-    return checkerInfos;
-  };
-
-  public scanCheckerInfoSelf = async (tip?: string): Promise<CheckerInfo> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...CHECKER_INFO_QUERY_OPTION,
-      order: "desc",
-    });
-
-    let checkerInfo: CheckerInfo | null = null;
-
-    for await (const cell of collector.collect()) {
-      checkerInfo = CheckerInfo.fromCell(cell);
-      if (checkerInfo) {
-        break;
+      if (!result) {
+        throw new Error("info or pool not found");
       }
-    }
+      return result;
+    };
+  }
 
-    if (!checkerInfo) {
-      throw new Error("info or pool not found");
-    }
-    return checkerInfo!;
-  };
+  public scanSidechainState = OnchainScanService.generateScanOneCell(SidechainState, SIDECHAIN_STATE_QUERY_OPTION);
 
-  public scanGlobalConfig = async (tip?: string): Promise<GlobalConfig> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...GLOBAL_CONFIG_QUERY_OPTION,
-      order: "desc",
-    });
+  public scanCode = OnchainScanService.generateScanOneCell(Code, CODE_QUERY_OPTION);
 
-    let globalConfig: GlobalConfig | null = null;
+  public scanSidechainConfig = OnchainScanService.generateScanOneCell(SidechainConfig, SIDECHAIN_CONFIG_QUERY_OPTION);
 
-    for await (const cell of collector.collect()) {
-      globalConfig = GlobalConfig.fromCell(cell);
-      if (globalConfig) {
-        break;
-      }
-    }
+  public scanSidechainFee = OnchainScanService.generateScanOneCell(SidechainFee, SIDECHAIN_FEE_QUERY_OPTION);
 
-    if (!globalConfig) {
-      throw new Error("info or pool not found");
-    }
-    return globalConfig!;
-  };
+  public scanSidechainBond = OnchainScanService.generateScanOneCell(SidechainBond, SIDECHAIN_BOND_QUERY_OPTION);
 
-  public scanTask = async (tip?: string): Promise<Array<Task>> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...TASK_QUERY_OPTION,
-      order: "desc",
-    });
+  public scanCheckerInfoSelf = OnchainScanService.generateScanOneCell(CheckerInfo, CHECKER_INFO_QUERY_OPTION);
 
-    const tasks: Array<Task> = [];
+  public scanGlobalConfig = OnchainScanService.generateScanOneCell(GlobalConfig, GLOBAL_CONFIG_QUERY_OPTION);
 
-    for await (const cell of collector.collect()) {
-      const task = Task.fromCell(cell);
-      if (!task) {
-        continue;
+  public scanCheckerBond = OnchainScanService.generateScanOneCell(CheckerBond, CHECKER_BOND_QUERY_OPTION);
+
+  // be careful that the tip is hexicalDecimal
+  private static generateScanCells<T>(t: FromCell<T>, options: QueryOptions) {
+    return async function (this: OnchainScanService, tip?: string): Promise<Array<T>> {
+      const collector = this.createCollector(options, tip);
+
+      const resultList: Array<T> = [];
+
+      for await (const cell of collector.collect()) {
+        const result = t.fromCell(cell);
+
+        if (!result) {
+          continue;
+        }
+        resultList.push(result);
       }
 
-      tasks.push(task!);
-    }
+      return resultList;
+    };
+  }
 
-    return tasks;
-  };
-  public scanCheckerBond = async (tip?: string): Promise<CheckerBond> => {
-    const collector = new CellCollector(this.#knex, {
-      toBlock: tip,
-      ...CHECKER_BOND_QUERY_OPTION,
-      order: "desc",
-    });
+  public scanCheckerInfo = OnchainScanService.generateScanCells(CheckerInfo, CHECKER_INFO_QUERY_OPTION);
 
-    let checkerBond: CheckerBond | null = null;
-
-    for await (const cell of collector.collect()) {
-      checkerBond = CheckerBond.fromCell(cell);
-      if (checkerBond) {
-        break;
-      }
-    }
-
-    if (!checkerBond) {
-      throw new Error("info or pool not found");
-    }
-    return checkerBond!;
-  };
+  public scanTask = OnchainScanService.generateScanCells(Task, TASK_QUERY_OPTION);
 }
