@@ -1,11 +1,12 @@
 use crate::{cell::*, common::*, error::Error};
 use ckb_std::ckb_constants::Source;
+use core::convert::TryFrom;
 
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
@@ -36,7 +37,7 @@ pub fn checker_publish_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result
 
     let config_dep_origin = CellOrigin(witness.sidechain_config_dep_index, Source::CellDep);
     let (config_dep, config_dep_type_args) = load_entities! {
-        SidechainConfigCellData: config_dep_origin,
+        SidechainConfigCell: config_dep_origin,
         SidechainConfigCellTypeArgs: config_dep_origin,
     };
 
@@ -75,7 +76,7 @@ pub fn checker_publish_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result
         return Err(Error::TaskMismatch);
     }
 
-    let output_count = usize::from(witness.challenge_count) + 1;
+    let output_count = usize::try_from(witness.challenge_count).or(Err(Error::Encoding))? + 1;
     // 2 + challenge_count - 1  * Since this checker already voted
 
     for i in 2..output_count {
@@ -93,7 +94,7 @@ pub fn checker_publish_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result
 }
 
 fn is_checker_publish_challenge(witness: &CheckerPublishChallengeWitness) -> Result<(), Error> {
-    let output_count = usize::from(witness.challenge_count) + 1;
+    let output_count = usize::try_from(witness.challenge_count).or(Err(Error::Encoding))? + 1;
     // 2 + challenge_count - 1  * Since this checker already voted
 
     let global = check_global_cell()?;
@@ -105,7 +106,7 @@ fn is_checker_publish_challenge(witness: &CheckerPublishChallengeWitness) -> Res
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
+            SidechainConfigCell: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
 
             CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,

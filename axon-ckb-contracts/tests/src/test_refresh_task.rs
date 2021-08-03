@@ -4,7 +4,7 @@ use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 use common_raw::cell::{
-    sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+    sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     task::{TaskCell, TaskCellTypeArgs},
 };
 
@@ -55,7 +55,7 @@ fn test_success() {
         .expect("script");
 
     // prepare celldep
-    let scc_data = SidechainConfigCellData::default();
+    let scc_data = SidechainConfigCell::default();
     let scc_dep = CellDepBuilder::default()
         .out_point(builder.context.create_cell(
             new_type_cell_output(1000, &always_success, &config_script),

@@ -6,7 +6,7 @@ use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::packed::{CellDep, CellInput};
 use ckb_tool::ckb_types::prelude::*;
 
-use common_raw::cell::sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs};
+use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::task::{TaskCell, TaskCellTypeArgs};
 use common_raw::cell::{
     sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
@@ -16,10 +16,10 @@ use common_raw::witness::collator_publish_task::CollatorPublishTaskWitness;
 
 const MAX_CYCLES: u64 = 10_000_000;
 
-const CHECKER_COUNT: u8 = 20;
+const CHECKER_COUNT: u32 = 20;
 const MIN_BOND: u128 = 10;
 const SIDECHAIN_BOND_AMOUNT: u128 = MIN_BOND + 1;
-const TASK_NUMBER: u8 = 3;
+const TASK_NUMBER: u32 = 3;
 const SIDECHAIN_BOND_UNLOCK_HEIGHT: u128 = 1000;
 #[test]
 fn test_success() {
@@ -67,7 +67,7 @@ fn test_success() {
         .expect("script");
 
     //prepare dep
-    let mut sidechain_config_data_dep = SidechainConfigCellData::default();
+    let mut sidechain_config_data_dep = SidechainConfigCell::default();
     sidechain_config_data_dep.checker_total_count = CHECKER_COUNT;
     sidechain_config_data_dep.commit_threshold = TASK_NUMBER;
     sidechain_config_data_dep.minimal_bond = MIN_BOND;

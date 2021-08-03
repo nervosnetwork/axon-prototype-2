@@ -11,7 +11,7 @@ use common_raw::{
         global_config::GlobalConfigCellData,
         muse_token::MuseTokenData,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
         sudt_token::SudtTokenData,
@@ -46,7 +46,7 @@ impl LoadableCell for CheckerInfoCellData {}
 impl LoadableCell for GlobalConfigCellData {}
 impl LoadableCell for MuseTokenData {}
 impl LoadableCell for SidechainBondCellData {}
-impl LoadableCell for SidechainConfigCellData {}
+impl LoadableCell for SidechainConfigCell {}
 impl LoadableCell for SidechainFeeCellData {}
 impl LoadableCell for SidechainStateCellData {}
 impl LoadableCell for SudtTokenData {}
@@ -173,7 +173,7 @@ impl TypedCell for CodeCell {
     }
 }
 
-impl TypedCell for SidechainConfigCellData {
+impl TypedCell for SidechainConfigCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (
             global.sidechain_config_cell_type_codehash,

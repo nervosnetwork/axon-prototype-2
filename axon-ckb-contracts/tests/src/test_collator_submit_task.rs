@@ -11,7 +11,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         muse_token::MuseTokenData,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
     },
@@ -67,7 +67,7 @@ fn test_success() {
         .expect("script");
 
     // prepare deps
-    let mut sidechain_config_data_dep = SidechainConfigCellData::default();
+    let mut sidechain_config_data_dep = SidechainConfigCell::default();
     sidechain_config_data_dep.commit_threshold = TASK_NUMBER;
     sidechain_config_data_dep.collator_lock_arg.copy_from_slice(&pubkey_hash);
     sidechain_config_data_dep.check_fee_rate = FEE_RATE;

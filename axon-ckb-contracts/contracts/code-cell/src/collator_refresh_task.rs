@@ -4,7 +4,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         code::CodeCell,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs},
     },
     witness::collator_refresh_task::CollatorRefreshTaskWitness,
@@ -28,7 +28,7 @@ pub fn collator_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
 
     let (config_input_type_args, config_input) = load_entities! {
         SidechainConfigCellTypeArgs: CellOrigin(5, Source::CellDep),
-        SidechainConfigCellData: CellOrigin(5, Source::CellDep),
+        SidechainConfigCell: CellOrigin(5, Source::CellDep),
     };
 
     if config_input_type_args.chain_id != witness.chain_id {
@@ -70,7 +70,7 @@ fn is_collator_refresh_task() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: CellOrigin(5, Source::CellDep),
+            SidechainConfigCell: CellOrigin(5, Source::CellDep),
             CodeCell: CODE_INPUT,
             CodeCell: CODE_OUTPUT,
         },

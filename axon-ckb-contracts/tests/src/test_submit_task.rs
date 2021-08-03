@@ -7,7 +7,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
@@ -55,7 +55,7 @@ fn test_success() {
         .expect("script");
 
     // prepare cell deps
-    let mut config_dep_data = SidechainConfigCellData::default();
+    let mut config_dep_data = SidechainConfigCell::default();
     config_dep_data.check_fee_rate = 100;
 
     let config_dep_out_point = builder.context.create_cell(

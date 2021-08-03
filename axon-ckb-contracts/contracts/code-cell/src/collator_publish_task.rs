@@ -6,7 +6,7 @@ use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
 use common_raw::cell::sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs};
 use common_raw::cell::task::TaskCellTypeArgs;
 use common_raw::{
-    cell::{code::CodeCell, sidechain_config::SidechainConfigCellData, task::TaskCell},
+    cell::{code::CodeCell, sidechain_config::SidechainConfigCell, task::TaskCell},
     witness::collator_publish_task::CollatorPublishTaskWitness,
     FromRaw,
 };
@@ -16,7 +16,7 @@ const SIDECHAIN_STATE_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const SIDECHAIN_CONFIG_DEP: CellOrigin = CellOrigin(5, Source::CellDep);
 const SIDECHAIN_BOND_DEP: CellOrigin = CellOrigin(6, Source::CellDep);
 const PUB_TASK_INPUT_CELL_COUNT: usize = 2;
-pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCellData) -> Result<(), Error> {
+pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCell) -> Result<(), Error> {
     /*
     CollatorPublishTask,
 
@@ -42,7 +42,7 @@ pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCellData)
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: SIDECHAIN_CONFIG_DEP,
+            SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
             SidechainBondCellData: SIDECHAIN_BOND_DEP,
             CodeCell: CODE_INPUT,
             SidechainStateCellData: SIDECHAIN_STATE_INPUT,
@@ -69,7 +69,7 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     let witness = CollatorPublishTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
     //load dep
     let (sidechain_config_dep, sidechain_config_type_args_dep, sidechain_bond_dep, sidechain_bond_lock_args_dep) = load_entities!(
-        SidechainConfigCellData: SIDECHAIN_CONFIG_DEP,
+        SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_DEP,
         SidechainBondCellData: SIDECHAIN_BOND_DEP,
         SidechainBondCellLockArgs: SIDECHAIN_BOND_DEP,

@@ -9,7 +9,7 @@ use ckb_tool::{
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
@@ -57,7 +57,7 @@ fn test_success() {
         .expect("script");
 
     //prepare dep
-    let mut config_dep_data = SidechainConfigCellData::default();
+    let mut config_dep_data = SidechainConfigCell::default();
     config_dep_data.challenge_threshold = 2;
     config_dep_data.collator_lock_arg.copy_from_slice(&pubkey_hash);
 

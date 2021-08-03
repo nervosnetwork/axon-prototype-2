@@ -5,7 +5,7 @@ use common_raw::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
     FromRaw,
@@ -38,12 +38,12 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
 
     let (config_input_type_args, config_input, checker_bond_input_lock_args, checker_bond_input) = load_entities! {
         SidechainConfigCellTypeArgs: CONFIG_INPUT,
-        SidechainConfigCellData: CONFIG_INPUT,
+        SidechainConfigCell: CONFIG_INPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_INPUT,
         CheckerBondCellData: CHECKER_BOND_INPUT,
     };
     let (config_output, checker_bond_output_lock_args, checker_bond_output, checker_info_output_type_args, checker_info_output) = load_entities! {
-        SidechainConfigCellData: CONFIG_OUTPUT,
+        SidechainConfigCell: CONFIG_OUTPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_OUTPUT,
         CheckerBondCellData: CHECKER_BOND_OUTPUT,
         CheckerInfoCellTypeArgs: CHECKER_INFO_OUTPUT,
@@ -52,7 +52,7 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
 
     let mut config_res = config_input.clone();
     config_res.checker_total_count += 1;
-    config_res.checker_bitmap = bit_map_add(&config_res.checker_bitmap, witness.checker_id).ok_or(Error::SidechainConfigMismatch)?;
+    // TODO: add checker to config checkers
 
     let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
     checker_bond_res_lock_args.chain_id_bitmap =
@@ -67,7 +67,6 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     checker_info_res_type_args.chain_id = witness.chain_id;
     checker_info_res_type_args.checker_lock_arg = signer;
 
-    has_sidechain_config_passed_update_interval(config_input, CONFIG_INPUT)?;
     if config_input_type_args.chain_id != witness.chain_id || config_res != config_output {
         return Err(Error::SidechainConfigMismatch);
     }
@@ -96,11 +95,11 @@ fn is_checker_join_sidechain() -> Result<(), Error> {
         &global,
         {
             CodeCell: CODE_INPUT,
-            SidechainConfigCellData: CONFIG_INPUT,
+            SidechainConfigCell: CONFIG_INPUT,
             CheckerBondCellData: CHECKER_BOND_INPUT,
 
             CodeCell: CODE_OUTPUT,
-            SidechainConfigCellData: CONFIG_OUTPUT,
+            SidechainConfigCell: CONFIG_OUTPUT,
             CheckerBondCellData: CHECKER_BOND_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },

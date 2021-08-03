@@ -4,7 +4,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        sidechain_config::SidechainConfigCellData,
+        sidechain_config::SidechainConfigCell,
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
@@ -35,7 +35,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
 
     is_checker_submit_task(&witness)?;
 
-    let config_dep = SidechainConfigCellData::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
+    let config_dep = SidechainConfigCell::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
     let (checker_info_input_type_args, checker_info_input, task_input_type_args, task_input) = load_entities! {
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCellData: CHECKER_INFO_INPUT,
@@ -79,7 +79,7 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
+            SidechainConfigCell: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
 
             CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
