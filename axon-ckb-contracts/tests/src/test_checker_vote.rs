@@ -10,7 +10,7 @@ use common_raw::{
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskStatus},
     },
-    witness::checker_submit_task::CheckerSubmitTaskWitness,
+    witness::checker_vote::CheckerVoteWitness,
 };
 
 const MAX_CYCLES: u64 = 10_000_000;
@@ -100,7 +100,7 @@ fn test_success() {
     ];
     let outputs_data: Vec<Bytes> = vec![Bytes::new(), checker_info_output.serialize(), task_output.serialize()];
 
-    let mut witness = CheckerSubmitTaskWitness::default();
+    let mut witness = CheckerVoteWitness::default();
     witness.sidechain_config_dep_index = EnvironmentBuilder::BOOTSTRAP_CELL_DEPS_LENGTH;
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 

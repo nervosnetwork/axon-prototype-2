@@ -15,7 +15,7 @@ mod secp256k1;
 #[cfg(test)]
 mod test_always_success;
 #[cfg(test)]
-mod test_checker_submit_task;
+mod test_checker_vote;
 #[cfg(test)]
 mod test_checker_withdraw;
 #[cfg(test)]

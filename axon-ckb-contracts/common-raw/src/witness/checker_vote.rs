@@ -1,27 +1,27 @@
 use crate::{pattern::Pattern, FromRaw, Serialize};
 
-const CHECKER_SUBMIT_TASK_WITNESS_LEN: usize = 4;
+const CHECKER_VOTE_WITNESS_LEN: usize = 4;
 
 #[derive(Debug)]
-pub struct CheckerSubmitTaskWitness {
+pub struct CheckerVoteWitness {
     pattern: Pattern,
     pub chain_id: u8,
     pub sidechain_config_dep_index: usize,
 }
 
-impl Default for CheckerSubmitTaskWitness {
+impl Default for CheckerVoteWitness {
     fn default() -> Self {
         Self {
-            pattern:                    Pattern::CheckerSubmitTask,
+            pattern:                    Pattern::CheckerVote,
             chain_id:                   0,
             sidechain_config_dep_index: 0,
         }
     }
 }
 
-impl FromRaw for CheckerSubmitTaskWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Option<CheckerSubmitTaskWitness> {
-        if witness_raw_data.len() < CHECKER_SUBMIT_TASK_WITNESS_LEN {
+impl FromRaw for CheckerVoteWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Option<CheckerVoteWitness> {
+        if witness_raw_data.len() < CHECKER_VOTE_WITNESS_LEN {
             return None;
         }
 
@@ -29,7 +29,7 @@ impl FromRaw for CheckerSubmitTaskWitness {
         let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
         let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[2..4])?;
 
-        Some(CheckerSubmitTaskWitness {
+        Some(CheckerVoteWitness {
             pattern,
             chain_id,
             sidechain_config_dep_index,
@@ -37,11 +37,11 @@ impl FromRaw for CheckerSubmitTaskWitness {
     }
 }
 
-impl Serialize for CheckerSubmitTaskWitness {
-    type RawType = [u8; CHECKER_SUBMIT_TASK_WITNESS_LEN];
+impl Serialize for CheckerVoteWitness {
+    type RawType = [u8; CHECKER_VOTE_WITNESS_LEN];
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; CHECKER_SUBMIT_TASK_WITNESS_LEN];
+        let mut buf = [0u8; CHECKER_VOTE_WITNESS_LEN];
 
         buf[0..1].copy_from_slice(&self.pattern.serialize());
         buf[1..2].copy_from_slice(&self.chain_id.serialize());

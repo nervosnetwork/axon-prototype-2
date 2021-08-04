@@ -11,7 +11,7 @@ pub enum Pattern {
     CheckerBondWithdraw = 1u8,
     CheckerJoinSidechain,
     CheckerQuitSidechain,
-    CheckerSubmitTask,
+    CheckerVote,
     CheckerPublishChallenge,
     CheckerTakeBeneficiary,
 
@@ -33,7 +33,7 @@ impl TryFrom<u8> for Pattern {
             1u8 => Self::CheckerBondWithdraw,
             2u8 => Self::CheckerJoinSidechain,
             3u8 => Self::CheckerQuitSidechain,
-            4u8 => Self::CheckerSubmitTask,
+            4u8 => Self::CheckerVote,
             5u8 => Self::CheckerPublishChallenge,
             6u8 => Self::CheckerTakeBeneficiary,
 

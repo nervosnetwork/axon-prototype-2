@@ -7,7 +7,7 @@ use common_raw::{
         sidechain_config::SidechainConfigCell,
         task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
-    witness::checker_submit_task::CheckerSubmitTaskWitness,
+    witness::checker_vote::CheckerVoteWitness,
     FromRaw,
 };
 
@@ -19,9 +19,9 @@ const TASK_INPUT: CellOrigin = CellOrigin(2, Source::Input);
 const CHECKER_INFO_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const TASK_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
-pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
+pub fn checker_vote(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
     /*
-    CheckerSubmitTask,
+    CheckerVote,
 
     Dep: 0 Global Config Cell
     Dep: 1 Sidechain Config Cell
@@ -31,9 +31,9 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     Task Cell         -> ~
     */
 
-    let witness = CheckerSubmitTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
+    let witness = CheckerVoteWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
-    is_checker_submit_task(&witness)?;
+    is_checker_vote(&witness)?;
 
     let config_dep = SidechainConfigCell::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
 
@@ -63,13 +63,30 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     }
 
     let mut task_res = task_input.clone();
-    task_res.status = TaskStatus::TaskPassed;
+
+    if task_input.status != TaskStatus::Idle {
+        return Err(Error::TaskMismatch);
+    }
+    task_res.status = task_output.status;
+
+    match task_input.mode {
+        TaskMode::Task => {
+            if task_res.status != TaskStatus::TaskPassed {
+                return Err(Error::TaskMismatch);
+            }
+        }
+        TaskMode::Challenge => {
+            if task_res.status != TaskStatus::ChallengePassed && task_res.status != TaskStatus::ChallengeRejected {
+                return Err(Error::TaskMismatch);
+            }
+        }
+    };
+
     task_res.commit.copy_from_slice(&task_output.commit);
     task_res.reveal.copy_from_slice(&task_output.reveal);
 
     if task_input_type_args.chain_id != witness.chain_id
         || task_input_type_args.checker_lock_arg != signer
-        || task_input.mode != TaskMode::Task
         || task_res != task_output
         || task_input_type_args != task_output_type_args
     {
@@ -79,7 +96,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     Ok(())
 }
 
-fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Error> {
+fn is_checker_vote(witness: &CheckerVoteWitness) -> Result<(), Error> {
     let global = check_global_cell()?;
 
     if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(3, Source::Output) {
