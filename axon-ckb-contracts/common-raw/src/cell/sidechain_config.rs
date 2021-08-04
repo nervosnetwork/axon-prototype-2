@@ -1,7 +1,139 @@
-use crate::{check_args_len, FromRaw, Serialize};
+use molecule::prelude::*;
 
-const SIDECHAIN_CONFIG_DATA_LEN: usize = 148;
-const SIDECHAIN_CONFIG_TYPE_ARGS_LEN: usize = 1;
+use crate::{
+    common::*,
+    molecule::{
+        cell::sidechain_config::{
+            CheckerInfoBuilder, CheckerInfoListBuilder, CheckerInfoReader, CheckerStatusReader, SidechainConfigCellBuilder,
+            SidechainConfigCellReader, SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader, SidechainStatusReader,
+        },
+        common::{
+            BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashReader, Uint128Reader, Uint32Reader, Uint8Reader,
+        },
+    },
+    FromRaw, Serialize,
+};
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
+#[repr(u8)]
+pub enum SidechainStatus {
+    Relaying,
+    Shutdown,
+}
+
+impl SidechainStatus {
+    fn from_reader(reader: SidechainStatusReader) -> Option<Self> {
+        let status = u8::from_raw(reader.raw_data())?;
+        match status {
+            0u8 => Some(Self::Relaying),
+            1u8 => Some(Self::Shutdown),
+            _ => None,
+        }
+    }
+}
+
+impl Default for SidechainStatus {
+    fn default() -> Self {
+        Self::Relaying
+    }
+}
+
+impl FromRaw for SidechainStatus {
+    fn from_raw(raw: &[u8]) -> Option<Self> {
+        let reader = SidechainStatusReader::from_slice(raw).ok()?;
+        Self::from_reader(reader)
+    }
+}
+
+impl Serialize for SidechainStatus {
+    type RawType = [u8; 1];
+
+    fn serialize(&self) -> Self::RawType {
+        (*self as u8).serialize()
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
+#[repr(u8)]
+pub enum CheckerStatus {
+    Normal,
+    Jailed,
+}
+
+impl CheckerStatus {
+    fn from_reader(reader: CheckerStatusReader) -> Option<Self> {
+        let status = u8::from_raw(reader.raw_data())?;
+        match status {
+            0u8 => Some(Self::Normal),
+            1u8 => Some(Self::Jailed),
+            _ => None,
+        }
+    }
+}
+
+impl Default for CheckerStatus {
+    fn default() -> Self {
+        Self::Normal
+    }
+}
+
+impl FromRaw for CheckerStatus {
+    fn from_raw(raw: &[u8]) -> Option<Self> {
+        let reader = CheckerStatusReader::from_slice(raw).ok()?;
+        Self::from_reader(reader)
+    }
+}
+
+impl Serialize for CheckerStatus {
+    type RawType = [u8; 1];
+
+    fn serialize(&self) -> Self::RawType {
+        (*self as u8).serialize()
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
+pub struct CheckerInfo {
+    lock_arg: PubKeyHash,
+    status:   CheckerStatus,
+}
+
+impl CheckerInfo {
+    fn from_reader(reader: CheckerInfoReader) -> Option<CheckerInfo> {
+        let mut lock_arg: PubKeyHash = [0u8; 20];
+        lock_arg.copy_from_slice(reader.lock_arg().raw_data());
+
+        let status = CheckerStatus::from_reader(reader.status())?;
+
+        Some(CheckerInfo { lock_arg, status })
+    }
+}
+
+impl FromRaw for CheckerInfo {
+    fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerInfo> {
+        let reader = CheckerInfoReader::from_slice(arg_raw_data).ok()?;
+
+        CheckerInfo::from_reader(reader)
+    }
+}
+
+impl Serialize for CheckerInfo {
+    type RawType = Vec<u8>;
+
+    fn serialize(&self) -> Self::RawType {
+        let lock_arg = PubKeyHashReader::new_unchecked(&self.lock_arg).to_entity();
+        let status = CheckerStatusReader::new_unchecked(&self.status.serialize()).to_entity();
+
+        let builder = CheckerInfoBuilder::default().lock_arg(lock_arg).status(status);
+
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing sidechain_config::CheckerInfo");
+        buf
+    }
+}
+
 /**
     Sidechain Config Cell
     Data:
@@ -14,116 +146,205 @@ const SIDECHAIN_CONFIG_TYPE_ARGS_LEN: usize = 1;
         hashtype: data
         args: null
 */
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct SidechainConfigCellData {
-    pub checker_total_count:   u8,
-    // 2**8 = 256
-    pub checker_bitmap:        [u8; 32],
-    // 256
-    pub checker_threshold:     u8,
-    pub update_interval:       u16,
-    pub minimal_bond:          u128,
+#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
+pub struct SidechainConfigCell {
+    pub sidechain_status: SidechainStatus,
+
+    pub commit_threshold:    u32,
+    pub challenge_threshold: u32,
+
+    pub checker_normal_count: u32,
+    pub checker_threshold:    u32,
+    pub checker_total_count:  u32,
+    pub checkers:             Vec<CheckerInfo>,
+
+    pub refresh_punish_points:             u32,
+    pub refresh_punish_release_points:     u32,
+    pub refresh_punish_threshold:          u32,
+    pub refresh_sidechain_height_interval: BlockHeight,
+
     pub check_data_size_limit: u128,
-    pub check_fee_rate:        u32,
-    pub refresh_interval:      u16,
-    pub commit_threshold:      u8,
-    pub challenge_threshold:   u8,
-    pub admin_lock_arg:        [u8; 20],
-    pub collator_lock_arg:     [u8; 20],
-    pub bond_sudt_type_hash:   [u8; 32],
+    pub check_fee_rate: u32,
+    pub minimal_bond: u128,
+    pub parallel_job_upper_bond: u8,
+    pub parallel_job_maximal_height_range: BlockHeight,
+
+    pub admin_lock_arg:    PubKeyHash,
+    pub collator_lock_arg: PubKeyHash,
+
+    pub bond_sudt_typescript_codehash: CodeHash,
+    pub bond_sudt_typescript_hashtype: HashType,
 }
 
-impl FromRaw for SidechainConfigCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Option<SidechainConfigCellData> {
-        check_args_len(cell_raw_data.len(), SIDECHAIN_CONFIG_DATA_LEN)?;
+impl FromRaw for SidechainConfigCell {
+    fn from_raw(cell_raw_data: &[u8]) -> Option<SidechainConfigCell> {
+        let reader = SidechainConfigCellReader::from_slice(cell_raw_data).ok()?;
 
-        let checker_total_count = u8::from_raw(&cell_raw_data[0..1])?;
+        let sidechain_status = SidechainStatus::from_reader(reader.sidechain_status())?;
 
-        let mut checker_bitmap = [0u8; 32];
-        checker_bitmap.copy_from_slice(&cell_raw_data[1..33]);
+        let commit_threshold = u32::from_raw(reader.commit_threshold().raw_data())?;
+        let challenge_threshold = u32::from_raw(reader.challenge_threshold().raw_data())?;
 
-        let checker_threshold = u8::from_raw(&cell_raw_data[33..34])?;
-        let update_interval = u16::from_raw(&cell_raw_data[34..36])?;
-        let minimal_bond = u128::from_raw(&cell_raw_data[36..52])?;
-        let check_data_size_limit = u128::from_raw(&cell_raw_data[52..68])?;
-        let check_fee_rate = u32::from_raw(&cell_raw_data[68..72])?;
-        let refresh_interval = u16::from_raw(&cell_raw_data[72..74])?;
-        let commit_threshold = u8::from_raw(&cell_raw_data[74..75])?;
-        let challenge_threshold = u8::from_raw(&cell_raw_data[75..76])?;
+        let checker_normal_count = u32::from_raw(reader.checker_normal_count().raw_data())?;
+        let checker_threshold = u32::from_raw(reader.checker_threshold().raw_data())?;
+        let checker_total_count = u32::from_raw(reader.checker_total_count().raw_data())?;
 
-        let mut admin_lock_arg = [0u8; 20];
-        admin_lock_arg.copy_from_slice(&cell_raw_data[76..96]);
+        let checkers_reader = reader.checkers();
+        let checkers_len = checkers_reader.len();
+        let mut checkers = Vec::with_capacity(checkers_len);
 
-        let mut collator_lock_arg = [0u8; 20];
-        collator_lock_arg.copy_from_slice(&cell_raw_data[96..116]);
+        for i in 0..checkers_len {
+            let result = CheckerInfo::from_reader(checkers_reader.get_unchecked(i))?;
+            checkers.push(result);
+        }
 
-        let mut bond_sudt_type_hash = [0u8; 32];
-        bond_sudt_type_hash.copy_from_slice(&cell_raw_data[116..148]);
+        let refresh_punish_points = u32::from_raw(reader.refresh_punish_points().raw_data())?;
+        let refresh_punish_release_points = u32::from_raw(reader.refresh_punish_release_points().raw_data())?;
+        let refresh_punish_threshold = u32::from_raw(reader.refresh_punish_threshold().raw_data())?;
+        let refresh_sidechain_height_interval = BlockHeight::from_raw(reader.refresh_sidechain_height_interval().raw_data())?;
 
-        Some(SidechainConfigCellData {
-            checker_total_count,
-            checker_bitmap,
-            checker_threshold,
-            update_interval,
-            minimal_bond,
-            check_data_size_limit,
-            check_fee_rate,
-            refresh_interval,
+        let check_data_size_limit = u128::from_raw(reader.check_data_size_limit().raw_data())?;
+        let check_fee_rate = u32::from_raw(reader.check_fee_rate().raw_data())?;
+        let minimal_bond = u128::from_raw(reader.minimal_bond().raw_data())?;
+        let parallel_job_upper_bond = u8::from_raw(reader.parallel_job_upper_bond().raw_data())?;
+        let parallel_job_maximal_height_range = BlockHeight::from_raw(reader.parallel_job_maximal_height_range().raw_data())?;
+
+        let mut admin_lock_arg: PubKeyHash = [0u8; 20];
+        admin_lock_arg.copy_from_slice(reader.admin_lock_arg().raw_data());
+
+        let mut collator_lock_arg: PubKeyHash = [0u8; 20];
+        collator_lock_arg.copy_from_slice(reader.collator_lock_arg().raw_data());
+
+        let mut bond_sudt_typescript_codehash: CodeHash = [0u8; 32];
+        bond_sudt_typescript_codehash.copy_from_slice(reader.bond_sudt_typescript_codehash().raw_data());
+
+        let bond_sudt_typescript_hashtype = HashType::from_raw(reader.bond_sudt_typescript_hashtype().raw_data())?;
+
+        Some(SidechainConfigCell {
+            sidechain_status,
+
             commit_threshold,
             challenge_threshold,
+
+            checker_normal_count,
+            checker_threshold,
+            checker_total_count,
+            checkers,
+
+            refresh_punish_points,
+            refresh_punish_release_points,
+            refresh_punish_threshold,
+            refresh_sidechain_height_interval,
+
+            check_data_size_limit,
+            check_fee_rate,
+            minimal_bond,
+            parallel_job_upper_bond,
+            parallel_job_maximal_height_range,
+
             admin_lock_arg,
             collator_lock_arg,
-            bond_sudt_type_hash,
+
+            bond_sudt_typescript_codehash,
+            bond_sudt_typescript_hashtype,
         })
     }
 }
 
-impl Serialize for SidechainConfigCellData {
-    type RawType = [u8; SIDECHAIN_CONFIG_DATA_LEN];
+impl Serialize for SidechainConfigCell {
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; SIDECHAIN_CONFIG_DATA_LEN];
+        let sidechain_status = SidechainStatusReader::new_unchecked(&self.sidechain_status.serialize()).to_entity();
 
-        buf[0..1].copy_from_slice(&self.checker_total_count.serialize());
+        let commit_threshold = Uint32Reader::new_unchecked(&self.commit_threshold.serialize()).to_entity();
+        let challenge_threshold = Uint32Reader::new_unchecked(&self.challenge_threshold.serialize()).to_entity();
 
-        buf[1..33].copy_from_slice(&self.checker_bitmap);
+        let checker_normal_count = Uint32Reader::new_unchecked(&self.checker_normal_count.serialize()).to_entity();
+        let checker_threshold = Uint32Reader::new_unchecked(&self.checker_threshold.serialize()).to_entity();
+        let checker_total_count = Uint32Reader::new_unchecked(&self.checker_total_count.serialize()).to_entity();
 
-        buf[33..34].copy_from_slice(&self.checker_threshold.serialize());
-        buf[34..36].copy_from_slice(&self.update_interval.serialize());
-        buf[36..52].copy_from_slice(&self.minimal_bond.serialize());
-        buf[52..68].copy_from_slice(&self.check_data_size_limit.serialize());
-        buf[68..72].copy_from_slice(&self.check_fee_rate.serialize());
-        buf[72..74].copy_from_slice(&self.refresh_interval.serialize());
-        buf[74..75].copy_from_slice(&self.commit_threshold.serialize());
-        buf[75..76].copy_from_slice(&self.challenge_threshold.serialize());
+        let mut checkers = CheckerInfoListBuilder::default();
+        for checker in &self.checkers {
+            checkers = checkers.push(CheckerInfoReader::new_unchecked(&checker.serialize()).to_entity());
+        }
 
-        buf[76..96].copy_from_slice(&self.admin_lock_arg);
-        buf[96..116].copy_from_slice(&self.collator_lock_arg);
-        buf[116..148].copy_from_slice(&self.bond_sudt_type_hash);
+        let refresh_punish_points = Uint32Reader::new_unchecked(&self.refresh_punish_points.serialize()).to_entity();
+        let refresh_punish_release_points = Uint32Reader::new_unchecked(&self.refresh_punish_release_points.serialize()).to_entity();
+        let refresh_punish_threshold = Uint32Reader::new_unchecked(&self.refresh_punish_threshold.serialize()).to_entity();
+        let refresh_sidechain_height_interval =
+            BlockHeightReader::new_unchecked(&self.refresh_sidechain_height_interval.serialize()).to_entity();
 
+        let check_data_size_limit = Uint128Reader::new_unchecked(&self.check_data_size_limit.serialize()).to_entity();
+        let check_fee_rate = Uint32Reader::new_unchecked(&self.check_fee_rate.serialize()).to_entity();
+        let minimal_bond = Uint128Reader::new_unchecked(&self.minimal_bond.serialize()).to_entity();
+        let parallel_job_upper_bond = Uint8Reader::new_unchecked(&self.parallel_job_upper_bond.serialize()).to_entity();
+        let parallel_job_maximal_height_range =
+            BlockHeightReader::new_unchecked(&self.parallel_job_maximal_height_range.serialize()).to_entity();
+
+        let admin_lock_arg = PubKeyHashReader::new_unchecked(&self.admin_lock_arg).to_entity();
+        let collator_lock_arg = PubKeyHashReader::new_unchecked(&self.collator_lock_arg).to_entity();
+
+        let bond_sudt_typescript_codehash = CodeHashReader::new_unchecked(&self.bond_sudt_typescript_codehash).to_entity();
+        let bond_sudt_typescript_hashtype = HashTypeReader::new_unchecked(&self.bond_sudt_typescript_hashtype.serialize()).to_entity();
+
+        let builder = SidechainConfigCellBuilder::default()
+            .sidechain_status(sidechain_status)
+            .commit_threshold(commit_threshold)
+            .challenge_threshold(challenge_threshold)
+            .checker_normal_count(checker_normal_count)
+            .checker_threshold(checker_threshold)
+            .checker_total_count(checker_total_count)
+            .checkers(checkers.build())
+            .refresh_punish_points(refresh_punish_points)
+            .refresh_punish_release_points(refresh_punish_release_points)
+            .refresh_punish_threshold(refresh_punish_threshold)
+            .refresh_sidechain_height_interval(refresh_sidechain_height_interval)
+            .check_data_size_limit(check_data_size_limit)
+            .check_fee_rate(check_fee_rate)
+            .minimal_bond(minimal_bond)
+            .parallel_job_upper_bond(parallel_job_upper_bond)
+            .parallel_job_maximal_height_range(parallel_job_maximal_height_range)
+            .admin_lock_arg(admin_lock_arg)
+            .collator_lock_arg(collator_lock_arg)
+            .bond_sudt_typescript_codehash(bond_sudt_typescript_codehash)
+            .bond_sudt_typescript_hashtype(bond_sudt_typescript_hashtype);
+
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing SidechainConfigCell");
         buf
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainConfigCellTypeArgs {
-    pub chain_id: u8,
+    pub chain_id: u8, // TODO: Change to ChainId.
 }
 
 impl FromRaw for SidechainConfigCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<SidechainConfigCellTypeArgs> {
-        check_args_len(arg_raw_data.len(), SIDECHAIN_CONFIG_TYPE_ARGS_LEN)?;
+        let reader = SidechainConfigCellTypeArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = u8::from_raw(&arg_raw_data[0..1])?;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
 
         Some(SidechainConfigCellTypeArgs { chain_id })
     }
 }
 
 impl Serialize for SidechainConfigCellTypeArgs {
-    type RawType = [u8; SIDECHAIN_CONFIG_TYPE_ARGS_LEN];
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        self.chain_id.serialize()
+        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as ChainId).serialize()).to_entity();
+
+        let builder = SidechainConfigCellTypeArgsBuilder::default().chain_id(chain_id);
+
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing SidechainConfigCellTypeArgs");
+        buf
     }
 }

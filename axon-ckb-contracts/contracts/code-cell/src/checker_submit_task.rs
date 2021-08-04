@@ -3,9 +3,9 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
-        sidechain_config::SidechainConfigCellData,
-        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
+        code::CodeCell,
+        sidechain_config::SidechainConfigCell,
+        task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
     FromRaw,
@@ -35,12 +35,12 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
 
     is_checker_submit_task(&witness)?;
 
-    let config_dep = SidechainConfigCellData::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
+    let config_dep = SidechainConfigCell::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
     let (checker_info_input_type_args, checker_info_input, task_input_type_args, task_input) = load_entities! {
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCellData: CHECKER_INFO_INPUT,
         TaskCellTypeArgs: TASK_INPUT,
-        TaskCellData: TASK_INPUT,
+        TaskCell: TASK_INPUT,
     };
 
     let (checker_info_output, checker_info_output_type_args) = load_entities! {
@@ -62,7 +62,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         return Err(Error::CheckerInfoMismatch);
     }
 
-    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskCellMode::Task {
+    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskMode::Task {
         return Err(Error::TaskMismatch);
     }
 
@@ -79,13 +79,13 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
+            SidechainConfigCell: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
 
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
-            TaskCellData: TASK_INPUT,
+            TaskCell: TASK_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },
     };

@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        code::CodeCellData,
+        code::CodeCell,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
         sudt_token::SudtTokenData,
@@ -66,10 +66,10 @@ fn is_collator_unlock_bond(witness: &CollatorUnlockBondWitness) -> Result<(), Er
         {
             SidechainStateCellData: CellOrigin(witness.sidechain_state_dep_index, Source::CellDep),
 
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             SidechainBondCellData: SIDECHAIN_BOND_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             SudtTokenData: SUDT_OUTPUT,
         },
     };

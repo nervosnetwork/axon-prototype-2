@@ -1,6 +1,7 @@
-use crate::{check_args_len, FromRaw};
+use molecule::prelude::*;
 
-const CODE_LOCK_ARGS_LEN: usize = 20;
+use crate::{common::*, molecule::cell::code::CodeCellLockArgsReader, FromRaw};
+
 /*
 
     Code Cell
@@ -16,19 +17,19 @@ const CODE_LOCK_ARGS_LEN: usize = 20;
 */
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct CodeCellData {}
+pub struct CodeCell {}
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CodeCellLockArgs {
-    pub lock_arg: [u8; 20],
+    pub lock_arg: PubKeyHash,
 }
 
 impl FromRaw for CodeCellLockArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<CodeCellLockArgs> {
-        check_args_len(arg_raw_data.len(), CODE_LOCK_ARGS_LEN)?;
+        let reader = CodeCellLockArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let mut lock_arg = [0u8; CODE_LOCK_ARGS_LEN];
-        lock_arg.copy_from_slice(&arg_raw_data);
+        let mut lock_arg = [0u8; 20];
+        lock_arg.copy_from_slice(reader.lock_arg().raw_data());
 
         Some(CodeCellLockArgs { lock_arg })
     }

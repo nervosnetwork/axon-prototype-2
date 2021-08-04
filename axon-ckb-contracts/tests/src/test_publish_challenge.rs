@@ -9,8 +9,8 @@ use ckb_tool::{
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
-        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
 };
@@ -57,7 +57,7 @@ fn test_success() {
         .expect("script");
 
     //prepare dep
-    let mut config_dep_data = SidechainConfigCellData::default();
+    let mut config_dep_data = SidechainConfigCell::default();
     config_dep_data.challenge_threshold = 2;
     config_dep_data.collator_lock_arg.copy_from_slice(&pubkey_hash);
 
@@ -75,7 +75,7 @@ fn test_success() {
         checker_info_input_data.serialize(),
     );
 
-    let task_input_data = TaskCellData::default();
+    let task_input_data = TaskCell::default();
     let task_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &task_script),
         task_input_data.serialize(),
@@ -87,8 +87,8 @@ fn test_success() {
     let mut checker_info_output = checker_info_input_data.clone();
     checker_info_output.mode = CheckerInfoCellMode::ChallengePassed;
 
-    let mut task_output_data = TaskCellData::default();
-    task_output_data.mode = TaskCellMode::Challenge;
+    let mut task_output_data = TaskCell::default();
+    task_output_data.mode = TaskMode::Challenge;
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),

@@ -8,7 +8,7 @@ use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     },
     witness::checker_join_sidechain::CheckerJoinSidechainWitness,
 };
@@ -79,9 +79,8 @@ fn test_success() {
         .expect("script");
 
     // prepare inputs
-    let mut config_input_data = SidechainConfigCellData::default();
+    let mut config_input_data = SidechainConfigCell::default();
     config_input_data.minimal_bond = 100;
-    config_input_data.update_interval = 100;
 
     let config_input_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &config_script),
@@ -105,10 +104,6 @@ fn test_success() {
     // prepare outputs
     let mut config_output = config_input_data.clone();
     config_output.checker_total_count = 1;
-    config_output.checker_bitmap = [
-        0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    ];
 
     let checker_bond_output = checker_bond_input_data.clone();
     let checker_info_output = CheckerInfoCellData::default();

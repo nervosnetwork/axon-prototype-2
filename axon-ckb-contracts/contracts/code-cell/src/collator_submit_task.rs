@@ -2,9 +2,9 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         muse_token::MuseTokenData,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
     },
@@ -24,7 +24,7 @@ const MUSE_TOKEN_INPUT: CellOrigin = CellOrigin(3, Source::Input);
 const SIDECHAIN_STATE_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const SIDECHAIN_FEE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
-fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCellData) -> Result<(), Error> {
+fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCell) -> Result<(), Error> {
     /*
     CollatorSubmitTask,
 
@@ -49,12 +49,12 @@ fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCellData) -> Re
     check_cells! {
         &global,
         {
-            SidechainConfigCellData: SIDECHAIN_CONFIG_DEP,
-            CodeCellData: CODE_INPUT,
+            SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
+            CodeCell: CODE_INPUT,
             SidechainStateCellData: SIDECHAIN_STATE_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },
@@ -85,7 +85,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
 
     //load deps
     let (sidechain_config_dep, sidechain_config_type_args_dep) = load_entities!(
-        SidechainConfigCellData: SIDECHAIN_CONFIG_DEP,
+        SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_DEP,
     );
 

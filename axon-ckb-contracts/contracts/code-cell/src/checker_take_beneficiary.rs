@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         muse_token::MuseTokenData,
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
     },
@@ -99,12 +99,12 @@ fn is_checker_take_beneficiary() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
             SidechainFeeCellData: FEE_INPUT,
             MuseTokenData: MUSE_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,
             SidechainFeeCellData: FEE_OUTPUT,
             MuseTokenData: MUSE_OUTPUT,

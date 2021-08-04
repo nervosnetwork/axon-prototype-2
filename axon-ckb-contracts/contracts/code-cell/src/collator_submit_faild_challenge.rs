@@ -3,9 +3,9 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
+        code::CodeCell,
         muse_token::MuseTokenData,
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
     },
@@ -58,13 +58,13 @@ pub fn is_collator_submit_faild_challenge(witness: &CollatorSubmitChallengeWitne
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
-            SidechainConfigCellData: SIDECHAIN_CONFIG_INPUT,
+            CodeCell: CODE_INPUT,
+            SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
             SidechainStateCellData: SIDECHAIN_STATE_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
-            CodeCellData: CODE_OUTPUT,
-            SidechainConfigCellData: SIDECHAIN_CONFIG_OUTPUT,
+            CodeCell: CODE_OUTPUT,
+            SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
             SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },
@@ -112,7 +112,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
         sidechain_fee_lock_args_input,
         muse_token_data_input,
     ) = load_entities!(
-        SidechainConfigCellData: SIDECHAIN_CONFIG_INPUT,
+        SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_INPUT,
         SidechainStateCellData: SIDECHAIN_STATE_INPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
@@ -130,7 +130,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
         sidechain_fee_data_output,
         sidechain_fee_lock_args_output,
     ) = load_entities!(
-        SidechainConfigCellData: SIDECHAIN_CONFIG_OUTPUT,
+        SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_OUTPUT,
         SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_OUTPUT,
@@ -143,17 +143,15 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
     }
 
     let mut sidechain_config_data_res = sidechain_config_data_input.clone();
-    sidechain_config_data_res.checker_bitmap =
-        bit_map_remove_by_batch(sidechain_config_data_res.checker_bitmap, witness.punish_checker_bitmap)
-            .ok_or(Error::SidechainConfigMismatch)?;
-    sidechain_config_data_res.checker_total_count -= punish_challenge_count;
+    // TODO: Remove punished checker from config checkers
+    sidechain_config_data_res.checker_total_count -= u32::from(punish_challenge_count);
 
     if sidechain_config_data_res != sidechain_config_data_output
         || sidechain_config_data_res.collator_lock_arg != signer
         || sidechain_config_type_args_input.chain_id != witness.chain_id
         || sidechain_config_type_args_input != sidechain_config_type_args_output
-        || (sidechain_config_data_res.commit_threshold - witness.task_count) * sidechain_config_data_res.challenge_threshold
-            != challenge_count
+        || (sidechain_config_data_res.commit_threshold - u32::from(witness.task_count)) * sidechain_config_data_res.challenge_threshold
+            != challenge_count.into()
     {
         return Err(Error::SidechainConfigMismatch);
     }

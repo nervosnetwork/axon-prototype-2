@@ -4,6 +4,7 @@
 use core::convert::TryFrom;
 
 pub mod cell;
+pub mod common;
 pub mod molecule;
 pub mod pattern;
 pub mod witness;

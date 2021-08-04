@@ -6,7 +6,7 @@ use crate::{
 
 use ckb_std::ckb_constants::Source;
 
-use common_raw::cell::{code::CodeCellData, sidechain_config::SidechainConfigCellData, sidechain_state::SidechainStateCellData};
+use common_raw::cell::{code::CodeCell, sidechain_config::SidechainConfigCell, sidechain_state::SidechainStateCellData};
 
 pub fn is_admin_create_sidechain() -> Result<(), Error> {
     /*
@@ -29,9 +29,9 @@ pub fn is_admin_create_sidechain() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            CodeCellData: CellOrigin(0, Source::Input),
-            CodeCellData: CellOrigin(0, Source::Output),
-            SidechainConfigCellData: CellOrigin(1, Source::Output),
+            CodeCell: CellOrigin(0, Source::Input),
+            CodeCell: CellOrigin(0, Source::Output),
+            SidechainConfigCell: CellOrigin(1, Source::Output),
             SidechainStateCellData: CellOrigin(2, Source::Output),
         },
     };

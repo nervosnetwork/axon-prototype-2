@@ -7,15 +7,15 @@ use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
-        code::{CodeCellData, CodeCellLockArgs},
+        code::{CodeCell, CodeCellLockArgs},
         global_config::GlobalConfigCellData,
         muse_token::MuseTokenData,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
-        sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs},
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
         sudt_token::SudtTokenData,
-        task::{TaskCellData, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs},
     },
     FromRaw,
 };
@@ -46,11 +46,11 @@ impl LoadableCell for CheckerInfoCellData {}
 impl LoadableCell for GlobalConfigCellData {}
 impl LoadableCell for MuseTokenData {}
 impl LoadableCell for SidechainBondCellData {}
-impl LoadableCell for SidechainConfigCellData {}
+impl LoadableCell for SidechainConfigCell {}
 impl LoadableCell for SidechainFeeCellData {}
 impl LoadableCell for SidechainStateCellData {}
 impl LoadableCell for SudtTokenData {}
-impl LoadableCell for TaskCellData {}
+impl LoadableCell for TaskCell {}
 
 pub trait LoadableLockArgs {
     fn load(origin: CellOrigin) -> Result<Self, Error>
@@ -132,7 +132,7 @@ macro_rules! CheckableHelpers {
                     Err(Error::IndexOutOfBound) => true,
                     Err(err) => return Err(err),
                 };
-                let output_ended = match TaskCellData::check(CellOrigin(x, Source::Output), &global) {
+                let output_ended = match TaskCell::check(CellOrigin(x, Source::Output), &global) {
                     Ok(_) => false,
                     Err(Error::IndexOutOfBound) => true,
                     Err(err) => return Err(err),
@@ -167,13 +167,13 @@ pub trait TypedCell {
     CheckableHelpers! {}
 }
 
-impl TypedCell for CodeCellData {
+impl TypedCell for CodeCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.code_cell_type_codehash, global.code_cell_type_hashtype)
     }
 }
 
-impl TypedCell for SidechainConfigCellData {
+impl TypedCell for SidechainConfigCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (
             global.sidechain_config_cell_type_codehash,
@@ -188,7 +188,7 @@ impl TypedCell for SidechainStateCellData {
     }
 }
 
-impl TypedCell for TaskCellData {
+impl TypedCell for TaskCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.task_cell_type_codehash, global.task_cell_type_hashtype)
     }

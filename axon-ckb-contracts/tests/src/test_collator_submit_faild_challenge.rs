@@ -7,19 +7,19 @@ use ckb_tool::ckb_types::packed::CellInput;
 use ckb_tool::ckb_types::prelude::*;
 use common_raw::cell::checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs};
 use common_raw::cell::muse_token::MuseTokenData;
-use common_raw::cell::sidechain_config::{SidechainConfigCellData, SidechainConfigCellTypeArgs};
+use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs};
 use common_raw::cell::sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs};
 use common_raw::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
 use core::convert::TryFrom;
 
 const MAX_CYCLES: u64 = 10_000_000;
-const TASK_COUNT: u8 = 3;
-const UNVALID_TASK_COUNT: u8 = 1;
-const CHALLENGE_THRESHOLD: u8 = 1;
+const TASK_COUNT: u32 = 3;
+const UNVALID_TASK_COUNT: u32 = 1;
+const CHALLENGE_THRESHOLD: u32 = 1;
 const CHECKE_HEIGHT_TO: u128 = 5;
 const FEE_RATE: u128 = 1;
-const CHECKER_COUNT: u8 = 10;
+const CHECKER_COUNT: u32 = 10;
 const CHECKE_SIZE: u128 = 10;
 #[test]
 fn test_success() {
@@ -64,16 +64,12 @@ fn test_success() {
         .build_script(&always_success_code, checker_info_type_args_input_output.serialize())
         .expect("script");
     //prepare inputs
-    let mut sidechain_config_data_input = SidechainConfigCellData::default();
+    let mut sidechain_config_data_input = SidechainConfigCell::default();
     sidechain_config_data_input.commit_threshold = TASK_COUNT;
     sidechain_config_data_input.challenge_threshold = CHALLENGE_THRESHOLD;
     sidechain_config_data_input.checker_total_count = CHECKER_COUNT;
     sidechain_config_data_input.check_fee_rate = u32::try_from(FEE_RATE).expect("convert");
 
-    sidechain_config_data_input.checker_bitmap = [
-        0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    ];
     sidechain_config_data_input.collator_lock_arg.copy_from_slice(&pubkey_hash);
     let sidechain_config_input_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &sidechain_config_type_script_input_output),
@@ -140,7 +136,7 @@ fn test_success() {
         new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output),
     ];
 
-    let mut sidechain_config_data_output = SidechainConfigCellData::default();
+    let mut sidechain_config_data_output = SidechainConfigCell::default();
     sidechain_config_data_output.commit_threshold = TASK_COUNT;
     sidechain_config_data_output.challenge_threshold = CHALLENGE_THRESHOLD;
     sidechain_config_data_output.checker_total_count = CHECKER_COUNT - UNVALID_TASK_COUNT * CHALLENGE_THRESHOLD;

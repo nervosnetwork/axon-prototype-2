@@ -3,8 +3,8 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
-        code::CodeCellData,
-        task::{TaskCellData, TaskCellMode, TaskCellTypeArgs},
+        code::CodeCell,
+        task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_challenge::CheckerSubmitChallengeWitness,
     FromRaw,
@@ -37,7 +37,7 @@ pub fn checker_submit_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result<
     let (checker_info_input, checker_info_input_type_args, task_cell_input, task_cell_input_type_args) = load_entities! {
         CheckerInfoCellData: CHECKER_INFO_INPUT,
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
-        TaskCellData: TASK_INPUT,
+        TaskCell: TASK_INPUT,
         TaskCellTypeArgs: TASK_INPUT,
     };
 
@@ -60,7 +60,7 @@ pub fn checker_submit_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result<
         return Err(Error::CheckerInfoMismatch);
     }
 
-    if task_cell_input_type_args.chain_id != witness.chain_id || task_cell_input.mode != TaskCellMode::Challenge {
+    if task_cell_input_type_args.chain_id != witness.chain_id || task_cell_input.mode != TaskMode::Challenge {
         return Err(Error::TaskMismatch);
     }
 
@@ -77,11 +77,11 @@ fn is_checker_submit_challenge() -> Result<(), Error> {
     check_cells! {
         &global,
         {
-            CodeCellData: CODE_INPUT,
+            CodeCell: CODE_INPUT,
             CheckerInfoCellData: CHECKER_INFO_INPUT,
-            TaskCellData: TASK_INPUT,
+            TaskCell: TASK_INPUT,
 
-            CodeCellData: CODE_OUTPUT,
+            CodeCell: CODE_OUTPUT,
             CheckerInfoCellData: CHECKER_INFO_OUTPUT,
         },
     };
