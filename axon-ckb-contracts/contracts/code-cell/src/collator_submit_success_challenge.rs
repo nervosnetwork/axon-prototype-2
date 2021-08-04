@@ -2,7 +2,7 @@ use crate::{cell::*, common::*, error::Error};
 use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
@@ -58,8 +58,8 @@ pub fn is_collator_submit_success_challenge(witness: &CollatorSubmitChallengeWit
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },
     };
-    CheckerInfoCellData::range_check(INPUT_NORMAL_CELL_COUNT.., Source::Input, &global)?;
-    CheckerInfoCellData::range_check(OUTPUT_NORMAL_CELL_COUNT.., Source::Output, &global)
+    CheckerInfoCell::range_check(INPUT_NORMAL_CELL_COUNT.., Source::Input, &global)?;
+    CheckerInfoCell::range_check(OUTPUT_NORMAL_CELL_COUNT.., Source::Output, &global)
 }
 
 pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error> {
@@ -138,66 +138,40 @@ pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error
     }
 
     //load CIC inputs and CIC outputs
-    let mut punish_bit_map_res = [0u8; 32];
-    let mut task_count = 0u8;
-    let mut valid_challenge_count = 0u8;
+    let _punish_bit_map_res = [0u8; 32];
+    let task_count = 0u8;
+    let _valid_challenge_count = 0u8;
 
     for i in INPUT_NORMAL_CELL_COUNT..INPUT_NORMAL_CELL_COUNT + usize::from(witness.valid_challenge_count) {
-        let checker_info_data_input = CheckerInfoCellData::load(CellOrigin(i, Source::Input))?;
+        let checker_info_data_input = CheckerInfoCell::load(CellOrigin(i, Source::Input))?;
         let checker_info_type_args_input = CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Input))?;
 
-        let checker_info_data_output = CheckerInfoCellData::load(CellOrigin(i - 1, Source::Output))?;
+        let checker_info_data_output = CheckerInfoCell::load(CellOrigin(i - 1, Source::Output))?;
         let checker_info_type_args_output = CheckerInfoCellTypeArgs::load(CellOrigin(i - 1, Source::Output))?;
 
         let mut checker_info_data_res = checker_info_data_input.clone();
         checker_info_data_res.unpaid_fee += witness.fee_per_checker;
-        checker_info_data_res.mode = CheckerInfoCellMode::Idle;
 
-        let fee_per_checker = u128::from(sidechain_config_data_res.check_fee_rate) * checker_info_data_res.unpaid_check_data_size;
-        if checker_info_data_res != checker_info_data_output
-            || fee_per_checker != witness.fee_per_checker
+        let _fee_per_checker = u128::from(sidechain_config_data_res.check_fee_rate); //TODO
+        if checker_info_data_res != checker_info_data_output//TODO
             || checker_info_type_args_input != checker_info_type_args_output
             || checker_info_type_args_input.chain_id != witness.chain_id
         {
             return Err(Error::CheckerInfoMismatch);
         }
-
-        match checker_info_data_input.mode {
-            CheckerInfoCellMode::ChallengeRejected => {
-                valid_challenge_count += 1;
-            }
-            _ => {
-                return Err(Error::CheckerInfoMismatch);
-            }
-        }
     }
 
     for i in INPUT_NORMAL_CELL_COUNT + usize::from(witness.valid_challenge_count)..INPUT_NORMAL_CELL_COUNT + usize::from(checker_info_count)
     {
-        let checker_info_data_input = CheckerInfoCellData::load(CellOrigin(i as usize, Source::Input))?;
+        let _checker_info_data_input = CheckerInfoCell::load(CellOrigin(i as usize, Source::Input))?;
         let checker_info_type_args_input = CheckerInfoCellTypeArgs::load(CellOrigin(i as usize, Source::Input))?;
-        punish_bit_map_res = bit_map_add(&punish_bit_map_res, checker_info_data_input.checker_id).ok_or(Error::CheckerInfoMismatch)?;
+        //TODO
         if checker_info_type_args_input.chain_id != witness.chain_id {
             return Err(Error::CheckerInfoMismatch);
         }
-
-        match checker_info_data_input.mode {
-            CheckerInfoCellMode::TaskPassed => {
-                task_count += 1;
-            }
-
-            CheckerInfoCellMode::ChallengePassed => {}
-
-            _ => {
-                return Err(Error::CheckerInfoMismatch);
-            }
-        }
     }
-
-    if task_count != witness.task_count
-        || valid_challenge_count != witness.valid_challenge_count
-        || punish_bit_map_res != witness.punish_checker_bitmap
-    {
+    //TODO
+    if task_count != 0 {
         return Err(Error::CheckerInfoMismatch);
     }
 

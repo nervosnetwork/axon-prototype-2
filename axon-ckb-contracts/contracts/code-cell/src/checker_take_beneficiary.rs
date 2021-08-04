@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         muse_token::MuseTokenData,
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
@@ -40,13 +40,13 @@ pub fn checker_take_beneficiary(raw_witness: &[u8], signer: [u8; 20]) -> Result<
 
     let (checker_info_input_type_args, checker_info_input, sidechain_fee_input_lock_args, sidechain_fee_input, muse_token_input) = load_entities! {
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
-        CheckerInfoCellData: CHECKER_INFO_INPUT,
+        CheckerInfoCell: CHECKER_INFO_INPUT,
         SidechainFeeCellLockArgs: FEE_INPUT,
         SidechainFeeCellData: FEE_INPUT,
         MuseTokenData: MUSE_INPUT,
     };
     let (checker_info_output, sidechain_fee_output_lock_args, sidechain_fee_output, muse_token_output) = load_entities! {
-        CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+        CheckerInfoCell: CHECKER_INFO_OUTPUT,
         SidechainFeeCellLockArgs: FEE_OUTPUT,
         SidechainFeeCellData: FEE_OUTPUT,
         MuseTokenData: MUSE_OUTPUT,
@@ -71,7 +71,6 @@ pub fn checker_take_beneficiary(raw_witness: &[u8], signer: [u8; 20]) -> Result<
 
     if checker_info_input_type_args.chain_id != witness.chain_id
         || checker_info_input_type_args.checker_lock_arg != signer
-        || checker_info_input.checker_id != witness.checker_id
         || checker_info_res != checker_info_output
     {
         return Err(Error::CheckerInfoMismatch);
@@ -100,12 +99,12 @@ fn is_checker_take_beneficiary() -> Result<(), Error> {
         &global,
         {
             CodeCell: CODE_INPUT,
-            CheckerInfoCellData: CHECKER_INFO_INPUT,
+            CheckerInfoCell: CHECKER_INFO_INPUT,
             SidechainFeeCellData: FEE_INPUT,
             MuseTokenData: MUSE_INPUT,
 
             CodeCell: CODE_OUTPUT,
-            CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+            CheckerInfoCell: CHECKER_INFO_OUTPUT,
             SidechainFeeCellData: FEE_OUTPUT,
             MuseTokenData: MUSE_OUTPUT,
         },

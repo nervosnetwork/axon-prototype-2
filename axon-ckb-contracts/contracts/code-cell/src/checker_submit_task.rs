@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         sidechain_config::SidechainConfigCell,
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
@@ -38,18 +38,17 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     let config_dep = SidechainConfigCell::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
     let (checker_info_input_type_args, checker_info_input, task_input_type_args, task_input) = load_entities! {
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
-        CheckerInfoCellData: CHECKER_INFO_INPUT,
+        CheckerInfoCell: CHECKER_INFO_INPUT,
         TaskCellTypeArgs: TASK_INPUT,
         TaskCell: TASK_INPUT,
     };
 
     let (checker_info_output, checker_info_output_type_args) = load_entities! {
-        CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+        CheckerInfoCell: CHECKER_INFO_OUTPUT,
         CheckerInfoCellTypeArgs: CHECKER_INFO_OUTPUT,
     };
 
     let mut checker_info_res = checker_info_input.clone();
-    checker_info_res.mode = CheckerInfoCellMode::TaskPassed;
     checker_info_res.unpaid_fee += u128::from(config_dep.check_fee_rate) * task_input.check_data_size;
 
     if checker_info_input_type_args.chain_id != witness.chain_id
@@ -57,7 +56,6 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         || checker_info_input_type_args != checker_info_output_type_args
         || checker_info_res != checker_info_output
         || checker_info_input_type_args.chain_id != witness.chain_id
-        || checker_info_input.checker_id != witness.checker_id
     {
         return Err(Error::CheckerInfoMismatch);
     }
@@ -82,11 +80,11 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
             SidechainConfigCell: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
 
             CodeCell: CODE_INPUT,
-            CheckerInfoCellData: CHECKER_INFO_INPUT,
+            CheckerInfoCell: CHECKER_INFO_INPUT,
             TaskCell: TASK_INPUT,
 
             CodeCell: CODE_OUTPUT,
-            CheckerInfoCellData: CHECKER_INFO_OUTPUT,
+            CheckerInfoCell: CHECKER_INFO_OUTPUT,
         },
     };
 

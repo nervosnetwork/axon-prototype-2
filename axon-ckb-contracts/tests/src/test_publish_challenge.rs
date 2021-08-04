@@ -8,7 +8,7 @@ use ckb_tool::{
 };
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
@@ -69,7 +69,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(config_dep);
 
     // prepare inputs
-    let checker_info_input_data = CheckerInfoCellData::default();
+    let checker_info_input_data = CheckerInfoCell::default();
     let checker_info_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &checker_info_script),
         checker_info_input_data.serialize(),
@@ -84,8 +84,7 @@ fn test_success() {
     let builder = builder.input(checker_info_input).input(task_input);
 
     //prepare output
-    let mut checker_info_output = checker_info_input_data.clone();
-    checker_info_output.mode = CheckerInfoCellMode::ChallengePassed;
+    let checker_info_output = checker_info_input_data.clone();
 
     let mut task_output_data = TaskCell::default();
     task_output_data.mode = TaskMode::Challenge;

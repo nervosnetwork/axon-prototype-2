@@ -6,7 +6,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode},
     },
     witness::checker_submit_challenge::CheckerSubmitChallengeWitness,
@@ -48,7 +48,7 @@ fn test_success() {
         .expect("script");
 
     // prepare inputs
-    let checker_info_input_data = CheckerInfoCellData::default();
+    let checker_info_input_data = CheckerInfoCell::default();
     let checker_info_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &checker_info_script),
         checker_info_input_data.serialize(),
@@ -65,8 +65,7 @@ fn test_success() {
     let builder = builder.input(checker_info_input).input(task_input);
 
     // prepare outputs
-    let mut checker_info_output = checker_info_input_data.clone();
-    checker_info_output.mode = CheckerInfoCellMode::ChallengePassed;
+    let checker_info_output = checker_info_input_data.clone();
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),

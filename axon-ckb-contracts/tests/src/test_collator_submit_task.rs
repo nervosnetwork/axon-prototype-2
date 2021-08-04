@@ -9,7 +9,7 @@ use ckb_tool::{
 };
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
@@ -105,9 +105,7 @@ fn test_success() {
     let muse_token_input = CellInput::new_builder().previous_output(muse_token_input_outpoint.clone()).build();
     let mut builder = builder.input(muse_token_input);
 
-    let mut checker_info_data_input = CheckerInfoCellData::default();
-    checker_info_data_input.unpaid_check_data_size = CHECKED_SIZE;
-    checker_info_data_input.mode = CheckerInfoCellMode::TaskPassed;
+    let mut checker_info_data_input = CheckerInfoCell::default();
 
     let output = new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output);
     let checker_info_input_outpoint = builder.context.create_cell(output, checker_info_data_input.serialize());
@@ -130,10 +128,7 @@ fn test_success() {
     let mut sidechain_fee_data_output = SidechainFeeCellData::default();
     sidechain_fee_data_output.amount = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
 
-    let mut checker_info_data_output = CheckerInfoCellData::default();
-    checker_info_data_output.unpaid_fee = FEE_RATE as u128 * CHECKED_SIZE;
-    checker_info_data_output.unpaid_check_data_size = 0;
-    checker_info_data_output.mode = CheckerInfoCellMode::Idle;
+    let mut checker_info_data_output = CheckerInfoCell::default();
 
     let outputs_data = vec![
         Bytes::new(),

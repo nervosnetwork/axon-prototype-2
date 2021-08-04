@@ -6,7 +6,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         muse_token::MuseTokenData,
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
     },
@@ -49,7 +49,7 @@ fn test_success() {
         .expect("script");
 
     // prepare inputs
-    let mut checker_info_input_data = CheckerInfoCellData::default();
+    let mut checker_info_input_data = CheckerInfoCell::default();
     checker_info_input_data.unpaid_fee = 100;
 
     let checker_info_input = builder.create_input(

@@ -6,7 +6,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs},
     },
@@ -66,7 +66,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(config_dep);
 
     // prepare inputs
-    let checker_info_input_data = CheckerInfoCellData::default();
+    let checker_info_input_data = CheckerInfoCell::default();
     let checker_info_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &checker_info_script),
         checker_info_input_data.serialize(),
@@ -84,7 +84,6 @@ fn test_success() {
 
     // prepare outputs
     let mut checker_info_output = checker_info_input_data.clone();
-    checker_info_output.mode = CheckerInfoCellMode::TaskPassed;
     checker_info_output.unpaid_fee = 10000;
 
     let outputs = vec![

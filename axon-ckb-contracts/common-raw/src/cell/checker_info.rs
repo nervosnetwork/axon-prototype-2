@@ -1,11 +1,14 @@
-use core::convert::{TryFrom, TryInto};
+use crate::molecule::cell::checker_info::CheckerInfoCellTypeArgsBuilder;
+use crate::molecule::cell::checker_info::{
+    CheckerInfoCellBuilder, CheckerInfoCellReader, CheckerInfoCellTypeArgsReader, CheckerInfoStatusReader,
+};
+use crate::molecule::common::{ChainIdReader, PubKeyHashReader, StringBuilder, Uint128Reader};
+use crate::{FromRaw, Serialize};
+use core::convert::TryFrom;
 use core::result::Result;
-
-use crate::{check_args_len, FromRaw, Serialize};
-
+use molecule::prelude::*;
 const CHECKER_INFO_DATA_LEN: usize = 546;
 const CHECKER_INFO_TYPE_ARGS_LEN: usize = 21;
-
 /**
     Checker Info Cell
     Data:
@@ -20,85 +23,72 @@ const CHECKER_INFO_TYPE_ARGS_LEN: usize = 21;
 */
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
 #[repr(u8)]
-pub enum CheckerInfoCellMode {
-    Idle = 0u8,
-    TaskPassed,
-    ChallengePassed,
-    ChallengeRejected,
+pub enum CheckerInfoStatus {
+    Relaying = 0u8,
+    Quit,
 }
 
-impl TryFrom<u8> for CheckerInfoCellMode {
+impl TryFrom<u8> for CheckerInfoStatus {
     type Error = ();
 
     fn try_from(mode: u8) -> Result<Self, Self::Error> {
         match mode {
-            0u8 => Ok(Self::Idle),
-            1u8 => Ok(Self::TaskPassed),
-            2u8 => Ok(Self::ChallengePassed),
-            3u8 => Ok(Self::ChallengeRejected),
+            0u8 => Ok(Self::Relaying),
+            1u8 => Ok(Self::Quit),
             _ => Err(()),
         }
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
-pub struct CheckerInfoCellData {
-    pub checker_id:             u8,
-    pub unpaid_fee:             u128,
-    pub rpc_url:                [u8; 512],
-    pub mode:                   CheckerInfoCellMode,
-    pub unpaid_check_data_size: u128,
+#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq)]
+pub struct CheckerInfoCell {
+    pub unpaid_fee: u128,
+    pub status:     CheckerInfoStatus,
+    pub rpc_url:    Vec<u8>,
 }
 
-impl Default for CheckerInfoCellData {
+impl Default for CheckerInfoCell {
     fn default() -> Self {
-        CheckerInfoCellData {
-            checker_id:             0u8,
-            unpaid_fee:             0u128,
-            rpc_url:                [0u8; 512],
-            mode:                   CheckerInfoCellMode::Idle,
-            unpaid_check_data_size: 0u128,
+        CheckerInfoCell {
+            unpaid_fee: 0,
+            status:     CheckerInfoStatus::Relaying,
+            rpc_url:    Vec::default(),
         }
     }
 }
 
-impl FromRaw for CheckerInfoCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Option<CheckerInfoCellData> {
-        check_args_len(cell_raw_data.len(), CHECKER_INFO_DATA_LEN)?;
-
-        let checker_id = u8::from_raw(&cell_raw_data[0..1])?;
-        let unpaid_fee = u128::from_raw(&cell_raw_data[1..17])?;
-
-        let mut rpc_url = [0u8; 512];
-        rpc_url.copy_from_slice(&cell_raw_data[17..529]);
-
-        let mode_u8 = u8::from_raw(&cell_raw_data[529..530])?;
-        let mode: CheckerInfoCellMode = mode_u8.try_into().ok()?;
-
-        let unpaid_check_data_size = u128::from_raw(&cell_raw_data[530..546])?;
-        Some(CheckerInfoCellData {
-            checker_id,
+impl FromRaw for CheckerInfoCell {
+    fn from_raw(cell_raw_data: &[u8]) -> Option<CheckerInfoCell> {
+        let reader = CheckerInfoCellReader::from_slice(cell_raw_data).expect("reader");
+        let unpaid_fee = u128::from_raw(reader.unpaid_fee().raw_data()).expect("unpaid_fee");
+        let rpc_url = reader.rpc_url().raw_data().to_vec();
+        let status = CheckerInfoStatus::try_from(reader.status().raw_data()[0]).ok()?;
+        Some(CheckerInfoCell {
             unpaid_fee,
             rpc_url,
-            mode,
-            unpaid_check_data_size,
+            status,
         })
     }
 }
 
-impl Serialize for CheckerInfoCellData {
-    type RawType = [u8; CHECKER_INFO_DATA_LEN];
+impl Serialize for CheckerInfoCell {
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; CHECKER_INFO_DATA_LEN];
-
-        buf[0..1].copy_from_slice(&self.checker_id.serialize());
-        buf[1..17].copy_from_slice(&self.unpaid_fee.serialize());
-
-        buf[17..529].copy_from_slice(&self.rpc_url);
-
-        buf[529..530].copy_from_slice(&(self.mode as u8).serialize());
-        buf[530..546].copy_from_slice(&self.unpaid_check_data_size.serialize());
+        let status = CheckerInfoStatusReader::new_unchecked(&(self.status as u8).serialize()).to_entity();
+        let unpaid_fee = Uint128Reader::new_unchecked(&self.unpaid_fee.serialize()).to_entity();
+        let mut rpc_url_builder = StringBuilder::default();
+        for &v in self.rpc_url.iter() {
+            rpc_url_builder = rpc_url_builder.push(Byte::new(v));
+        }
+        let builder = CheckerInfoCellBuilder::default()
+            .rpc_url(rpc_url_builder.build())
+            .status(status)
+            .unpaid_fee(unpaid_fee);
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing ChckerInfoCell");
         buf
     }
 }
@@ -111,12 +101,12 @@ pub struct CheckerInfoCellTypeArgs {
 
 impl FromRaw for CheckerInfoCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerInfoCellTypeArgs> {
-        check_args_len(arg_raw_data.len(), CHECKER_INFO_TYPE_ARGS_LEN)?;
+        let reader = CheckerInfoCellTypeArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = u8::from_raw(&arg_raw_data[0..1])?;
+        let chain_id = u32::from_raw(reader.chain_id().raw_data())? as u8;
 
         let mut checker_lock_arg = [0u8; 20];
-        checker_lock_arg.copy_from_slice(&arg_raw_data[1..21]);
+        checker_lock_arg.copy_from_slice(reader.checker_lock_arg().raw_data());
 
         Some(CheckerInfoCellTypeArgs {
             chain_id,
@@ -126,14 +116,20 @@ impl FromRaw for CheckerInfoCellTypeArgs {
 }
 
 impl Serialize for CheckerInfoCellTypeArgs {
-    type RawType = [u8; CHECKER_INFO_TYPE_ARGS_LEN];
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; CHECKER_INFO_TYPE_ARGS_LEN];
+        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as u32).serialize()).to_entity();
+        let checker_lock_arg = PubKeyHashReader::new_unchecked(&self.checker_lock_arg).to_entity();
 
-        buf[0..1].copy_from_slice(&self.chain_id.serialize());
-        buf[1..21].copy_from_slice(&self.checker_lock_arg);
+        let builder = CheckerInfoCellTypeArgsBuilder::default()
+            .chain_id(chain_id)
+            .checker_lock_arg(checker_lock_arg);
 
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing CheckerInfoCellTypeArgs");
         buf
     }
 }
