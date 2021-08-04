@@ -1,21 +1,23 @@
 use crate::{pattern::Pattern, FromRaw, Serialize};
-const COLLATOR_SUBMIT_TASK_WITNESS_LEN: usize = 34;
+const COLLATOR_SUBMIT_TASK_WITNESS_LEN: usize = 36;
 
 #[derive(Debug)]
 pub struct CollatorSubmitTaskWitness {
-    pattern:             Pattern,
-    pub chain_id:        u8,
-    pub fee:             u128,
+    pattern: Pattern,
+    pub chain_id: u8,
+    pub fee: u128,
     pub fee_per_checker: u128,
+    pub sidechain_config_dep_index: usize,
 }
 
 impl Default for CollatorSubmitTaskWitness {
     fn default() -> Self {
         Self {
-            pattern:         Pattern::CollatorSubmitTask,
-            chain_id:        0,
-            fee:             0,
+            pattern: Pattern::CollatorSubmitTask,
+            chain_id: 0,
+            fee: 0,
             fee_per_checker: 0,
+            sidechain_config_dep_index: 0,
         }
     }
 }
@@ -30,12 +32,14 @@ impl FromRaw for CollatorSubmitTaskWitness {
         let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
         let fee = u128::from_raw(&witness_raw_data[2..18])?;
         let fee_per_checker = u128::from_raw(&witness_raw_data[18..34])?;
+        let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[34..36])?;
 
         Some(CollatorSubmitTaskWitness {
             pattern,
             chain_id,
             fee,
             fee_per_checker,
+            sidechain_config_dep_index,
         })
     }
 }
@@ -49,6 +53,7 @@ impl Serialize for CollatorSubmitTaskWitness {
         buf[1..2].copy_from_slice(&self.chain_id.serialize());
         buf[2..18].copy_from_slice(&self.fee.serialize());
         buf[18..34].copy_from_slice(&self.fee_per_checker.serialize());
+        buf[34..36].copy_from_slice(&self.sidechain_config_dep_index.serialize());
         buf
     }
 }

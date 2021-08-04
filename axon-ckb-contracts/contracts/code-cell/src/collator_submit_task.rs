@@ -15,8 +15,6 @@ use core::usize;
 
 use crate::{cell::*, common::*, error::Error};
 
-const SIDECHAIN_CONFIG_DEP: CellOrigin = CellOrigin(5, Source::CellDep);
-
 const SIDECHAIN_STATE_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const SIDECHAIN_FEE_INPUT: CellOrigin = CellOrigin(2, Source::Input);
 const MUSE_TOKEN_INPUT: CellOrigin = CellOrigin(3, Source::Input);
@@ -24,7 +22,7 @@ const MUSE_TOKEN_INPUT: CellOrigin = CellOrigin(3, Source::Input);
 const SIDECHAIN_STATE_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const SIDECHAIN_FEE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
-fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCell) -> Result<(), Error> {
+fn is_collator_submit_task(witness: &CollatorSubmitTaskWitness, sidechain_config_dep: &SidechainConfigCell) -> Result<(), Error> {
     /*
     CollatorSubmitTask,
 
@@ -49,7 +47,8 @@ fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCell) -> Result
     check_cells! {
         &global,
         {
-            SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
+
+            SidechainConfigCell: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
             CodeCell: CODE_INPUT,
             SidechainStateCell: SIDECHAIN_STATE_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
@@ -83,10 +82,12 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
 
     let witness = CollatorSubmitTaskWitness::from_raw(&raw_witness).ok_or(Error::Encoding)?;
 
+    let sidechain_config_dep_cell_orgin = CellOrigin(witness.sidechain_config_dep_index, Source::CellDep);
+
     //load deps
     let (sidechain_config_dep, sidechain_config_type_args_dep) = load_entities!(
-        SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
-        SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_DEP,
+        SidechainConfigCell: sidechain_config_dep_cell_orgin,
+        SidechainConfigCellTypeArgs: sidechain_config_dep_cell_orgin,
     );
 
     if sidechain_config_type_args_dep.chain_id != witness.chain_id
@@ -96,7 +97,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
         return Err(Error::SidechainConfigMismatch);
     }
 
-    is_collator_submit_task(&sidechain_config_dep)?;
+    is_collator_submit_task(&witness, &sidechain_config_dep)?;
     //load inputs
     let (sidechain_state_input, sidechain_state_type_args_input, sidechain_fee_input, sidechain_fee_lock_args_input, muse_token_input) = load_entities!(
         SidechainStateCell: SIDECHAIN_STATE_INPUT,
