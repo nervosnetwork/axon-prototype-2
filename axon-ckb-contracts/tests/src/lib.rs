@@ -15,6 +15,8 @@ mod secp256k1;
 #[cfg(test)]
 mod test_always_success;
 #[cfg(test)]
+mod test_checker_submit_task;
+#[cfg(test)]
 mod test_checker_withdraw;
 #[cfg(test)]
 mod test_collator_publish_task;
@@ -34,8 +36,6 @@ mod test_quit_sidechain;
 mod test_refresh_task;
 #[cfg(test)]
 mod test_submit_challenge;
-#[cfg(test)]
-mod test_submit_task;
 #[cfg(test)]
 mod test_take_beneficiary;
 
