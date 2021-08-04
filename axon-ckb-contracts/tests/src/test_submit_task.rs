@@ -8,7 +8,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        task::{TaskCell, TaskCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs, TaskStatus},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
 };
@@ -40,7 +40,9 @@ fn test_success() {
         .build_script(&always_success_code, config_type_args.serialize())
         .expect("script");
 
-    let task_type_args = TaskCellTypeArgs::default();
+    let mut task_type_args = TaskCellTypeArgs::default();
+    task_type_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+
     let task_script = builder
         .context
         .build_script(&always_success_code, task_type_args.serialize())
@@ -86,11 +88,17 @@ fn test_success() {
     let mut checker_info_output = checker_info_input_data.clone();
     checker_info_output.unpaid_fee = 10000;
 
+    let mut task_output = task_input_data.clone();
+    task_output.status = TaskStatus::TaskPassed;
+    task_output.commit[0] = 1;
+    task_output.reveal[0] = 1;
+
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
         new_type_cell_output(1000, &always_success, &checker_info_script),
+        new_type_cell_output(1000, &always_success, &task_script),
     ];
-    let outputs_data: Vec<Bytes> = vec![Bytes::new(), checker_info_output.serialize()];
+    let outputs_data: Vec<Bytes> = vec![Bytes::new(), checker_info_output.serialize(), task_output.serialize()];
 
     let mut witness = CheckerSubmitTaskWitness::default();
     witness.sidechain_config_dep_index = EnvironmentBuilder::BOOTSTRAP_CELL_DEPS_LENGTH;

@@ -5,7 +5,7 @@ use common_raw::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         sidechain_config::SidechainConfigCell,
-        task::{TaskCell, TaskCellTypeArgs, TaskMode},
+        task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     witness::checker_submit_task::CheckerSubmitTaskWitness,
     FromRaw,
@@ -17,18 +17,18 @@ const CHECKER_INFO_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const TASK_INPUT: CellOrigin = CellOrigin(2, Source::Input);
 
 const CHECKER_INFO_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
+const TASK_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
 pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
     /*
     CheckerSubmitTask,
 
-    Dep:    0 Global Config Cell
-    Dep:    1 Sidechain Config Cell
+    Dep: 0 Global Config Cell
+    Dep: 1 Sidechain Config Cell
 
-    Code Cell                   ->         Code Cell
-    Checker Info Cell           ->          Checker Info Cell
-    Task Cell                   ->          Null
-
+    Code Cell         -> ~
+    Checker Info Cell -> ~
+    Task Cell         -> ~
     */
 
     let witness = CheckerSubmitTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
@@ -36,6 +36,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
     is_checker_submit_task(&witness)?;
 
     let config_dep = SidechainConfigCell::load(CellOrigin(witness.sidechain_config_dep_index, Source::CellDep))?;
+
     let (checker_info_input_type_args, checker_info_input, task_input_type_args, task_input) = load_entities! {
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
         CheckerInfoCell: CHECKER_INFO_INPUT,
@@ -43,9 +44,11 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         TaskCell: TASK_INPUT,
     };
 
-    let (checker_info_output, checker_info_output_type_args) = load_entities! {
-        CheckerInfoCell: CHECKER_INFO_OUTPUT,
+    let (checker_info_output_type_args, checker_info_output, task_output_type_args, task_output) = load_entities! {
         CheckerInfoCellTypeArgs: CHECKER_INFO_OUTPUT,
+        CheckerInfoCell: CHECKER_INFO_OUTPUT,
+        TaskCellTypeArgs: TASK_OUTPUT,
+        TaskCell: TASK_OUTPUT,
     };
 
     let mut checker_info_res = checker_info_input.clone();
@@ -55,12 +58,21 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
         || checker_info_input_type_args.checker_lock_arg != signer
         || checker_info_input_type_args != checker_info_output_type_args
         || checker_info_res != checker_info_output
-        || checker_info_input_type_args.chain_id != witness.chain_id
     {
         return Err(Error::CheckerInfoMismatch);
     }
 
-    if task_input_type_args.chain_id != witness.chain_id || task_input.mode != TaskMode::Task {
+    let mut task_res = task_input.clone();
+    task_res.status = TaskStatus::TaskPassed;
+    task_res.commit.copy_from_slice(&task_output.commit);
+    task_res.reveal.copy_from_slice(&task_output.reveal);
+
+    if task_input_type_args.chain_id != witness.chain_id
+        || task_input_type_args.checker_lock_arg != signer
+        || task_input.mode != TaskMode::Task
+        || task_res != task_output
+        || task_input_type_args != task_output_type_args
+    {
         return Err(Error::TaskMismatch);
     }
 
@@ -70,7 +82,7 @@ pub fn checker_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), E
 fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Error> {
     let global = check_global_cell()?;
 
-    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(2, Source::Output) {
+    if is_cell_count_not_equals(3, Source::Input) || is_cell_count_not_equals(3, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
 
@@ -85,6 +97,7 @@ fn is_checker_submit_task(witness: &CheckerSubmitTaskWitness) -> Result<(), Erro
 
             CodeCell: CODE_OUTPUT,
             CheckerInfoCell: CHECKER_INFO_OUTPUT,
+            TaskCell: TASK_OUTPUT,
         },
     };
 

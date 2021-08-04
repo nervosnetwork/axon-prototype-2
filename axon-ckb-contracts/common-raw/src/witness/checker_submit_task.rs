@@ -1,12 +1,11 @@
 use crate::{pattern::Pattern, FromRaw, Serialize};
 
-const CHECKER_SUBMIT_TASK_WITNESS_LEN: usize = 5;
+const CHECKER_SUBMIT_TASK_WITNESS_LEN: usize = 4;
 
 #[derive(Debug)]
 pub struct CheckerSubmitTaskWitness {
     pattern: Pattern,
     pub chain_id: u8,
-    pub checker_id: u8,
     pub sidechain_config_dep_index: usize,
 }
 
@@ -15,7 +14,6 @@ impl Default for CheckerSubmitTaskWitness {
         Self {
             pattern:                    Pattern::CheckerSubmitTask,
             chain_id:                   0,
-            checker_id:                 0,
             sidechain_config_dep_index: 0,
         }
     }
@@ -29,13 +27,11 @@ impl FromRaw for CheckerSubmitTaskWitness {
 
         let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
         let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
-        let checker_id = u8::from_raw(&witness_raw_data[2..3])?;
-        let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[3..5])?;
+        let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[2..4])?;
 
         Some(CheckerSubmitTaskWitness {
             pattern,
             chain_id,
-            checker_id,
             sidechain_config_dep_index,
         })
     }
@@ -49,8 +45,7 @@ impl Serialize for CheckerSubmitTaskWitness {
 
         buf[0..1].copy_from_slice(&self.pattern.serialize());
         buf[1..2].copy_from_slice(&self.chain_id.serialize());
-        buf[2..3].copy_from_slice(&self.checker_id.serialize());
-        buf[3..5].copy_from_slice(&self.sidechain_config_dep_index.serialize());
+        buf[2..4].copy_from_slice(&self.sidechain_config_dep_index.serialize());
 
         buf
     }
