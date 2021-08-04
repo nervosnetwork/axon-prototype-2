@@ -1,7 +1,7 @@
 use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
@@ -60,8 +60,8 @@ fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCell) -> Result
         },
     };
 
-    CheckerInfoCellData::range_check(4..4 + sidechain_config_dep.commit_threshold as usize, Source::Input, &global)?;
-    CheckerInfoCellData::range_check(3..3 + sidechain_config_dep.commit_threshold as usize, Source::Output, &global)?;
+    CheckerInfoCell::range_check(4..4 + sidechain_config_dep.commit_threshold as usize, Source::Input, &global)?;
+    CheckerInfoCell::range_check(3..3 + sidechain_config_dep.commit_threshold as usize, Source::Output, &global)?;
     Ok(())
 }
 
@@ -134,21 +134,17 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
     //load checker info inputs and outputs
     for i in 0..sidechain_config_dep.commit_threshold as usize {
         let (checker_info_input, checker_info_type_args_input, checker_info_output, checker_info_type_args_output) = load_entities!(
-            CheckerInfoCellData: CellOrigin(4 + i, Source::Input),
+            CheckerInfoCell: CellOrigin(4 + i, Source::Input),
             CheckerInfoCellTypeArgs: CellOrigin(4 + i, Source::Input),
-            CheckerInfoCellData: CellOrigin(3 + i, Source::Output),
+            CheckerInfoCell: CellOrigin(3 + i, Source::Output),
             CheckerInfoCellTypeArgs: CellOrigin(3 + i, Source::Output),
         );
         let mut checker_info_res = checker_info_input.clone();
-        checker_info_res.mode = CheckerInfoCellMode::Idle;
         checker_info_res.unpaid_fee += witness.fee_per_checker;
-        checker_info_res.unpaid_check_data_size = 0;
 
-        if checker_info_input.mode != CheckerInfoCellMode::TaskPassed
-            && checker_info_type_args_input.chain_id != witness.chain_id
+        if checker_info_type_args_input.chain_id != witness.chain_id
             && checker_info_res != checker_info_output
             && checker_info_type_args_input != checker_info_type_args_output
-            && checker_info_input.unpaid_check_data_size * sidechain_config_dep.check_fee_rate as u128 != witness.fee_per_checker
         {
             return Err(Error::CheckerInfoMismatch);
         }

@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     },
@@ -42,14 +42,14 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
         checker_bond_input_lock_args,
         checker_bond_input,
         checker_info_input_type_args,
-        checker_info_input,
+        _checker_info_input,
     ) = load_entities! {
         SidechainConfigCellTypeArgs: CONFIG_INPUT,
         SidechainConfigCell: CONFIG_INPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_INPUT,
         CheckerBondCellData: CHECKER_BOND_INPUT,
         CheckerInfoCellTypeArgs: CHECKER_INFO_INPUT,
-        CheckerInfoCellData: CHECKER_INFO_INPUT,
+        CheckerInfoCell: CHECKER_INFO_INPUT,
     };
     let (config_output, checker_bond_output_lock_args, checker_bond_output) = load_entities! {
         SidechainConfigCell: CONFIG_OUTPUT,
@@ -77,11 +77,7 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     {
         return Err(Error::CheckerBondMismatch);
     }
-    if checker_info_input_type_args.chain_id != witness.chain_id
-        || checker_info_input.checker_id != witness.checker_id
-        || checker_info_input_type_args.checker_lock_arg != signer
-        || checker_info_input.mode != CheckerInfoCellMode::Idle
-    {
+    if checker_info_input_type_args.chain_id != witness.chain_id || checker_info_input_type_args.checker_lock_arg != signer {
         return Err(Error::CheckerInfoMismatch);
     }
 
@@ -101,7 +97,7 @@ fn is_checker_quit_sidechain() -> Result<(), Error> {
             CodeCell: CODE_INPUT,
             SidechainConfigCell: CONFIG_INPUT,
             CheckerBondCellData: CHECKER_BOND_INPUT,
-            CheckerInfoCellData: CHECKER_INFO_INPUT,
+            CheckerInfoCell: CHECKER_INFO_INPUT,
 
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: CONFIG_OUTPUT,

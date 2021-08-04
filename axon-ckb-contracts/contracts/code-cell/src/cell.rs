@@ -6,7 +6,7 @@ use ckb_std::high_level::{load_cell_data, load_cell_lock, load_cell_type};
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::{CodeCell, CodeCellLockArgs},
         global_config::GlobalConfigCellData,
         muse_token::MuseTokenData,
@@ -42,7 +42,7 @@ pub trait LoadableCell {
 }
 
 impl LoadableCell for CheckerBondCellData {}
-impl LoadableCell for CheckerInfoCellData {}
+impl LoadableCell for CheckerInfoCell {}
 impl LoadableCell for GlobalConfigCellData {}
 impl LoadableCell for MuseTokenData {}
 impl LoadableCell for SidechainBondCellData {}
@@ -194,7 +194,7 @@ impl TypedCell for TaskCell {
     }
 }
 
-impl TypedCell for CheckerInfoCellData {
+impl TypedCell for CheckerInfoCell {
     fn type_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.checker_info_cell_type_codehash, global.checker_info_cell_type_hashtype)
     }

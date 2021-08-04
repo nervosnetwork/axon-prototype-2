@@ -210,7 +210,6 @@ impl ::core::fmt::Display for CheckerInfoCell {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "unpaid_fee", self.unpaid_fee())?;
-        write!(f, ", {}: {}", "uppaid_check_data_size", self.uppaid_check_data_size())?;
         write!(f, ", {}: {}", "status", self.status())?;
         write!(f, ", {}: {}", "rpc_url", self.rpc_url())?;
         let extra_count = self.count_extra_fields();
@@ -223,14 +222,13 @@ impl ::core::fmt::Display for CheckerInfoCell {
 impl ::core::default::Default for CheckerInfoCell {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            57, 0, 0, 0, 20, 0, 0, 0, 36, 0, 0, 0, 52, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            37, 0, 0, 0, 16, 0, 0, 0, 32, 0, 0, 0, 33, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         CheckerInfoCell::new_unchecked(v.into())
     }
 }
 impl CheckerInfoCell {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 3;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -259,25 +257,18 @@ impl CheckerInfoCell {
         Uint128::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn uppaid_check_data_size(&self) -> Uint128 {
+    pub fn status(&self) -> CheckerInfoStatus {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[8..]) as usize;
         let end = molecule::unpack_number(&slice[12..]) as usize;
-        Uint128::new_unchecked(self.0.slice(start..end))
-    }
-
-    pub fn status(&self) -> CheckerInfoStatus {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[12..]) as usize;
-        let end = molecule::unpack_number(&slice[16..]) as usize;
         CheckerInfoStatus::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn rpc_url(&self) -> String {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[16..]) as usize;
+        let start = molecule::unpack_number(&slice[12..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[20..]) as usize;
+            let end = molecule::unpack_number(&slice[16..]) as usize;
             String::new_unchecked(self.0.slice(start..end))
         } else {
             String::new_unchecked(self.0.slice(start..))
@@ -320,7 +311,6 @@ impl molecule::prelude::Entity for CheckerInfoCell {
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
             .unpaid_fee(self.unpaid_fee())
-            .uppaid_check_data_size(self.uppaid_check_data_size())
             .status(self.status())
             .rpc_url(self.rpc_url())
     }
@@ -345,7 +335,6 @@ impl<'r> ::core::fmt::Display for CheckerInfoCellReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "unpaid_fee", self.unpaid_fee())?;
-        write!(f, ", {}: {}", "uppaid_check_data_size", self.uppaid_check_data_size())?;
         write!(f, ", {}: {}", "status", self.status())?;
         write!(f, ", {}: {}", "rpc_url", self.rpc_url())?;
         let extra_count = self.count_extra_fields();
@@ -356,7 +345,7 @@ impl<'r> ::core::fmt::Display for CheckerInfoCellReader<'r> {
     }
 }
 impl<'r> CheckerInfoCellReader<'r> {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 3;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -385,25 +374,18 @@ impl<'r> CheckerInfoCellReader<'r> {
         Uint128Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn uppaid_check_data_size(&self) -> Uint128Reader<'r> {
+    pub fn status(&self) -> CheckerInfoStatusReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[8..]) as usize;
         let end = molecule::unpack_number(&slice[12..]) as usize;
-        Uint128Reader::new_unchecked(&self.as_slice()[start..end])
-    }
-
-    pub fn status(&self) -> CheckerInfoStatusReader<'r> {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[12..]) as usize;
-        let end = molecule::unpack_number(&slice[16..]) as usize;
         CheckerInfoStatusReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn rpc_url(&self) -> StringReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[16..]) as usize;
+        let start = molecule::unpack_number(&slice[12..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[20..]) as usize;
+            let end = molecule::unpack_number(&slice[16..]) as usize;
             StringReader::new_unchecked(&self.as_slice()[start..end])
         } else {
             StringReader::new_unchecked(&self.as_slice()[start..])
@@ -465,29 +447,22 @@ impl<'r> molecule::prelude::Reader<'r> for CheckerInfoCellReader<'r> {
             return ve!(Self, OffsetsNotMatch);
         }
         Uint128Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
-        Uint128Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        CheckerInfoStatusReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        StringReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        CheckerInfoStatusReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        StringReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
 pub struct CheckerInfoCellBuilder {
-    pub(crate) unpaid_fee:             Uint128,
-    pub(crate) uppaid_check_data_size: Uint128,
-    pub(crate) status:                 CheckerInfoStatus,
-    pub(crate) rpc_url:                String,
+    pub(crate) unpaid_fee: Uint128,
+    pub(crate) status:     CheckerInfoStatus,
+    pub(crate) rpc_url:    String,
 }
 impl CheckerInfoCellBuilder {
-    pub const FIELD_COUNT: usize = 4;
+    pub const FIELD_COUNT: usize = 3;
 
     pub fn unpaid_fee(mut self, v: Uint128) -> Self {
         self.unpaid_fee = v;
-        self
-    }
-
-    pub fn uppaid_check_data_size(mut self, v: Uint128) -> Self {
-        self.uppaid_check_data_size = v;
         self
     }
 
@@ -509,7 +484,6 @@ impl molecule::prelude::Builder for CheckerInfoCellBuilder {
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.unpaid_fee.as_slice().len()
-            + self.uppaid_check_data_size.as_slice().len()
             + self.status.as_slice().len()
             + self.rpc_url.as_slice().len()
     }
@@ -520,8 +494,6 @@ impl molecule::prelude::Builder for CheckerInfoCellBuilder {
         offsets.push(total_size);
         total_size += self.unpaid_fee.as_slice().len();
         offsets.push(total_size);
-        total_size += self.uppaid_check_data_size.as_slice().len();
-        offsets.push(total_size);
         total_size += self.status.as_slice().len();
         offsets.push(total_size);
         total_size += self.rpc_url.as_slice().len();
@@ -530,7 +502,6 @@ impl molecule::prelude::Builder for CheckerInfoCellBuilder {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
         writer.write_all(self.unpaid_fee.as_slice())?;
-        writer.write_all(self.uppaid_check_data_size.as_slice())?;
         writer.write_all(self.status.as_slice())?;
         writer.write_all(self.rpc_url.as_slice())?;
         Ok(())

@@ -7,7 +7,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCellData, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     },
     witness::checker_quit_sidechain::CheckerQuitSidechainWitness,
@@ -97,7 +97,7 @@ fn test_success() {
         checker_bond_input_data.serialize(),
     );
 
-    let checker_info_input_data = CheckerInfoCellData::default();
+    let checker_info_input_data = CheckerInfoCell::default();
     let checker_info_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &checker_info_script),
         checker_info_input_data.serialize(),

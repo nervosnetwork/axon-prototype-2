@@ -31,7 +31,8 @@ fn test_success() {
             ..
         },
     ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
-
+    println!("{:?}", always_success.as_reader().code_hash().as_slice());
+    println!("{:?}", always_success.calc_script_hash().as_slice());
     // prepare scripts
     let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
     checker_bond_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);

@@ -5,7 +5,7 @@ use ckb_tool::bytes::Bytes;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::packed::CellInput;
 use ckb_tool::ckb_types::prelude::*;
-use common_raw::cell::checker_info::{CheckerInfoCellData, CheckerInfoCellMode, CheckerInfoCellTypeArgs};
+use common_raw::cell::checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs};
 use common_raw::cell::sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs};
@@ -96,9 +96,7 @@ fn test_success() {
     let mut builder = builder.input(sidechain_bond_input);
 
     for _ in 0..REJECT_TASK_COUNT * CHALLENGE_THRESHOLD {
-        let mut checker_info_data_input = CheckerInfoCellData::default();
-        checker_info_data_input.mode = CheckerInfoCellMode::ChallengeRejected;
-        checker_info_data_input.unpaid_check_data_size = CHECKE_SIZE;
+        let checker_info_data_input = CheckerInfoCell::default();
         let checker_info_input_outpoint = builder.context.create_cell(
             new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output),
             checker_info_data_input.serialize(),
@@ -107,10 +105,7 @@ fn test_success() {
         builder = builder.input(checker_info_input);
     }
 
-    let mut checker_info_data_input = CheckerInfoCellData::default();
-    checker_info_data_input.mode = CheckerInfoCellMode::TaskPassed;
-    checker_info_data_input.unpaid_check_data_size = CHECKE_SIZE;
-    checker_info_data_input.checker_id = 1;
+    let checker_info_data_input = CheckerInfoCell::default();
     let checker_info_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output),
         checker_info_data_input.serialize(),
@@ -143,9 +138,7 @@ fn test_success() {
     ];
 
     for _ in 0..REJECT_TASK_COUNT * CHALLENGE_THRESHOLD {
-        let mut checker_info_data_output = CheckerInfoCellData::default();
-        checker_info_data_output.mode = CheckerInfoCellMode::Idle;
-        checker_info_data_output.unpaid_check_data_size = CHECKE_SIZE;
+        let mut checker_info_data_output = CheckerInfoCell::default();
         checker_info_data_output.unpaid_fee = CHECKE_SIZE * FEE_RATE;
         outputs_data.push(checker_info_data_output.serialize());
     }
