@@ -35,8 +35,6 @@ mod test_quit_sidechain;
 #[cfg(test)]
 mod test_refresh_task;
 #[cfg(test)]
-mod test_submit_challenge;
-#[cfg(test)]
 mod test_take_beneficiary;
 
 const TEST_ENV_VAR: &str = "CAPSULE_TEST_ENV";
