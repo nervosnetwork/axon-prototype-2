@@ -73,3 +73,38 @@ pub type ChainId = u32;
 
 pub type RandomSeed = [u8; 32];
 pub type CommittedHash = [u8; 32];
+
+#[macro_export]
+macro_rules! PureSudtTokenCell {
+    ($type: ty) => {
+        impl crate::FromRaw for $type {
+            fn from_raw(cell_raw_data: &[u8]) -> Option<Self> {
+                use molecule::prelude::Reader;
+
+                let reader = crate::molecule::cell::sudt_token::SudtTokenCellReader::from_slice(cell_raw_data).ok()?;
+
+                let amount = crate::FromRaw::from_raw(reader.amount().raw_data())?;
+
+                Some(Self { amount })
+            }
+        }
+
+        impl crate::Serialize for $type {
+            type RawType = molecule::prelude::Vec<u8>;
+
+            fn serialize(&self) -> Self::RawType {
+                use molecule::prelude::{Builder, Reader};
+
+                let amount = crate::molecule::common::Uint128Reader::new_unchecked(&crate::Serialize::serialize(&self.amount)).to_entity();
+
+                let builder = crate::molecule::cell::sudt_token::SudtTokenCellBuilder::default().amount(amount);
+
+                let mut buf = molecule::prelude::Vec::new();
+                builder
+                    .write(&mut buf)
+                    .expect(concat!("Unable to write buffer while serializing ", stringify!($type)));
+                buf
+            }
+        }
+    };
+}

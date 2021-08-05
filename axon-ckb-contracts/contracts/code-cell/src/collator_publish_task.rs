@@ -1,7 +1,7 @@
 use crate::{cell::*, common::*, error::Error};
 use ckb_std::ckb_constants::Source;
 
-use common_raw::cell::sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs};
+use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
 use common_raw::cell::sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::cell::task::TaskCellTypeArgs;
@@ -43,7 +43,7 @@ pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCell) -> 
         &global,
         {
             SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
-            SidechainBondCellData: SIDECHAIN_BOND_DEP,
+            SidechainBondCell: SIDECHAIN_BOND_DEP,
             CodeCell: CODE_INPUT,
             SidechainStateCell: SIDECHAIN_STATE_INPUT,
             CodeCell: CODE_OUTPUT,
@@ -71,7 +71,7 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     let (sidechain_config_dep, sidechain_config_type_args_dep, sidechain_bond_dep, sidechain_bond_lock_args_dep) = load_entities!(
         SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_DEP,
-        SidechainBondCellData: SIDECHAIN_BOND_DEP,
+        SidechainBondCell: SIDECHAIN_BOND_DEP,
         SidechainBondCellLockArgs: SIDECHAIN_BOND_DEP,
     );
 

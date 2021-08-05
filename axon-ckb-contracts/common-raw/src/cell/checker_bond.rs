@@ -1,4 +1,4 @@
-use crate::{check_args_len, FromRaw, Serialize, SUDT_DATA_LEN};
+use crate::{check_args_len, FromRaw, PureSudtTokenCell, Serialize};
 
 const CHECKER_BOND_LOCK_ARGS_LEN: usize = 52;
 
@@ -17,27 +17,11 @@ const CHECKER_BOND_LOCK_ARGS_LEN: usize = 52;
 
 // which is standard sudt
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct CheckerBondCellData {
+pub struct CheckerBondCell {
     pub amount: u128,
 }
 
-impl FromRaw for CheckerBondCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Option<CheckerBondCellData> {
-        check_args_len(cell_raw_data.len(), SUDT_DATA_LEN)?;
-
-        let sudt_amount = u128::from_raw(&cell_raw_data[0..16])?;
-
-        Some(CheckerBondCellData { amount: sudt_amount })
-    }
-}
-
-impl Serialize for CheckerBondCellData {
-    type RawType = [u8; SUDT_DATA_LEN];
-
-    fn serialize(&self) -> Self::RawType {
-        self.amount.serialize()
-    }
-}
+PureSudtTokenCell!(CheckerBondCell);
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CheckerBondCellLockArgs {

@@ -7,8 +7,8 @@ use ckb_tool::ckb_types::{bytes::Bytes, prelude::*};
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
-        muse_token::MuseTokenData,
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+        muse_token::MuseTokenCell,
+        sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
     },
     witness::checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
 };
@@ -57,7 +57,7 @@ fn test_success() {
         checker_info_input_data.serialize(),
     );
 
-    let mut sidechain_fee_input_data = SidechainFeeCellData::default();
+    let mut sidechain_fee_input_data = SidechainFeeCell::default();
     sidechain_fee_input_data.amount = 100;
 
     let sidechain_fee_input = builder.create_input(
@@ -65,7 +65,7 @@ fn test_success() {
         sidechain_fee_input_data.serialize(),
     );
 
-    let muse_input_data = MuseTokenData::default();
+    let muse_input_data = MuseTokenCell::default();
     let muse_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &always_success),
         muse_input_data.serialize(),

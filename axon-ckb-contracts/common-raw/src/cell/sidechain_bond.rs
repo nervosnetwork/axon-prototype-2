@@ -1,4 +1,4 @@
-use crate::{check_args_len, FromRaw, Serialize, SUDT_DATA_LEN};
+use crate::{check_args_len, FromRaw, PureSudtTokenCell, Serialize};
 
 const SIDECHAIN_BOND_LOCK_ARGS_LEN: usize = 37;
 
@@ -17,27 +17,11 @@ const SIDECHAIN_BOND_LOCK_ARGS_LEN: usize = 37;
 
 // which is standard sudt
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct SidechainBondCellData {
+pub struct SidechainBondCell {
     pub amount: u128,
 }
 
-impl FromRaw for SidechainBondCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Option<SidechainBondCellData> {
-        check_args_len(cell_raw_data.len(), SUDT_DATA_LEN)?;
-
-        let sudt_amount = u128::from_raw(&cell_raw_data[0..16])?;
-
-        Some(SidechainBondCellData { amount: sudt_amount })
-    }
-}
-
-impl Serialize for SidechainBondCellData {
-    type RawType = [u8; SUDT_DATA_LEN];
-
-    fn serialize(&self) -> Self::RawType {
-        self.amount.serialize()
-    }
-}
+PureSudtTokenCell!(SidechainBondCell);
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainBondCellLockArgs {

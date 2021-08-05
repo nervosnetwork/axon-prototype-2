@@ -6,9 +6,9 @@ use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::packed::CellInput;
 use ckb_tool::ckb_types::prelude::*;
 use common_raw::cell::checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs};
-use common_raw::cell::sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs};
+use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
-use common_raw::cell::sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs};
+use common_raw::cell::sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs};
 use common_raw::pattern::Pattern;
 use common_raw::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
 use core::convert::TryFrom;
@@ -78,7 +78,7 @@ fn test_success() {
     let sidechain_config_input = CellInput::new_builder().previous_output(sidechain_config_input_out_point).build();
     let mut builder = builder.input(sidechain_config_input);
 
-    let sidechain_fee_data_input = SidechainFeeCellData::default();
+    let sidechain_fee_data_input = SidechainFeeCell::default();
     let sidechain_fee_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &sidechain_fee_lock_script_input_output, &always_success),
         sidechain_fee_data_input.serialize(),
@@ -86,7 +86,7 @@ fn test_success() {
     let sidechain_fee_input = CellInput::new_builder().previous_output(sidechain_fee_input_outpoint).build();
     let mut builder = builder.input(sidechain_fee_input);
 
-    let mut sidechain_bond_data_input = SidechainBondCellData::default();
+    let mut sidechain_bond_data_input = SidechainBondCell::default();
     sidechain_bond_data_input.amount = SIDECHAIN_BOND_AMOUNT;
     let sidechain_bond_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &sidechain_bond_lock_script_input, &always_success),
@@ -128,7 +128,7 @@ fn test_success() {
     sidechain_config_data_output.checker_total_count = CHECKER_COUNT - 1;
     sidechain_config_data_output.check_fee_rate = u32::try_from(FEE_RATE).expect("convert");
 
-    let mut sidechain_fee_data_output = SidechainFeeCellData::default();
+    let mut sidechain_fee_data_output = SidechainFeeCell::default();
     sidechain_fee_data_output.amount = SIDECHAIN_BOND_AMOUNT;
 
     let mut outputs_data = vec![

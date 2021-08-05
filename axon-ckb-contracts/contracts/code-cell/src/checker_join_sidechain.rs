@@ -2,7 +2,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
-        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
+        checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
@@ -40,12 +40,12 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
         SidechainConfigCellTypeArgs: CONFIG_INPUT,
         SidechainConfigCell: CONFIG_INPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_INPUT,
-        CheckerBondCellData: CHECKER_BOND_INPUT,
+        CheckerBondCell: CHECKER_BOND_INPUT,
     };
     let (config_output, checker_bond_output_lock_args, checker_bond_output, checker_info_output_type_args, checker_info_output) = load_entities! {
         SidechainConfigCell: CONFIG_OUTPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_OUTPUT,
-        CheckerBondCellData: CHECKER_BOND_OUTPUT,
+        CheckerBondCell: CHECKER_BOND_OUTPUT,
         CheckerInfoCellTypeArgs: CHECKER_INFO_OUTPUT,
         CheckerInfoCell: CHECKER_INFO_OUTPUT,
     };
@@ -94,11 +94,11 @@ fn is_checker_join_sidechain() -> Result<(), Error> {
         {
             CodeCell: CODE_INPUT,
             SidechainConfigCell: CONFIG_INPUT,
-            CheckerBondCellData: CHECKER_BOND_INPUT,
+            CheckerBondCell: CHECKER_BOND_INPUT,
 
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: CONFIG_OUTPUT,
-            CheckerBondCellData: CHECKER_BOND_OUTPUT,
+            CheckerBondCell: CHECKER_BOND_OUTPUT,
             CheckerInfoCell: CHECKER_INFO_OUTPUT,
         },
     };
