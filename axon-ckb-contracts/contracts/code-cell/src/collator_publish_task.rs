@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 
 use common_raw::cell::sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
-use common_raw::cell::sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs};
+use common_raw::cell::sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::cell::task::TaskCellTypeArgs;
 use common_raw::{
     cell::{code::CodeCell, sidechain_config::SidechainConfigCell, task::TaskCell},
@@ -45,9 +45,9 @@ pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCell) -> 
             SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
             SidechainBondCellData: SIDECHAIN_BOND_DEP,
             CodeCell: CODE_INPUT,
-            SidechainStateCellData: SIDECHAIN_STATE_INPUT,
+            SidechainStateCell: SIDECHAIN_STATE_INPUT,
             CodeCell: CODE_OUTPUT,
-            SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
+            SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
         },
     };
     TaskCell::range_check(3.., Source::Output, &global)
@@ -79,13 +79,13 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
 
     //load inputs
     let (sidechain_state_input, sidechain_state_type_args_input) = load_entities! {
-        SidechainStateCellData: SIDECHAIN_STATE_INPUT,
+        SidechainStateCell: SIDECHAIN_STATE_INPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
     };
 
     //load outputs
     let (sidechain_state_output, sidechain_state_type_args_output) = load_entities!(
-        SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
+        SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_OUTPUT,
     );
 
@@ -96,14 +96,10 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         return Err(Error::SidechainConfigMismatch);
     }
 
-    let mut sidechain_state_res = sidechain_state_input.clone();
-    sidechain_state_res.latest_block_hash = sidechain_state_output.latest_block_hash;
-    sidechain_state_res.latest_block_height = sidechain_state_output.latest_block_height;
+    let sidechain_state_res = sidechain_state_input.clone();
     // about committed height, see below in task cell checking
-    if sidechain_state_type_args_input != sidechain_state_type_args_output
-        || sidechain_state_type_args_input.chain_id != witness.chain_id
-        || sidechain_state_input.committed_block_height != sidechain_state_input.latest_block_height
-        || sidechain_state_res != sidechain_state_output
+    if sidechain_state_type_args_input != sidechain_state_type_args_output || sidechain_state_res != sidechain_state_output
+    //TODO: check chain_id
     {
         return Err(Error::SidechainStateMismatch);
     }
@@ -120,8 +116,6 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
 
     if task_cell_type_args_data.chain_id != witness.chain_id
         || sidechain_bond_lock_args_dep.unlock_sidechain_height < task_cell_data.sidechain_block_height_to
-        || (sidechain_state_input.latest_block_height + 1) != task_cell_data.sidechain_block_height_from
-        || sidechain_state_output.latest_block_height != task_cell_data.sidechain_block_height_to
         || task_cell_data.sidechain_block_height_from >= task_cell_data.sidechain_block_height_to
     {
         return Err(Error::TaskMismatch);

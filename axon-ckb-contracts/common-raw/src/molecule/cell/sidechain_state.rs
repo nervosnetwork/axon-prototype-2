@@ -495,6 +495,308 @@ impl molecule::prelude::Builder for CommittedCheckerInfoBuilder {
     }
 }
 #[derive(Clone)]
+pub struct CommittedCheckerInfos(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for CommittedCheckerInfos {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for CommittedCheckerInfos {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for CommittedCheckerInfos {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} [", Self::NAME)?;
+        for i in 0..self.len() {
+            if i == 0 {
+                write!(f, "{}", self.get_unchecked(i))?;
+            } else {
+                write!(f, ", {}", self.get_unchecked(i))?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+impl ::core::default::Default for CommittedCheckerInfos {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![0, 0, 0, 0];
+        CommittedCheckerInfos::new_unchecked(v.into())
+    }
+}
+impl CommittedCheckerInfos {
+    pub const ITEM_SIZE: usize = 52;
+
+    pub fn total_size(&self) -> usize {
+        molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.item_count()
+    }
+
+    pub fn item_count(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn get(&self, idx: usize) -> Option<CommittedCheckerInfo> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+
+    pub fn get_unchecked(&self, idx: usize) -> CommittedCheckerInfo {
+        let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
+        let end = start + Self::ITEM_SIZE;
+        CommittedCheckerInfo::new_unchecked(self.0.slice(start..end))
+    }
+
+    pub fn as_reader<'r>(&'r self) -> CommittedCheckerInfosReader<'r> {
+        CommittedCheckerInfosReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for CommittedCheckerInfos {
+    type Builder = CommittedCheckerInfosBuilder;
+
+    const NAME: &'static str = "CommittedCheckerInfos";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        CommittedCheckerInfos(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CommittedCheckerInfosReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CommittedCheckerInfosReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().extend(self.into_iter())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct CommittedCheckerInfosReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for CommittedCheckerInfosReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for CommittedCheckerInfosReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for CommittedCheckerInfosReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} [", Self::NAME)?;
+        for i in 0..self.len() {
+            if i == 0 {
+                write!(f, "{}", self.get_unchecked(i))?;
+            } else {
+                write!(f, ", {}", self.get_unchecked(i))?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+impl<'r> CommittedCheckerInfosReader<'r> {
+    pub const ITEM_SIZE: usize = 52;
+
+    pub fn total_size(&self) -> usize {
+        molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.item_count()
+    }
+
+    pub fn item_count(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn get(&self, idx: usize) -> Option<CommittedCheckerInfoReader<'r>> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+
+    pub fn get_unchecked(&self, idx: usize) -> CommittedCheckerInfoReader<'r> {
+        let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
+        let end = start + Self::ITEM_SIZE;
+        CommittedCheckerInfoReader::new_unchecked(&self.as_slice()[start..end])
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for CommittedCheckerInfosReader<'r> {
+    type Entity = CommittedCheckerInfos;
+
+    const NAME: &'static str = "CommittedCheckerInfosReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        CommittedCheckerInfosReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], _compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let item_count = molecule::unpack_number(slice) as usize;
+        if item_count == 0 {
+            if slice_len != molecule::NUMBER_SIZE {
+                return ve!(Self, TotalSizeNotMatch, molecule::NUMBER_SIZE, slice_len);
+            }
+            return Ok(());
+        }
+        let total_size = molecule::NUMBER_SIZE + Self::ITEM_SIZE * item_count;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct CommittedCheckerInfosBuilder(pub(crate) Vec<CommittedCheckerInfo>);
+impl CommittedCheckerInfosBuilder {
+    pub const ITEM_SIZE: usize = 52;
+
+    pub fn set(mut self, v: Vec<CommittedCheckerInfo>) -> Self {
+        self.0 = v;
+        self
+    }
+
+    pub fn push(mut self, v: CommittedCheckerInfo) -> Self {
+        self.0.push(v);
+        self
+    }
+
+    pub fn extend<T: ::core::iter::IntoIterator<Item = CommittedCheckerInfo>>(mut self, iter: T) -> Self {
+        for elem in iter {
+            self.0.push(elem);
+        }
+        self
+    }
+}
+impl molecule::prelude::Builder for CommittedCheckerInfosBuilder {
+    type Entity = CommittedCheckerInfos;
+
+    const NAME: &'static str = "CommittedCheckerInfosBuilder";
+
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.0.len()
+    }
+
+    fn write<W: molecule::io::Write>(&self, writer: &mut W) -> molecule::io::Result<()> {
+        writer.write_all(&molecule::pack_number(self.0.len() as molecule::Number))?;
+        for inner in &self.0[..] {
+            writer.write_all(inner.as_slice())?;
+        }
+        Ok(())
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        CommittedCheckerInfos::new_unchecked(inner.into())
+    }
+}
+pub struct CommittedCheckerInfosIterator(CommittedCheckerInfos, usize, usize);
+impl ::core::iter::Iterator for CommittedCheckerInfosIterator {
+    type Item = CommittedCheckerInfo;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl ::core::iter::ExactSizeIterator for CommittedCheckerInfosIterator {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+impl ::core::iter::IntoIterator for CommittedCheckerInfos {
+    type IntoIter = CommittedCheckerInfosIterator;
+    type Item = CommittedCheckerInfo;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let len = self.len();
+        CommittedCheckerInfosIterator(self, 0, len)
+    }
+}
+impl<'r> CommittedCheckerInfosReader<'r> {
+    pub fn iter<'t>(&'t self) -> CommittedCheckerInfosReaderIterator<'t, 'r> {
+        CommittedCheckerInfosReaderIterator(&self, 0, self.len())
+    }
+}
+pub struct CommittedCheckerInfosReaderIterator<'t, 'r>(&'t CommittedCheckerInfosReader<'r>, usize, usize);
+impl<'t: 'r, 'r> ::core::iter::Iterator for CommittedCheckerInfosReaderIterator<'t, 'r> {
+    type Item = CommittedCheckerInfoReader<'t>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for CommittedCheckerInfosReaderIterator<'t, 'r> {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+#[derive(Clone)]
 pub struct PunishedChecker(molecule::bytes::Bytes);
 impl ::core::fmt::LowerHex for PunishedChecker {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
@@ -1824,11 +2126,10 @@ impl ::core::fmt::Display for SidechainStateCell {
 impl ::core::default::Default for SidechainStateCell {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            202, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 65, 0, 0, 0, 69, 0, 0, 0, 73, 0, 0, 0, 105, 0, 0, 0, 106, 0, 0, 0, 158, 0, 0, 0, 162,
-            0, 0, 0, 166, 0, 0, 0, 198, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            154, 0, 0, 0, 48, 0, 0, 0, 49, 0, 0, 0, 65, 0, 0, 0, 69, 0, 0, 0, 73, 0, 0, 0, 105, 0, 0, 0, 106, 0, 0, 0, 110, 0, 0, 0, 114,
+            0, 0, 0, 118, 0, 0, 0, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         SidechainStateCell::new_unchecked(v.into())
     }
@@ -1898,11 +2199,11 @@ impl SidechainStateCell {
         Uint8::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn random_commit(&self) -> CommittedCheckerInfo {
+    pub fn random_commit(&self) -> CommittedCheckerInfos {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[28..]) as usize;
         let end = molecule::unpack_number(&slice[32..]) as usize;
-        CommittedCheckerInfo::new_unchecked(self.0.slice(start..end))
+        CommittedCheckerInfos::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn punish_checkers(&self) -> PunishedCheckers {
@@ -2097,11 +2398,11 @@ impl<'r> SidechainStateCellReader<'r> {
         Uint8Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn random_commit(&self) -> CommittedCheckerInfoReader<'r> {
+    pub fn random_commit(&self) -> CommittedCheckerInfosReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[28..]) as usize;
         let end = molecule::unpack_number(&slice[32..]) as usize;
-        CommittedCheckerInfoReader::new_unchecked(&self.as_slice()[start..end])
+        CommittedCheckerInfosReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn punish_checkers(&self) -> PunishedCheckersReader<'r> {
@@ -2196,7 +2497,7 @@ impl<'r> molecule::prelude::Reader<'r> for SidechainStateCellReader<'r> {
         JobsReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
         RandomSeedReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
         Uint8Reader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
-        CommittedCheckerInfoReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
+        CommittedCheckerInfosReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
         PunishedCheckersReader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
         BlockHeadersReader::verify(&slice[offsets[8]..offsets[9]], compatible)?;
         MerkleHashReader::verify(&slice[offsets[9]..offsets[10]], compatible)?;
@@ -2212,7 +2513,7 @@ pub struct SidechainStateCellBuilder {
     pub(crate) confirmed_jobs: Jobs,
     pub(crate) random_seed: RandomSeed,
     pub(crate) random_offset: Uint8,
-    pub(crate) random_commit: CommittedCheckerInfo,
+    pub(crate) random_commit: CommittedCheckerInfos,
     pub(crate) punish_checkers: PunishedCheckers,
     pub(crate) recent_block_headers: BlockHeaders,
     pub(crate) ancient_block_heard_merkle_root: MerkleHash,
@@ -2251,7 +2552,7 @@ impl SidechainStateCellBuilder {
         self
     }
 
-    pub fn random_commit(mut self, v: CommittedCheckerInfo) -> Self {
+    pub fn random_commit(mut self, v: CommittedCheckerInfos) -> Self {
         self.random_commit = v;
         self
     }

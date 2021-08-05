@@ -7,7 +7,7 @@ use common_raw::{
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
-        sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
+        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
     witness::collator_submit_challenge::CollatorSubmitChallengeWitness,
     FromRaw,
@@ -60,12 +60,12 @@ pub fn is_collator_submit_faild_challenge(witness: &CollatorSubmitChallengeWitne
         {
             CodeCell: CODE_INPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
-            SidechainStateCellData: SIDECHAIN_STATE_INPUT,
+            SidechainStateCell: SIDECHAIN_STATE_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
-            SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
+            SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },
     };
@@ -114,7 +114,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
     ) = load_entities!(
         SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_INPUT,
-        SidechainStateCellData: SIDECHAIN_STATE_INPUT,
+        SidechainStateCell: SIDECHAIN_STATE_INPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
         SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
@@ -132,7 +132,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
     ) = load_entities!(
         SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_OUTPUT,
-        SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
+        SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_OUTPUT,
         SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_OUTPUT,
@@ -156,13 +156,10 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
         return Err(Error::SidechainConfigMismatch);
     }
 
-    let mut sidechain_state_data_res = sidechain_state_data_input.clone();
-    sidechain_state_data_res.committed_block_height = sidechain_state_data_input.latest_block_height;
-    sidechain_state_data_res.committed_block_hash = sidechain_state_data_input.latest_block_hash;
+    let sidechain_state_data_res = sidechain_state_data_input.clone();
 
-    if sidechain_state_data_res != sidechain_state_data_output
-        || sidechain_state_type_args_input != sidechain_state_type_args_output
-        || sidechain_state_type_args_input.chain_id != witness.chain_id
+    if sidechain_state_data_res != sidechain_state_data_output || sidechain_state_type_args_input != sidechain_state_type_args_output
+    //TODO: check chain_id
     {
         return Err(Error::SidechainStateMismatch);
     }
