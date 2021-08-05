@@ -8,7 +8,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         muse_token::MuseTokenData,
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+        sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
     },
     witness::checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
 };
@@ -57,7 +57,7 @@ fn test_success() {
         checker_info_input_data.serialize(),
     );
 
-    let mut sidechain_fee_input_data = SidechainFeeCellData::default();
+    let mut sidechain_fee_input_data = SidechainFeeCell::default();
     sidechain_fee_input_data.amount = 100;
 
     let sidechain_fee_input = builder.create_input(

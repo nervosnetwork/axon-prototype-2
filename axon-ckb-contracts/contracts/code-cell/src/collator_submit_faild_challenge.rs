@@ -6,7 +6,7 @@ use common_raw::{
         code::CodeCell,
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+        sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
     witness::collator_submit_challenge::CollatorSubmitChallengeWitness,
@@ -61,12 +61,12 @@ pub fn is_collator_submit_faild_challenge(witness: &CollatorSubmitChallengeWitne
             CodeCell: CODE_INPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
             SidechainStateCell: SIDECHAIN_STATE_INPUT,
-            SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
             SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
-            SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
         },
     };
 
@@ -116,7 +116,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_INPUT,
         SidechainStateCell: SIDECHAIN_STATE_INPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
-        SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
+        SidechainFeeCell: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
         MuseTokenData: MUSE_TOKEN_INPUT,
     );
@@ -134,7 +134,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_OUTPUT,
         SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_OUTPUT,
-        SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
+        SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_OUTPUT,
     );
 

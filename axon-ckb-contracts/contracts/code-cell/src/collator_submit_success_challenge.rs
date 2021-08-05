@@ -6,7 +6,7 @@ use common_raw::{
         code::CodeCell,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+        sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
     },
     witness::collator_submit_challenge::CollatorSubmitChallengeWitness,
     FromRaw,
@@ -51,11 +51,11 @@ pub fn is_collator_submit_success_challenge(witness: &CollatorSubmitChallengeWit
         {
             CodeCell: CODE_INPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
-            SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_INPUT,
             SidechainBondCellData: SIDECHAIN_BOND_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
-            SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
         },
     };
     CheckerInfoCell::range_check(INPUT_NORMAL_CELL_COUNT.., Source::Input, &global)?;
@@ -97,7 +97,7 @@ pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error
     ) = load_entities!(
         SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_INPUT,
-        SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
+        SidechainFeeCell: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
         SidechainBondCellData: SIDECHAIN_BOND_INPUT,
         SidechainBondCellLockArgs: SIDECHAIN_BOND_INPUT,
@@ -107,7 +107,7 @@ pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error
     let (sidechain_config_data_output, sidechain_config_type_args_output, sidechain_fee_data_output, sidechain_fee_lock_args_output) = load_entities!(
         SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_OUTPUT,
-        SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
+        SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_OUTPUT,
     );
     if sidechain_bond_lock_args_input.collator_lock_arg != sidechain_config_data_input.collator_lock_arg {

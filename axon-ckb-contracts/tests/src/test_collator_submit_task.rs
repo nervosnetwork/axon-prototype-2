@@ -12,7 +12,7 @@ use common_raw::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+        sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
     witness::collator_submit_task::CollatorSubmitTaskWitness,
@@ -90,7 +90,7 @@ fn test_success() {
         .build();
     let mut builder = builder.input(sidechain_state_input);
 
-    let sidechain_fee_data_input = SidechainFeeCellData::default();
+    let sidechain_fee_data_input = SidechainFeeCell::default();
     let output = new_type_cell_output(1000, &sidechain_fee_lcok_script_input_output, &always_success);
     let sidechain_fee_input_outpoint = builder.context.create_cell(output, sidechain_fee_data_input.serialize());
     let sidechain_fee_input = CellInput::new_builder()
@@ -123,7 +123,7 @@ fn test_success() {
     ];
     let mut sidechain_state_data_output = SidechainStateCellData::default();
 
-    let mut sidechain_fee_data_output = SidechainFeeCellData::default();
+    let mut sidechain_fee_data_output = SidechainFeeCell::default();
     sidechain_fee_data_output.amount = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
 
     let mut checker_info_data_output = CheckerInfoCell::default();

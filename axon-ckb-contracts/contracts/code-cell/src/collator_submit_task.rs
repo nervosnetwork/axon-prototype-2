@@ -5,7 +5,7 @@ use common_raw::{
         code::CodeCell,
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
+        sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
     witness::collator_submit_task::CollatorSubmitTaskWitness,
@@ -51,11 +51,11 @@ fn is_collator_submit_task(witness: &CollatorSubmitTaskWitness, sidechain_config
             SidechainConfigCell: CellOrigin(witness.sidechain_config_dep_index, Source::CellDep),
             CodeCell: CODE_INPUT,
             SidechainStateCell: SIDECHAIN_STATE_INPUT,
-            SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
-            SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
         },
     };
 
@@ -102,7 +102,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
     let (sidechain_state_input, sidechain_state_type_args_input, sidechain_fee_input, sidechain_fee_lock_args_input, muse_token_input) = load_entities!(
         SidechainStateCell: SIDECHAIN_STATE_INPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
-        SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
+        SidechainFeeCell: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
         MuseTokenData: MUSE_TOKEN_INPUT,
     );
@@ -119,7 +119,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
     let (sidechain_state_output, sidechain_state_type_args_output, sidechain_fee_output, sidechain_fee_lock_args_output) = load_entities!(
         SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_OUTPUT,
-        SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
+        SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_OUTPUT,
     );
 

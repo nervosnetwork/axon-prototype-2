@@ -1,6 +1,16 @@
-use crate::{check_args_len, FromRaw, Serialize, SUDT_DATA_LEN};
+use molecule::prelude::*;
 
-const SIDECHAIN_FEE_LOCK_ARGS_LEN: usize = 1;
+use crate::{
+    common::*,
+    molecule::{
+        cell::{
+            sidechain_fee::{SidechainFeeCellLockArgsBuilder, SidechainFeeCellLockArgsReader},
+            sudt_token::{SudtTokenCellBuilder, SudtTokenCellReader},
+        },
+        common::{ChainIdReader, Uint128Reader},
+    },
+    FromRaw, Serialize,
+};
 
 /**
     Sidechain Fee Cell
@@ -14,50 +24,64 @@ const SIDECHAIN_FEE_LOCK_ARGS_LEN: usize = 1;
         hashtype: type
         args: chain_id
 */
-
-// which is standard sudt
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct SidechainFeeCellData {
+pub struct SidechainFeeCell {
     pub amount: u128,
 }
 
-impl FromRaw for SidechainFeeCellData {
-    fn from_raw(cell_raw_data: &[u8]) -> Option<SidechainFeeCellData> {
-        check_args_len(cell_raw_data.len(), SUDT_DATA_LEN)?;
+impl FromRaw for SidechainFeeCell {
+    fn from_raw(cell_raw_data: &[u8]) -> Option<Self> {
+        let reader = SudtTokenCellReader::from_slice(cell_raw_data).ok()?;
 
-        let sudt_amount = u128::from_raw(&cell_raw_data[0..16])?;
+        let amount = u128::from_raw(reader.amount().raw_data())?;
 
-        Some(SidechainFeeCellData { amount: sudt_amount })
+        Some(Self { amount })
     }
 }
 
-impl Serialize for SidechainFeeCellData {
-    type RawType = [u8; SUDT_DATA_LEN];
+impl Serialize for SidechainFeeCell {
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        self.amount.serialize()
+        let amount = Uint128Reader::new_unchecked(&self.amount.serialize()).to_entity();
+
+        let builder = SudtTokenCellBuilder::default().amount(amount);
+
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing SidechainFeeCell");
+        buf
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainFeeCellLockArgs {
-    pub chain_id: u8,
+    pub chain_id: u8, // TODO: Change to ChainId
 }
 
 impl FromRaw for SidechainFeeCellLockArgs {
-    fn from_raw(arg_raw_data: &[u8]) -> Option<SidechainFeeCellLockArgs> {
-        check_args_len(arg_raw_data.len(), SIDECHAIN_FEE_LOCK_ARGS_LEN)?;
+    fn from_raw(arg_raw_data: &[u8]) -> Option<Self> {
+        let reader = SidechainFeeCellLockArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = u8::from_raw(&arg_raw_data[0..1])?;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
 
-        Some(SidechainFeeCellLockArgs { chain_id })
+        Some(Self { chain_id })
     }
 }
 
 impl Serialize for SidechainFeeCellLockArgs {
-    type RawType = [u8; SIDECHAIN_FEE_LOCK_ARGS_LEN];
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        self.chain_id.serialize()
+        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as ChainId).serialize()).to_entity();
+
+        let builder = SidechainFeeCellLockArgsBuilder::default().chain_id(chain_id);
+
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing SidechainFeeCellLockArgs");
+        buf
     }
 }
