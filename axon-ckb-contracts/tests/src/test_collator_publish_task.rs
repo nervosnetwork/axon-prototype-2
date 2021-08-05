@@ -10,7 +10,7 @@ use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCel
 use common_raw::cell::task::{TaskCell, TaskCellTypeArgs};
 use common_raw::cell::{
     sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
-    sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
+    sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
 };
 use common_raw::witness::collator_publish_task::CollatorPublishTaskWitness;
 
@@ -89,7 +89,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(sidechain_bond_dep);
 
     //prepare input
-    let sidechain_state_data_input = SidechainStateCellData::default();
+    let sidechain_state_data_input = SidechainStateCell::default();
     let output = new_type_cell_output(1000, &always_success, &sidechain_state_type_script_input_output);
     let sidechain_state_input_outpoint = builder.context.create_cell(output, sidechain_state_data_input.serialize());
     let sidechain_state_input = CellInput::new_builder()
@@ -103,8 +103,7 @@ fn test_success() {
         new_type_cell_output(1000, &always_success, &sidechain_state_type_script_input_output),
     ];
 
-    let mut sidechain_state_data_output = SidechainStateCellData::default();
-    sidechain_state_data_output.latest_block_height = 2;
+    let sidechain_state_data_output = SidechainStateCell::default();
 
     let mut sidechain_bond_data_output = SidechainBondCellData::default();
     sidechain_bond_data_output.amount = SIDECHAIN_BOND_AMOUNT;

@@ -239,15 +239,13 @@ fn admin_create_sidechain(_signer: [u8; 20]) -> Result<(), Error> {
 
     let sidechain_config_output_type_args = SidechainConfigCellTypeArgs::load(CellOrigin(1, Source::Output))?;
 
-    let sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(2, Source::Output))?;
+    let _sidechain_state_output_type_args = SidechainStateCellTypeArgs::load(CellOrigin(2, Source::Output))?;
 
     if sidechain_config_output_type_args.chain_id != witness.chain_id {
         return Err(Error::Wrong);
     }
 
-    if sidechain_state_output_type_args.chain_id != witness.chain_id {
-        return Err(Error::Wrong);
-    }
+    //TODO check chain_id
 
     Ok(())
 }

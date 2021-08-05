@@ -4,7 +4,7 @@ use common_raw::{
     cell::{
         code::CodeCell,
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
-        sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
+        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
         sudt_token::SudtTokenData,
     },
     witness::collator_unlock_bond::CollatorUnlockBondWitness,
@@ -35,19 +35,15 @@ pub fn collator_unlock_bond(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
     is_collator_unlock_bond(&witness)?;
 
     let state_origin = CellOrigin(witness.sidechain_state_dep_index, Source::CellDep);
-    let (state_dep_type_args, state_dep, bond_input_lock_args) = load_entities! {
+    let (_state_dep_type_args, _state_dep, bond_input_lock_args) = load_entities! {
         SidechainStateCellTypeArgs: state_origin,
-        SidechainStateCellData: state_origin,
+        SidechainStateCell: state_origin,
         SidechainBondCellLockArgs: SIDECHAIN_BOND_INPUT,
     };
 
-    if state_dep_type_args.chain_id != witness.chain_id {
-        return Err(Error::SidechainStateMismatch);
-    }
-    if signer != bond_input_lock_args.collator_lock_arg
-        || bond_input_lock_args.chain_id != witness.chain_id
-        || bond_input_lock_args.unlock_sidechain_height < state_dep.committed_block_height
-    {
+    //TODO: check chain_id
+
+    if signer != bond_input_lock_args.collator_lock_arg || bond_input_lock_args.chain_id != witness.chain_id {
         return Err(Error::SidechainBondMismatch);
     }
 
@@ -64,7 +60,7 @@ fn is_collator_unlock_bond(witness: &CollatorUnlockBondWitness) -> Result<(), Er
     check_cells! {
         &global,
         {
-            SidechainStateCellData: CellOrigin(witness.sidechain_state_dep_index, Source::CellDep),
+            SidechainStateCell: CellOrigin(witness.sidechain_state_dep_index, Source::CellDep),
 
             CodeCell: CODE_INPUT,
             SidechainBondCellData: SIDECHAIN_BOND_INPUT,

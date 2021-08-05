@@ -9,14 +9,13 @@ use common_raw::cell::checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs};
 use common_raw::cell::muse_token::MuseTokenData;
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs};
-use common_raw::cell::sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs};
+use common_raw::cell::sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
 use core::convert::TryFrom;
 const MAX_CYCLES: u64 = 10_000_000;
 const TASK_COUNT: u32 = 3;
 const UNVALID_TASK_COUNT: u32 = 1;
 const CHALLENGE_THRESHOLD: u32 = 1;
-const CHECKE_HEIGHT_TO: u128 = 5;
 const FEE_RATE: u128 = 1;
 const CHECKER_COUNT: u32 = 10;
 const CHECKE_SIZE: u128 = 10;
@@ -77,8 +76,8 @@ fn test_success() {
     let sidechain_config_input = CellInput::new_builder().previous_output(sidechain_config_input_out_point).build();
     let mut builder = builder.input(sidechain_config_input);
 
-    let mut sidechain_state_data_input = SidechainStateCellData::default();
-    sidechain_state_data_input.latest_block_height = CHECKE_HEIGHT_TO;
+    let sidechain_state_data_input = SidechainStateCell::default();
+
     let sidechain_state_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &sidechain_state_type_args_script_input_output),
         sidechain_state_data_input.serialize(),
@@ -137,9 +136,7 @@ fn test_success() {
     sidechain_config_data_output.check_fee_rate = u32::try_from(FEE_RATE).expect("convert");
     sidechain_config_data_output.collator_lock_arg.copy_from_slice(&pubkey_hash);
 
-    let mut sidechain_state_data_output = SidechainStateCellData::default();
-    sidechain_state_data_output.latest_block_height = CHECKE_HEIGHT_TO;
-    sidechain_state_data_output.committed_block_height = CHECKE_HEIGHT_TO;
+    let sidechain_state_data_output = SidechainStateCell::default();
 
     let mut sidechain_fee_data_output = SidechainFeeCellData::default();
     sidechain_fee_data_output.amount = u128::from(TASK_COUNT - UNVALID_TASK_COUNT) * CHECKE_SIZE * FEE_RATE;

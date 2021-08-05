@@ -13,7 +13,7 @@ use common_raw::{
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
-        sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
+        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
     witness::collator_submit_task::CollatorSubmitTaskWitness,
 };
@@ -81,7 +81,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(sidechain_config_dep);
 
     //prepare inputs
-    let mut sidechain_state_data_input = SidechainStateCellData::default();
+    let mut sidechain_state_data_input = SidechainStateCell::default();
     sidechain_state_data_input.latest_block_height = 1000;
     let output = new_type_cell_output(1000, &always_success, &sidechain_state_type_script_input_output);
     let sidechain_state_input_outpoint = builder.context.create_cell(output, sidechain_state_data_input.serialize());
@@ -122,8 +122,6 @@ fn test_success() {
         new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output),
     ];
     let mut sidechain_state_data_output = SidechainStateCellData::default();
-    sidechain_state_data_output.latest_block_height = 1000;
-    sidechain_state_data_output.committed_block_height = 1000;
 
     let mut sidechain_fee_data_output = SidechainFeeCellData::default();
     sidechain_fee_data_output.amount = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;

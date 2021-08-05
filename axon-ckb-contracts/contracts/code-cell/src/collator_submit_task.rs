@@ -6,7 +6,7 @@ use common_raw::{
         muse_token::MuseTokenData,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCellData, SidechainFeeCellLockArgs},
-        sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
+        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
     witness::collator_submit_task::CollatorSubmitTaskWitness,
     FromRaw,
@@ -51,11 +51,11 @@ fn is_collator_submit_task(sidechain_config_dep: &SidechainConfigCell) -> Result
         {
             SidechainConfigCell: SIDECHAIN_CONFIG_DEP,
             CodeCell: CODE_INPUT,
-            SidechainStateCellData: SIDECHAIN_STATE_INPUT,
+            SidechainStateCell: SIDECHAIN_STATE_INPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
             MuseTokenData: MUSE_TOKEN_INPUT,
             CodeCell: CODE_OUTPUT,
-            SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
+            SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
             SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         },
     };
@@ -99,7 +99,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
     is_collator_submit_task(&sidechain_config_dep)?;
     //load inputs
     let (sidechain_state_input, sidechain_state_type_args_input, sidechain_fee_input, sidechain_fee_lock_args_input, muse_token_input) = load_entities!(
-        SidechainStateCellData: SIDECHAIN_STATE_INPUT,
+        SidechainStateCell: SIDECHAIN_STATE_INPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
         SidechainFeeCellData: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
@@ -109,16 +109,14 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
         return Err(Error::MuseTokenMismatch);
     }
 
-    let mut sidechain_state_res = sidechain_state_input.clone();
-    sidechain_state_res.committed_block_hash = sidechain_state_res.latest_block_hash;
-    sidechain_state_res.committed_block_height = sidechain_state_res.latest_block_height;
+    let sidechain_state_res = sidechain_state_input.clone();
 
     let mut sidechain_fee_res = sidechain_fee_input.clone();
     sidechain_fee_res.amount += witness.fee;
 
     //load outputs
     let (sidechain_state_output, sidechain_state_type_args_output, sidechain_fee_output, sidechain_fee_lock_args_output) = load_entities!(
-        SidechainStateCellData: SIDECHAIN_STATE_OUTPUT,
+        SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_OUTPUT,
         SidechainFeeCellData: SIDECHAIN_FEE_OUTPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_OUTPUT,

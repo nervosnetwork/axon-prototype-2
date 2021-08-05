@@ -7,7 +7,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 use common_raw::{
     cell::{
         sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
-        sidechain_state::{SidechainStateCellData, SidechainStateCellTypeArgs},
+        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
         sudt_token::SudtTokenData,
     },
     witness::collator_unlock_bond::CollatorUnlockBondWitness,
@@ -49,7 +49,7 @@ fn test_success() {
         .expect("script");
 
     // prepare cell deps
-    let state_dep_data = SidechainStateCellData::default();
+    let state_dep_data = SidechainStateCell::default();
     let state_dep_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &state_dep_script),
         state_dep_data.serialize(),
