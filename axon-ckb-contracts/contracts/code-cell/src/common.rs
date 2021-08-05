@@ -16,6 +16,8 @@ pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
 
 pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
 
+pub const CKB_HASH_PERSONALIZATION: &[u8] = b"ckb-default-hash";
+
 pub fn is_cell_count_greater(n: usize, source: Source) -> bool {
     load_cell_capacity(n, source).is_ok()
 }
@@ -88,4 +90,36 @@ pub fn bit_map_count(input: [u8; 32]) -> Option<u8> {
 
 pub fn check_global_cell() -> Result<GlobalConfigCellData, Error> {
     common::check_global_cell().ok_or(Error::GlobalConfigMissed)
+}
+
+pub struct Blake2b {
+    blake2b: blake2b_ref::Blake2b,
+}
+
+impl Default for Blake2b {
+    fn default() -> Self {
+        Self {
+            blake2b: blake2b_ref::Blake2bBuilder::new(32).personal(CKB_HASH_PERSONALIZATION).build(),
+        }
+    }
+}
+
+impl Blake2b {
+    pub fn update(&mut self, data: &[u8]) {
+        self.blake2b.update(data);
+    }
+
+    pub fn finalize(self, dest: &mut [u8]) {
+        self.blake2b.finalize(dest);
+    }
+
+    pub fn calculate(data: &[u8]) -> [u8; 32] {
+        let mut blake2b = Self::default();
+        blake2b.update(data);
+
+        let mut result = [0u8; 32];
+        blake2b.finalize(&mut result);
+
+        result
+    }
 }
