@@ -6,9 +6,9 @@ use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 
 use common_raw::{
     cell::{
-        sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
+        sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
-        sudt_token::SudtTokenData,
+        sudt_token::SudtTokenCell,
     },
     witness::collator_unlock_bond::CollatorUnlockBondWitness,
 };
@@ -59,7 +59,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(state_dep);
 
     // prepare inputs
-    let sidechain_bond_input_data = SidechainBondCellData::default();
+    let sidechain_bond_input_data = SidechainBondCell::default();
     let sidechain_bond_input = builder.create_input(
         new_type_cell_output(1000, &sidechain_bond_lock_input_script, &always_success),
         sidechain_bond_input_data.serialize(),
@@ -68,7 +68,7 @@ fn test_success() {
     let builder = builder.input(sidechain_bond_input);
 
     // prepare outputs
-    let sudt_output = SudtTokenData::default();
+    let sudt_output = SudtTokenCell::default();
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
         new_type_cell_output(1000, &always_success, &always_success),

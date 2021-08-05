@@ -6,7 +6,7 @@ use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::packed::CellInput;
 use ckb_tool::ckb_types::prelude::*;
 use common_raw::cell::checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs};
-use common_raw::cell::sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs};
+use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs};
 use common_raw::pattern::Pattern;
@@ -86,7 +86,7 @@ fn test_success() {
     let sidechain_fee_input = CellInput::new_builder().previous_output(sidechain_fee_input_outpoint).build();
     let mut builder = builder.input(sidechain_fee_input);
 
-    let mut sidechain_bond_data_input = SidechainBondCellData::default();
+    let mut sidechain_bond_data_input = SidechainBondCell::default();
     sidechain_bond_data_input.amount = SIDECHAIN_BOND_AMOUNT;
     let sidechain_bond_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &sidechain_bond_lock_script_input, &always_success),

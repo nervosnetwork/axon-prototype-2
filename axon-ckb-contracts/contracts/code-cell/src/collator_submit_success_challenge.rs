@@ -4,7 +4,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
+        sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
     },
@@ -52,7 +52,7 @@ pub fn is_collator_submit_success_challenge(witness: &CollatorSubmitChallengeWit
             CodeCell: CODE_INPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
             SidechainFeeCell: SIDECHAIN_FEE_INPUT,
-            SidechainBondCellData: SIDECHAIN_BOND_INPUT,
+            SidechainBondCell: SIDECHAIN_BOND_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
             SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
@@ -99,7 +99,7 @@ pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_INPUT,
         SidechainFeeCell: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
-        SidechainBondCellData: SIDECHAIN_BOND_INPUT,
+        SidechainBondCell: SIDECHAIN_BOND_INPUT,
         SidechainBondCellLockArgs: SIDECHAIN_BOND_INPUT,
     );
 

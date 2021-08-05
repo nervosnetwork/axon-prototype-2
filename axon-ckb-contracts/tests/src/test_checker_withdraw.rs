@@ -6,8 +6,8 @@ use ckb_tool::ckb_types::{bytes::Bytes, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
-        sudt_token::SudtTokenData,
+        checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
+        sudt_token::SudtTokenCell,
     },
     witness::checker_bond_withdraw::CheckerBondWithdrawWitness,
 };
@@ -43,7 +43,7 @@ fn test_success() {
         .expect("script");
 
     // prepare inputs
-    let mut checker_bond_input_data = CheckerBondCellData::default();
+    let mut checker_bond_input_data = CheckerBondCell::default();
     checker_bond_input_data.amount = 100;
 
     let checker_bond_input = builder.create_input(
@@ -54,7 +54,7 @@ fn test_success() {
     let builder = builder.input(checker_bond_input);
 
     // prepare outputs
-    let mut sudt_output = SudtTokenData::default();
+    let mut sudt_output = SudtTokenCell::default();
     sudt_output.amount = 100;
 
     let outputs = vec![

@@ -9,7 +9,7 @@ use ckb_tool::ckb_types::prelude::*;
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::task::{TaskCell, TaskCellTypeArgs};
 use common_raw::cell::{
-    sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
+    sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs},
     sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
 };
 use common_raw::witness::collator_publish_task::CollatorPublishTaskWitness;
@@ -78,7 +78,7 @@ fn test_success() {
     );
     let sidechain_config_dep = CellDep::new_builder().out_point(sidechain_config_dep_out_point).build();
 
-    let mut sidechain_bond_data_dep = SidechainBondCellData::default();
+    let mut sidechain_bond_data_dep = SidechainBondCell::default();
     sidechain_bond_data_dep.amount = SIDECHAIN_BOND_AMOUNT;
     let sidechain_bond_dep_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &sidechain_bond_lock_script_dep, &always_success),
@@ -105,7 +105,7 @@ fn test_success() {
 
     let sidechain_state_data_output = SidechainStateCell::default();
 
-    let mut sidechain_bond_data_output = SidechainBondCellData::default();
+    let mut sidechain_bond_data_output = SidechainBondCell::default();
     sidechain_bond_data_output.amount = SIDECHAIN_BOND_AMOUNT;
 
     let mut outputs_data = vec![Bytes::new(), sidechain_state_data_output.serialize()];

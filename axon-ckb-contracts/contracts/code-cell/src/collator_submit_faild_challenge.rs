@@ -4,7 +4,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        muse_token::MuseTokenData,
+        muse_token::MuseTokenCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
@@ -62,7 +62,7 @@ pub fn is_collator_submit_faild_challenge(witness: &CollatorSubmitChallengeWitne
             SidechainConfigCell: SIDECHAIN_CONFIG_INPUT,
             SidechainStateCell: SIDECHAIN_STATE_INPUT,
             SidechainFeeCell: SIDECHAIN_FEE_INPUT,
-            MuseTokenData: MUSE_TOKEN_INPUT,
+            MuseTokenCell: MUSE_TOKEN_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
             SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
@@ -118,7 +118,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
         SidechainFeeCell: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
-        MuseTokenData: MUSE_TOKEN_INPUT,
+        MuseTokenCell: MUSE_TOKEN_INPUT,
     );
 
     //load outputs

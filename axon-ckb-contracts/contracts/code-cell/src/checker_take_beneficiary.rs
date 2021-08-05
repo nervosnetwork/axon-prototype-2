@@ -4,7 +4,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        muse_token::MuseTokenData,
+        muse_token::MuseTokenCell,
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
     },
     witness::checker_take_beneficiary::CheckerTakeBeneficiaryWitness,
@@ -43,13 +43,13 @@ pub fn checker_take_beneficiary(raw_witness: &[u8], signer: [u8; 20]) -> Result<
         CheckerInfoCell: CHECKER_INFO_INPUT,
         SidechainFeeCellLockArgs: FEE_INPUT,
         SidechainFeeCell: FEE_INPUT,
-        MuseTokenData: MUSE_INPUT,
+        MuseTokenCell: MUSE_INPUT,
     };
     let (checker_info_output, sidechain_fee_output_lock_args, sidechain_fee_output, muse_token_output) = load_entities! {
         CheckerInfoCell: CHECKER_INFO_OUTPUT,
         SidechainFeeCellLockArgs: FEE_OUTPUT,
         SidechainFeeCell: FEE_OUTPUT,
-        MuseTokenData: MUSE_OUTPUT,
+        MuseTokenCell: MUSE_OUTPUT,
     };
 
     if checker_info_input.unpaid_fee < witness.fee {
@@ -101,12 +101,12 @@ fn is_checker_take_beneficiary() -> Result<(), Error> {
             CodeCell: CODE_INPUT,
             CheckerInfoCell: CHECKER_INFO_INPUT,
             SidechainFeeCell: FEE_INPUT,
-            MuseTokenData: MUSE_INPUT,
+            MuseTokenCell: MUSE_INPUT,
 
             CodeCell: CODE_OUTPUT,
             CheckerInfoCell: CHECKER_INFO_OUTPUT,
             SidechainFeeCell: FEE_OUTPUT,
-            MuseTokenData: MUSE_OUTPUT,
+            MuseTokenCell: MUSE_OUTPUT,
         },
     };
 

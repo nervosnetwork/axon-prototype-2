@@ -3,7 +3,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
-        muse_token::MuseTokenData,
+        muse_token::MuseTokenCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
@@ -52,7 +52,7 @@ fn is_collator_submit_task(witness: &CollatorSubmitTaskWitness, sidechain_config
             CodeCell: CODE_INPUT,
             SidechainStateCell: SIDECHAIN_STATE_INPUT,
             SidechainFeeCell: SIDECHAIN_FEE_INPUT,
-            MuseTokenData: MUSE_TOKEN_INPUT,
+            MuseTokenCell: MUSE_TOKEN_INPUT,
             CodeCell: CODE_OUTPUT,
             SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
             SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
@@ -104,7 +104,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
         SidechainStateCellTypeArgs: SIDECHAIN_STATE_INPUT,
         SidechainFeeCell: SIDECHAIN_FEE_INPUT,
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_INPUT,
-        MuseTokenData: MUSE_TOKEN_INPUT,
+        MuseTokenCell: MUSE_TOKEN_INPUT,
     );
     if muse_token_input.amount != witness.fee {
         return Err(Error::MuseTokenMismatch);

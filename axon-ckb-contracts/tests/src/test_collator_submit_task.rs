@@ -10,7 +10,7 @@ use ckb_tool::{
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
-        muse_token::MuseTokenData,
+        muse_token::MuseTokenCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
@@ -98,7 +98,7 @@ fn test_success() {
         .build();
     let mut builder = builder.input(sidechain_fee_input);
 
-    let mut muse_token_data_input = MuseTokenData::default();
+    let mut muse_token_data_input = MuseTokenCell::default();
     muse_token_data_input.amount = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
     let output = new_type_cell_output(1000, &always_success, &always_success);
     let muse_token_input_outpoint = builder.context.create_cell(output, muse_token_data_input.serialize());

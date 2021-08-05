@@ -5,16 +5,16 @@ use ckb_std::high_level::{load_cell_data, load_cell_lock, load_cell_type};
 
 use common_raw::{
     cell::{
-        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
+        checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::{CodeCell, CodeCellLockArgs},
         global_config::GlobalConfigCellData,
-        muse_token::MuseTokenData,
-        sidechain_bond::{SidechainBondCellData, SidechainBondCellLockArgs},
+        muse_token::MuseTokenCell,
+        sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
-        sudt_token::SudtTokenData,
+        sudt_token::SudtTokenCell,
         task::{TaskCell, TaskCellTypeArgs},
     },
     FromRaw,
@@ -41,15 +41,15 @@ pub trait LoadableCell {
     }
 }
 
-impl LoadableCell for CheckerBondCellData {}
+impl LoadableCell for CheckerBondCell {}
 impl LoadableCell for CheckerInfoCell {}
 impl LoadableCell for GlobalConfigCellData {}
-impl LoadableCell for MuseTokenData {}
-impl LoadableCell for SidechainBondCellData {}
+impl LoadableCell for MuseTokenCell {}
+impl LoadableCell for SidechainBondCell {}
 impl LoadableCell for SidechainConfigCell {}
 impl LoadableCell for SidechainFeeCell {}
 impl LoadableCell for SidechainStateCell {}
-impl LoadableCell for SudtTokenData {}
+impl LoadableCell for SudtTokenCell {}
 impl LoadableCell for TaskCell {}
 
 pub trait LoadableLockArgs {
@@ -217,8 +217,8 @@ pub trait TypedSudtCell {
     CheckableHelpers! {}
 }
 
-impl TypedSudtCell for MuseTokenData {}
-impl TypedSudtCell for SudtTokenData {}
+impl TypedSudtCell for MuseTokenCell {}
+impl TypedSudtCell for SudtTokenCell {}
 
 pub trait LockedTypedSudtCell {
     fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8);
@@ -238,13 +238,13 @@ pub trait LockedTypedSudtCell {
     CheckableHelpers! {}
 }
 
-impl LockedTypedSudtCell for CheckerBondCellData {
+impl LockedTypedSudtCell for CheckerBondCell {
     fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.checker_bond_cell_lock_codehash, global.checker_bond_cell_lock_hashtype)
     }
 }
 
-impl LockedTypedSudtCell for SidechainBondCellData {
+impl LockedTypedSudtCell for SidechainBondCell {
     fn lock_script_info(global: &GlobalConfigCellData) -> ([u8; 32], u8) {
         (global.sidechain_bond_cell_lock_codehash, global.sidechain_bond_cell_lock_hashtype)
     }

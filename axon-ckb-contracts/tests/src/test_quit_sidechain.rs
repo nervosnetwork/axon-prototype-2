@@ -6,7 +6,7 @@ use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 
 use common_raw::{
     cell::{
-        checker_bond::{CheckerBondCellData, CheckerBondCellLockArgs},
+        checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     },
@@ -89,7 +89,7 @@ fn test_success() {
     );
     let config_input = CellInput::new_builder().previous_output(config_input_out_point.clone()).build();
 
-    let mut checker_bond_input_data = CheckerBondCellData::default();
+    let mut checker_bond_input_data = CheckerBondCell::default();
     checker_bond_input_data.amount = 100;
 
     let checker_bond_input = builder.create_input(
