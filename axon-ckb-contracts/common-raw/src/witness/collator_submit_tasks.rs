@@ -1,8 +1,8 @@
 use crate::{pattern::Pattern, FromRaw, Serialize};
-const COLLATOR_SUBMIT_TASK_WITNESS_LEN: usize = 36;
+const COLLATOR_SUBMIT_TASKS_WITNESS_LEN: usize = 36;
 
 #[derive(Debug)]
-pub struct CollatorSubmitTaskWitness {
+pub struct CollatorSubmitTasksWitness {
     pattern: Pattern,
     pub chain_id: u8,
     pub fee: u128,
@@ -10,10 +10,10 @@ pub struct CollatorSubmitTaskWitness {
     pub sidechain_config_dep_index: usize,
 }
 
-impl Default for CollatorSubmitTaskWitness {
+impl Default for CollatorSubmitTasksWitness {
     fn default() -> Self {
         Self {
-            pattern: Pattern::CollatorSubmitTask,
+            pattern: Pattern::CollatorSubmitTasks,
             chain_id: 0,
             fee: 0,
             fee_per_checker: 0,
@@ -22,9 +22,9 @@ impl Default for CollatorSubmitTaskWitness {
     }
 }
 
-impl FromRaw for CollatorSubmitTaskWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Option<CollatorSubmitTaskWitness> {
-        if witness_raw_data.len() < COLLATOR_SUBMIT_TASK_WITNESS_LEN {
+impl FromRaw for CollatorSubmitTasksWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Option<CollatorSubmitTasksWitness> {
+        if witness_raw_data.len() < COLLATOR_SUBMIT_TASKS_WITNESS_LEN {
             return None;
         }
 
@@ -34,7 +34,7 @@ impl FromRaw for CollatorSubmitTaskWitness {
         let fee_per_checker = u128::from_raw(&witness_raw_data[18..34])?;
         let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[34..36])?;
 
-        Some(CollatorSubmitTaskWitness {
+        Some(CollatorSubmitTasksWitness {
             pattern,
             chain_id,
             fee,
@@ -44,11 +44,11 @@ impl FromRaw for CollatorSubmitTaskWitness {
     }
 }
 
-impl Serialize for CollatorSubmitTaskWitness {
-    type RawType = [u8; COLLATOR_SUBMIT_TASK_WITNESS_LEN];
+impl Serialize for CollatorSubmitTasksWitness {
+    type RawType = [u8; COLLATOR_SUBMIT_TASKS_WITNESS_LEN];
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; COLLATOR_SUBMIT_TASK_WITNESS_LEN];
+        let mut buf = [0u8; COLLATOR_SUBMIT_TASKS_WITNESS_LEN];
         buf[0..1].copy_from_slice(&self.pattern.serialize());
         buf[1..2].copy_from_slice(&self.chain_id.serialize());
         buf[2..18].copy_from_slice(&self.fee.serialize());

@@ -16,7 +16,7 @@ pub enum Pattern {
     CheckerTakeBeneficiary,
 
     CollatorPublishTask = 7u8,
-    CollatorSubmitTask,
+    CollatorSubmitTasks,
     CollatorSubmitFaildChallenge,
     AnyoneRefreshTask,
     CollatorUnlockBond,
@@ -38,7 +38,7 @@ impl TryFrom<u8> for Pattern {
             6u8 => Self::CheckerTakeBeneficiary,
 
             7u8 => Self::CollatorPublishTask,
-            8u8 => Self::CollatorSubmitTask,
+            8u8 => Self::CollatorSubmitTasks,
             9u8 => Self::CollatorSubmitFaildChallenge,
             10u8 => Self::AnyoneRefreshTask,
             11u8 => Self::CollatorUnlockBond,

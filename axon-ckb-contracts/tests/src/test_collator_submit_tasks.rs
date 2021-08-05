@@ -15,11 +15,11 @@ use common_raw::{
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
-    witness::collator_submit_task::CollatorSubmitTaskWitness,
+    witness::collator_submit_tasks::CollatorSubmitTasksWitness,
 };
 const MAX_CYCLES: u64 = 10_000_000;
 
-const TASK_NUMBER: u8 = 1;
+const TASK_NUMBER: u32 = 1;
 const CHECKED_SIZE: u128 = 10;
 const FEE_RATE: u32 = 1;
 
@@ -81,8 +81,7 @@ fn test_success() {
     let mut builder = builder.cell_dep(sidechain_config_dep);
 
     //prepare inputs
-    let mut sidechain_state_data_input = SidechainStateCell::default();
-    sidechain_state_data_input.latest_block_height = 1000;
+    let sidechain_state_data_input = SidechainStateCell::default();
     let output = new_type_cell_output(1000, &always_success, &sidechain_state_type_script_input_output);
     let sidechain_state_input_outpoint = builder.context.create_cell(output, sidechain_state_data_input.serialize());
     let sidechain_state_input = CellInput::new_builder()
@@ -105,7 +104,7 @@ fn test_success() {
     let muse_token_input = CellInput::new_builder().previous_output(muse_token_input_outpoint.clone()).build();
     let mut builder = builder.input(muse_token_input);
 
-    let mut checker_info_data_input = CheckerInfoCell::default();
+    let checker_info_data_input = CheckerInfoCell::default();
 
     let output = new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output);
     let checker_info_input_outpoint = builder.context.create_cell(output, checker_info_data_input.serialize());
@@ -121,12 +120,12 @@ fn test_success() {
         new_type_cell_output(1000, &sidechain_fee_lcok_script_input_output, &always_success),
         new_type_cell_output(1000, &always_success, &checker_info_type_script_input_output),
     ];
-    let mut sidechain_state_data_output = SidechainStateCellData::default();
+    let sidechain_state_data_output = SidechainStateCell::default();
 
     let mut sidechain_fee_data_output = SidechainFeeCell::default();
     sidechain_fee_data_output.amount = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
 
-    let mut checker_info_data_output = CheckerInfoCell::default();
+    let checker_info_data_output = CheckerInfoCell::default();
 
     let outputs_data = vec![
         Bytes::new(),
@@ -135,7 +134,7 @@ fn test_success() {
         checker_info_data_output.serialize(),
     ];
 
-    let mut witness = CollatorSubmitTaskWitness::default();
+    let mut witness = CollatorSubmitTasksWitness::default();
     witness.fee_per_checker = FEE_RATE as u128 * CHECKED_SIZE;
     witness.fee = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
     witness.sidechain_config_dep_index = EnvironmentBuilder::BOOTSTRAP_CELL_DEPS_LENGTH;

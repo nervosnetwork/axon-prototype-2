@@ -8,7 +8,7 @@ pub mod checker_take_beneficiary;
 pub mod checker_vote;
 pub mod collator_publish_task;
 pub mod collator_submit_challenge;
-pub mod collator_submit_task;
+pub mod collator_submit_tasks;
 pub mod collator_unlock_bond;
 
 pub mod code_cell_witness;

@@ -29,7 +29,7 @@ mod checker_vote;
 mod collator_publish_task;
 mod collator_submit_faild_challenge;
 mod collator_submit_success_challenge;
-mod collator_submit_task;
+mod collator_submit_tasks;
 mod collator_unlock_bond;
 
 use ckb_std::{debug, default_alloc};

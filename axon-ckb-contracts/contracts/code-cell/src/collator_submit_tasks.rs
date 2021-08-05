@@ -8,7 +8,7 @@ use common_raw::{
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
     },
-    witness::collator_submit_task::CollatorSubmitTaskWitness,
+    witness::collator_submit_tasks::CollatorSubmitTasksWitness,
     FromRaw,
 };
 use core::usize;
@@ -22,9 +22,9 @@ const MUSE_TOKEN_INPUT: CellOrigin = CellOrigin(3, Source::Input);
 const SIDECHAIN_STATE_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const SIDECHAIN_FEE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
-fn is_collator_submit_task(witness: &CollatorSubmitTaskWitness, sidechain_config_dep: &SidechainConfigCell) -> Result<(), Error> {
+fn is_collator_submit_tasks(witness: &CollatorSubmitTasksWitness, sidechain_config_dep: &SidechainConfigCell) -> Result<(), Error> {
     /*
-    CollatorSubmitTask,
+    CollatorSubmitTasks,
 
     Dep:    0 Global Config Cell
             1 Sidechain Config Cell
@@ -64,9 +64,9 @@ fn is_collator_submit_task(witness: &CollatorSubmitTaskWitness, sidechain_config
     Ok(())
 }
 
-pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
+pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
     /*
-    CollatorSubmitTask,
+    CollatorSubmitTasks,
 
     Dep:    0 Global Config Cell
     Dep:    1 Sidechain Config Cell
@@ -80,7 +80,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
 
     */
 
-    let witness = CollatorSubmitTaskWitness::from_raw(&raw_witness).ok_or(Error::Encoding)?;
+    let witness = CollatorSubmitTasksWitness::from_raw(&raw_witness).ok_or(Error::Encoding)?;
 
     let sidechain_config_dep_cell_orgin = CellOrigin(witness.sidechain_config_dep_index, Source::CellDep);
 
@@ -97,7 +97,7 @@ pub fn collator_submit_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), 
         return Err(Error::SidechainConfigMismatch);
     }
 
-    is_collator_submit_task(&witness, &sidechain_config_dep)?;
+    is_collator_submit_tasks(&witness, &sidechain_config_dep)?;
     //load inputs
     let (sidechain_state_input, sidechain_state_type_args_input, sidechain_fee_input, sidechain_fee_lock_args_input, muse_token_input) = load_entities!(
         SidechainStateCell: SIDECHAIN_STATE_INPUT,

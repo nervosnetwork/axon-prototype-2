@@ -1,13 +1,13 @@
 // Import from `core` instead of from `std` since we are in no-std mode
 use core::result::Result;
 
-use crate::anyone_refresh_task::anyone_refresh_task;
 use crate::{
-    cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
-    checker_publish_challenge::checker_publish_challenge, checker_quit_sidechain::checker_quit_sidechain,
-    checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote, collator_publish_task::collator_publish_task,
-    collator_submit_faild_challenge::collator_submit_faild_challenge, collator_submit_success_challenge::collator_submit_success_challenge,
-    collator_submit_task::collator_submit_task, collator_unlock_bond::collator_unlock_bond, error::Error,
+    anyone_refresh_task::anyone_refresh_task, cell::*, checker_bond_withdraw::checker_bond_withdraw,
+    checker_join_sidechain::checker_join_sidechain, checker_publish_challenge::checker_publish_challenge,
+    checker_quit_sidechain::checker_quit_sidechain, checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote,
+    collator_publish_task::collator_publish_task, collator_submit_faild_challenge::collator_submit_faild_challenge,
+    collator_submit_success_challenge::collator_submit_success_challenge, collator_submit_tasks::collator_submit_tasks,
+    collator_unlock_bond::collator_unlock_bond, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -140,7 +140,7 @@ pub fn main() -> Result<(), Error> {
         Pattern::CollatorPublishTask => collator_publish_task(raw_witness, signer),
 
         /*
-        CollatorSubmitTask,
+        CollatorSubmitTasks,
 
         Dep:    0 Global Config Cell
         Dep:    1 Sidechain Config Cell
@@ -151,7 +151,7 @@ pub fn main() -> Result<(), Error> {
         [Checker Info Cell]         ->          [Checker Info Cell]
 
         */
-        Pattern::CollatorSubmitTask => collator_submit_task(raw_witness, signer),
+        Pattern::CollatorSubmitTasks => collator_submit_tasks(raw_witness, signer),
 
         /*
         CollatorSubmitChallenge,
