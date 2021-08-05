@@ -4,8 +4,7 @@ use core::result::Result;
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_publish_challenge::checker_publish_challenge, checker_quit_sidechain::checker_quit_sidechain,
-    checker_submit_challenge::checker_submit_challenge, checker_submit_task::checker_submit_task,
-    checker_take_beneficiary::checker_take_beneficiary, collator_publish_task::collator_publish_task,
+    checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote, collator_publish_task::collator_publish_task,
     collator_refresh_task::collator_refresh_task, collator_submit_faild_challenge::collator_submit_faild_challenge,
     collator_submit_success_challenge::collator_submit_success_challenge, collator_submit_task::collator_submit_task,
     collator_unlock_bond::collator_unlock_bond, error::Error,
@@ -75,7 +74,7 @@ pub fn main() -> Result<(), Error> {
         Pattern::CheckerQuitSidechain => checker_quit_sidechain(raw_witness, signer),
 
         /*
-        CheckerSubmitTask,
+        CheckerVote,
 
         Dep:    0 Global Config Cell
         Dep:    1 Sidechain Config Cell
@@ -85,7 +84,7 @@ pub fn main() -> Result<(), Error> {
         Task Cell                   ->          Null
 
         */
-        Pattern::CheckerSubmitTask => checker_submit_task(raw_witness, signer),
+        Pattern::CheckerVote => checker_vote(raw_witness, signer),
         /*
         CheckerPublishChallenge,
 
@@ -98,18 +97,6 @@ pub fn main() -> Result<(), Error> {
 
         */
         Pattern::CheckerPublishChallenge => checker_publish_challenge(raw_witness, signer),
-        /*
-        CheckerSubmitChallenge,
-
-        Dep:    0 Global Config Cell
-        Dep:    1 Sidechain Config Cell
-
-        Code Cell                   ->         Code Cell
-        Checker Info Cell           ->          Checker Info Cell
-        Task Cell                   ->          Null
-
-        */
-        Pattern::CheckerSubmitChallenge => checker_submit_challenge(raw_witness, signer),
         /*
         CheckerTakeBeneficiary,
 

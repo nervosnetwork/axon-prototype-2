@@ -3,9 +3,12 @@ use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
 use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
-use common_raw::cell::{
-    sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-    task::{TaskCell, TaskCellTypeArgs},
+use common_raw::{
+    cell::{
+        sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs},
+    },
+    witness::collator_refresh_task::CollatorRefreshTaskWitness,
 };
 
 const MAX_CYCLES: u64 = 10_000_000;
@@ -87,9 +90,8 @@ fn test_success() {
     ];
     let outputs_data: Vec<Bytes> = vec![Bytes::new(), task_cell_data.serialize()];
 
-    let witnesses = [get_dummy_witness_builder()
-        .input_type(Bytes::copy_from_slice(&[11, 0]).pack_some())
-        .as_bytes()];
+    let witness = CollatorRefreshTaskWitness::default();
+    let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 
     // build transaction
     let builder = builder.outputs(outputs).outputs_data(outputs_data.pack());
