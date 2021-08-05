@@ -4,7 +4,7 @@ use crate::{
     common::*,
     molecule::{
         cell::sidechain_fee::{SidechainFeeCellLockArgsBuilder, SidechainFeeCellLockArgsReader},
-        common::ChainIdReader,
+        common::{ChainIdReader, Uint128Reader},
     },
     FromRaw, PureSudtTokenCell, Serialize,
 };
@@ -31,6 +31,7 @@ PureSudtTokenCell!(SidechainFeeCell);
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainFeeCellLockArgs {
     pub chain_id: u8, // TODO: Change to ChainId
+    pub surplus: u128,
 }
 
 impl FromRaw for SidechainFeeCellLockArgs {
@@ -38,8 +39,9 @@ impl FromRaw for SidechainFeeCellLockArgs {
         let reader = SidechainFeeCellLockArgsReader::from_slice(arg_raw_data).ok()?;
 
         let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
+        let surplus = u128::from_raw(reader.surplus().raw_data())?;
 
-        Some(Self { chain_id })
+        Some(Self { chain_id, surplus })
     }
 }
 
@@ -48,8 +50,9 @@ impl Serialize for SidechainFeeCellLockArgs {
 
     fn serialize(&self) -> Self::RawType {
         let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as ChainId).serialize()).to_entity();
+        let surplus = Uint128Reader::new_unchecked(&self.surplus.serialize()).to_entity();
 
-        let builder = SidechainFeeCellLockArgsBuilder::default().chain_id(chain_id);
+        let builder = SidechainFeeCellLockArgsBuilder::default().chain_id(chain_id).surplus(surplus);
 
         let mut buf = Vec::new();
         builder

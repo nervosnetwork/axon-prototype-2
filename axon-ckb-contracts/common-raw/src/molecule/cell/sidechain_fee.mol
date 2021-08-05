@@ -1,4 +1,5 @@
 import ../common;
 struct SidechainFeeCellLockArgs {
     chain_id: ChainId,
+    surplus: Uint128,
 }
