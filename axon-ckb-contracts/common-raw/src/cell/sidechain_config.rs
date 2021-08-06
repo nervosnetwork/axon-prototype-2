@@ -4,8 +4,8 @@ use crate::{
     common::*,
     molecule::{
         cell::sidechain_config::{
-            CheckerInfoBuilder, CheckerInfoListBuilder, CheckerInfoReader, CheckerStatusReader, SidechainConfigCellBuilder,
-            SidechainConfigCellReader, SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader, SidechainStatusReader,
+            CheckerInfoListBuilder, CheckerStatusReader, SidechainConfigCellBuilder, SidechainConfigCellReader,
+            SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader, SidechainStatusReader,
         },
         common::{
             BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashReader, Uint128Reader, Uint32Reader, Uint8Reader,
@@ -92,48 +92,6 @@ impl Serialize for CheckerStatus {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
-pub struct CheckerInfo {
-    lock_arg: PubKeyHash,
-    status:   CheckerStatus,
-}
-
-impl CheckerInfo {
-    fn from_reader(reader: CheckerInfoReader) -> Option<CheckerInfo> {
-        let mut lock_arg: PubKeyHash = [0u8; 20];
-        lock_arg.copy_from_slice(reader.lock_arg().raw_data());
-
-        let status = CheckerStatus::from_reader(reader.status())?;
-
-        Some(CheckerInfo { lock_arg, status })
-    }
-}
-
-impl FromRaw for CheckerInfo {
-    fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerInfo> {
-        let reader = CheckerInfoReader::from_slice(arg_raw_data).ok()?;
-
-        CheckerInfo::from_reader(reader)
-    }
-}
-
-impl Serialize for CheckerInfo {
-    type RawType = Vec<u8>;
-
-    fn serialize(&self) -> Self::RawType {
-        let lock_arg = PubKeyHashReader::new_unchecked(&self.lock_arg).to_entity();
-        let status = CheckerStatusReader::new_unchecked(&self.status.serialize()).to_entity();
-
-        let builder = CheckerInfoBuilder::default().lock_arg(lock_arg).status(status);
-
-        let mut buf = Vec::new();
-        builder
-            .write(&mut buf)
-            .expect("Unable to write buffer while serializing sidechain_config::CheckerInfo");
-        buf
-    }
-}
-
 /**
     Sidechain Config Cell
     Data:
@@ -156,7 +114,8 @@ pub struct SidechainConfigCell {
     pub checker_normal_count: u32,
     pub checker_threshold:    u32,
     pub checker_total_count:  u32,
-    pub checkers:             Vec<CheckerInfo>,
+    pub activated_checkers:   Vec<PubKeyHash>,
+    pub jailed_checkers:      Vec<PubKeyHash>,
 
     pub refresh_punish_points:             u32,
     pub refresh_punish_release_points:     u32,
@@ -189,13 +148,22 @@ impl FromRaw for SidechainConfigCell {
         let checker_threshold = u32::from_raw(reader.checker_threshold().raw_data())?;
         let checker_total_count = u32::from_raw(reader.checker_total_count().raw_data())?;
 
-        let checkers_reader = reader.checkers();
-        let checkers_len = checkers_reader.len();
-        let mut checkers = Vec::with_capacity(checkers_len);
+        let activated_checkers_reader = reader.activated_checkers();
+        let activated_checkers_len = activated_checkers_reader.len();
+        let mut activated_checkers = Vec::with_capacity(activated_checkers_len);
 
-        for i in 0..checkers_len {
-            let result = CheckerInfo::from_reader(checkers_reader.get_unchecked(i))?;
-            checkers.push(result);
+        for i in 0..activated_checkers_len {
+            let result = PubKeyHash::from_raw(activated_checkers_reader.get_unchecked(i).raw_data())?;
+            activated_checkers.push(result);
+        }
+
+        let jailed_checkers_reader = reader.activated_checkers();
+        let jailed_checkers_len = jailed_checkers_reader.len();
+        let mut jailed_checkers = Vec::with_capacity(jailed_checkers_len);
+
+        for i in 0..jailed_checkers_len {
+            let result = PubKeyHash::from_raw(jailed_checkers_reader.get_unchecked(i).raw_data())?;
+            jailed_checkers.push(result);
         }
 
         let refresh_punish_points = u32::from_raw(reader.refresh_punish_points().raw_data())?;
@@ -229,8 +197,8 @@ impl FromRaw for SidechainConfigCell {
             checker_normal_count,
             checker_threshold,
             checker_total_count,
-            checkers,
-
+            activated_checkers,
+            jailed_checkers,
             refresh_punish_points,
             refresh_punish_release_points,
             refresh_punish_threshold,
@@ -264,9 +232,14 @@ impl Serialize for SidechainConfigCell {
         let checker_threshold = Uint32Reader::new_unchecked(&self.checker_threshold.serialize()).to_entity();
         let checker_total_count = Uint32Reader::new_unchecked(&self.checker_total_count.serialize()).to_entity();
 
-        let mut checkers = CheckerInfoListBuilder::default();
-        for checker in &self.checkers {
-            checkers = checkers.push(CheckerInfoReader::new_unchecked(&checker.serialize()).to_entity());
+        let mut activated_checkers = CheckerInfoListBuilder::default();
+        for checker in &self.activated_checkers {
+            activated_checkers = activated_checkers.push(PubKeyHashReader::new_unchecked(checker).to_entity());
+        }
+
+        let mut jailed_checkers = CheckerInfoListBuilder::default();
+        for checker in &self.jailed_checkers {
+            jailed_checkers = jailed_checkers.push(PubKeyHashReader::new_unchecked(checker).to_entity());
         }
 
         let refresh_punish_points = Uint32Reader::new_unchecked(&self.refresh_punish_points.serialize()).to_entity();
@@ -295,7 +268,8 @@ impl Serialize for SidechainConfigCell {
             .checker_normal_count(checker_normal_count)
             .checker_threshold(checker_threshold)
             .checker_total_count(checker_total_count)
-            .checkers(checkers.build())
+            .activated_checkers(activated_checkers.build())
+            .jailed_checkers(jailed_checkers.build())
             .refresh_punish_points(refresh_punish_points)
             .refresh_punish_release_points(refresh_punish_release_points)
             .refresh_punish_threshold(refresh_punish_threshold)

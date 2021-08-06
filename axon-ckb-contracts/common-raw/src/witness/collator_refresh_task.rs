@@ -1,13 +1,13 @@
 use core::default::Default;
 
-use crate::{pattern::Pattern, FromRaw, Serialize};
+use crate::{common::ChainId, pattern::Pattern, FromRaw, Serialize};
 
-const COLLATOR_REFRESH_TASK_WITNESS_LEN: usize = 2;
+const COLLATOR_REFRESH_TASK_WITNESS_LEN: usize = 5;
 
 #[derive(Debug)]
 pub struct CollatorRefreshTaskWitness {
     pattern:      Pattern,
-    pub chain_id: u8,
+    pub chain_id: ChainId,
 }
 
 impl Default for CollatorRefreshTaskWitness {
@@ -26,8 +26,7 @@ impl FromRaw for CollatorRefreshTaskWitness {
         }
 
         let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
-        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
-
+        let chain_id = ChainId::from_raw(&witness_raw_data[1..5])?;
         Some(CollatorRefreshTaskWitness { pattern, chain_id })
     }
 }
@@ -39,7 +38,7 @@ impl Serialize for CollatorRefreshTaskWitness {
         let mut buf = [0u8; COLLATOR_REFRESH_TASK_WITNESS_LEN];
 
         buf[0..1].copy_from_slice(&self.pattern.serialize());
-        buf[1..2].copy_from_slice(&self.chain_id.serialize());
+        buf[1..5].copy_from_slice(&self.chain_id.serialize());
 
         buf
     }
