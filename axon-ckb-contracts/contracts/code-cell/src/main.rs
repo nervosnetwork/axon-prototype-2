@@ -19,6 +19,7 @@ mod entry;
 mod error;
 mod pattern;
 
+mod anyone_refresh_task;
 mod checker_bond_withdraw;
 mod checker_join_sidechain;
 mod checker_publish_challenge;
@@ -26,7 +27,6 @@ mod checker_quit_sidechain;
 mod checker_take_beneficiary;
 mod checker_vote;
 mod collator_publish_task;
-mod collator_refresh_task;
 mod collator_submit_faild_challenge;
 mod collator_submit_success_challenge;
 mod collator_submit_task;

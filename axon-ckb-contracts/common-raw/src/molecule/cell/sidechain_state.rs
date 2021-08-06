@@ -2648,8 +2648,8 @@ impl molecule::prelude::Builder for SidechainStateCellBuilder {
     }
 }
 #[derive(Clone)]
-pub struct SidechainStateCellLockArgs(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for SidechainStateCellLockArgs {
+pub struct SidechainStateCellTypeArgs(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for SidechainStateCellTypeArgs {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -2658,25 +2658,25 @@ impl ::core::fmt::LowerHex for SidechainStateCellLockArgs {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for SidechainStateCellLockArgs {
+impl ::core::fmt::Debug for SidechainStateCellTypeArgs {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for SidechainStateCellLockArgs {
+impl ::core::fmt::Display for SidechainStateCellTypeArgs {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "chain_id", self.chain_id())?;
         write!(f, " }}")
     }
 }
-impl ::core::default::Default for SidechainStateCellLockArgs {
+impl ::core::default::Default for SidechainStateCellTypeArgs {
     fn default() -> Self {
         let v: Vec<u8> = vec![0, 0, 0, 0];
-        SidechainStateCellLockArgs::new_unchecked(v.into())
+        SidechainStateCellTypeArgs::new_unchecked(v.into())
     }
 }
-impl SidechainStateCellLockArgs {
+impl SidechainStateCellTypeArgs {
     pub const FIELD_COUNT: usize = 1;
     pub const FIELD_SIZES: [usize; 1] = [4];
     pub const TOTAL_SIZE: usize = 4;
@@ -2685,17 +2685,17 @@ impl SidechainStateCellLockArgs {
         ChainId::new_unchecked(self.0.slice(0..4))
     }
 
-    pub fn as_reader<'r>(&'r self) -> SidechainStateCellLockArgsReader<'r> {
-        SidechainStateCellLockArgsReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> SidechainStateCellTypeArgsReader<'r> {
+        SidechainStateCellTypeArgsReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for SidechainStateCellLockArgs {
-    type Builder = SidechainStateCellLockArgsBuilder;
+impl molecule::prelude::Entity for SidechainStateCellTypeArgs {
+    type Builder = SidechainStateCellTypeArgsBuilder;
 
-    const NAME: &'static str = "SidechainStateCellLockArgs";
+    const NAME: &'static str = "SidechainStateCellTypeArgs";
 
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        SidechainStateCellLockArgs(data)
+        SidechainStateCellTypeArgs(data)
     }
 
     fn as_bytes(&self) -> molecule::bytes::Bytes {
@@ -2707,11 +2707,11 @@ impl molecule::prelude::Entity for SidechainStateCellLockArgs {
     }
 
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        SidechainStateCellLockArgsReader::from_slice(slice).map(|reader| reader.to_entity())
+        SidechainStateCellTypeArgsReader::from_slice(slice).map(|reader| reader.to_entity())
     }
 
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        SidechainStateCellLockArgsReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        SidechainStateCellTypeArgsReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
 
     fn new_builder() -> Self::Builder {
@@ -2723,8 +2723,8 @@ impl molecule::prelude::Entity for SidechainStateCellLockArgs {
     }
 }
 #[derive(Clone, Copy)]
-pub struct SidechainStateCellLockArgsReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for SidechainStateCellLockArgsReader<'r> {
+pub struct SidechainStateCellTypeArgsReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for SidechainStateCellTypeArgsReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -2733,19 +2733,19 @@ impl<'r> ::core::fmt::LowerHex for SidechainStateCellLockArgsReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for SidechainStateCellLockArgsReader<'r> {
+impl<'r> ::core::fmt::Debug for SidechainStateCellTypeArgsReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for SidechainStateCellLockArgsReader<'r> {
+impl<'r> ::core::fmt::Display for SidechainStateCellTypeArgsReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "chain_id", self.chain_id())?;
         write!(f, " }}")
     }
 }
-impl<'r> SidechainStateCellLockArgsReader<'r> {
+impl<'r> SidechainStateCellTypeArgsReader<'r> {
     pub const FIELD_COUNT: usize = 1;
     pub const FIELD_SIZES: [usize; 1] = [4];
     pub const TOTAL_SIZE: usize = 4;
@@ -2754,17 +2754,17 @@ impl<'r> SidechainStateCellLockArgsReader<'r> {
         ChainIdReader::new_unchecked(&self.as_slice()[0..4])
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for SidechainStateCellLockArgsReader<'r> {
-    type Entity = SidechainStateCellLockArgs;
+impl<'r> molecule::prelude::Reader<'r> for SidechainStateCellTypeArgsReader<'r> {
+    type Entity = SidechainStateCellTypeArgs;
 
-    const NAME: &'static str = "SidechainStateCellLockArgsReader";
+    const NAME: &'static str = "SidechainStateCellTypeArgsReader";
 
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().to_owned().into())
     }
 
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        SidechainStateCellLockArgsReader(slice)
+        SidechainStateCellTypeArgsReader(slice)
     }
 
     fn as_slice(&self) -> &'r [u8] {
@@ -2781,10 +2781,10 @@ impl<'r> molecule::prelude::Reader<'r> for SidechainStateCellLockArgsReader<'r> 
     }
 }
 #[derive(Debug, Default)]
-pub struct SidechainStateCellLockArgsBuilder {
+pub struct SidechainStateCellTypeArgsBuilder {
     pub(crate) chain_id: ChainId,
 }
-impl SidechainStateCellLockArgsBuilder {
+impl SidechainStateCellTypeArgsBuilder {
     pub const FIELD_COUNT: usize = 1;
     pub const FIELD_SIZES: [usize; 1] = [4];
     pub const TOTAL_SIZE: usize = 4;
@@ -2794,10 +2794,10 @@ impl SidechainStateCellLockArgsBuilder {
         self
     }
 }
-impl molecule::prelude::Builder for SidechainStateCellLockArgsBuilder {
-    type Entity = SidechainStateCellLockArgs;
+impl molecule::prelude::Builder for SidechainStateCellTypeArgsBuilder {
+    type Entity = SidechainStateCellTypeArgs;
 
-    const NAME: &'static str = "SidechainStateCellLockArgsBuilder";
+    const NAME: &'static str = "SidechainStateCellTypeArgsBuilder";
 
     fn expected_length(&self) -> usize {
         Self::TOTAL_SIZE
@@ -2812,6 +2812,6 @@ impl molecule::prelude::Builder for SidechainStateCellLockArgsBuilder {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        SidechainStateCellLockArgs::new_unchecked(inner.into())
+        SidechainStateCellTypeArgs::new_unchecked(inner.into())
     }
 }

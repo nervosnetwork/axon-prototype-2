@@ -38,6 +38,6 @@ table SidechainStateCell {
     checker_last_task_sidechain_heights: CheckerLastAcceptTaskHeights,
 }
 
-struct SidechainStateCellLockArgs {
+struct SidechainStateCellTypeArgs {
     chain_id: ChainId,
 }

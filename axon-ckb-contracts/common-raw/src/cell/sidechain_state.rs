@@ -5,7 +5,7 @@ use crate::{
             BlockHeadersBuilder, CheckerLastAcceptTaskHeightBuilder, CheckerLastAcceptTaskHeightReader,
             CheckerLastAcceptTaskHeightsBuilder, CommittedCheckerInfoBuilder, CommittedCheckerInfoReader, CommittedCheckerInfosBuilder,
             JobsBuilder, PunishedCheckerBuilder, PunishedCheckerReader, PunishedCheckersBuilder, SidechainStateCellBuilder,
-            SidechainStateCellLockArgsBuilder, SidechainStateCellLockArgsReader, SidechainStateCellReader,
+            SidechainStateCellReader, SidechainStateCellTypeArgsBuilder, SidechainStateCellTypeArgsReader,
         },
         common::{
             BlockHeaderReader, BlockHeightReader, BlockSliceReader, ChainIdReader, CommittedHashReader, MerkleHashReader, PubKeyHashReader,
@@ -83,8 +83,8 @@ impl Serialize for CommittedCheckerInfo {
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct PunishedChecker {
-    checker_lock_arg: PubKeyHash,
-    punish_points:    u32,
+    pub checker_lock_arg: PubKeyHash,
+    pub punish_points:    u32,
 }
 
 impl PunishedChecker {
@@ -295,7 +295,7 @@ impl Serialize for SidechainStateCell {
         let random_commit = random_commit_builder.build();
 
         let mut punish_checkers_builder = PunishedCheckersBuilder::default();
-        for punish_checker in &self.confirmed_jobs {
+        for punish_checker in &self.punish_checkers {
             punish_checkers_builder =
                 punish_checkers_builder.push(PunishedCheckerReader::new_unchecked(&punish_checker.serialize()).to_entity());
         }
@@ -343,7 +343,7 @@ pub struct SidechainStateCellTypeArgs {
 
 impl FromRaw for SidechainStateCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<SidechainStateCellTypeArgs> {
-        let reader = SidechainStateCellLockArgsReader::from_slice(arg_raw_data).ok()?;
+        let reader = SidechainStateCellTypeArgsReader::from_slice(arg_raw_data).ok()?;
         let chain_id = ChainId::from_raw(reader.chain_id().raw_data())?;
         Some(SidechainStateCellTypeArgs { chain_id })
     }
@@ -354,7 +354,7 @@ impl Serialize for SidechainStateCellTypeArgs {
 
     fn serialize(&self) -> Self::RawType {
         let mut buf = Vec::new();
-        SidechainStateCellLockArgsBuilder::default()
+        SidechainStateCellTypeArgsBuilder::default()
             .chain_id(ChainIdReader::new_unchecked(&self.chain_id.serialize()).to_entity())
             .write(&mut buf)
             .expect("Unable to write buffer while serializing sidechainState::SidechainStateCellTypeArgs");

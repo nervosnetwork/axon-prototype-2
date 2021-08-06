@@ -1,12 +1,9 @@
 use crate::{cell::CellOrigin, error::Error};
 
 use ckb_std::ckb_constants::Source;
-use ckb_std::high_level::{load_cell_capacity, load_header, QueryIter};
+use ckb_std::high_level::load_cell_capacity;
 
-use common_raw::{
-    cell::{global_config::GlobalConfigCellData, sidechain_config::SidechainConfigCell},
-    FromRaw,
-};
+use common_raw::cell::global_config::GlobalConfigCellData;
 
 use bit_vec::*;
 use core::convert::TryInto;
@@ -28,20 +25,6 @@ pub fn is_cell_count_smaller(n: usize, source: Source) -> bool {
 
 pub fn is_cell_count_not_equals(n: usize, source: Source) -> bool {
     is_cell_count_smaller(n, source) || is_cell_count_greater(n, source)
-}
-
-pub fn has_task_passed_update_interval(config: &SidechainConfigCell, origin: CellOrigin) -> Result<(), Error> {
-    let CellOrigin(index, source) = origin;
-    let config_number = u64::from_raw(load_header(index, source)?.as_reader().raw().number().raw_data()).unwrap();
-    let number_proof = QueryIter::new(load_header, Source::HeaderDep).find(|header| {
-        let number = u64::from_raw(header.as_reader().raw().number().raw_data()).unwrap();
-        u128::from(number - config_number) >= config.refresh_sidechain_height_interval
-    });
-
-    if number_proof.is_none() {
-        return Err(Error::SidechainConfigMismatch);
-    }
-    Ok(())
 }
 
 #[macro_export]

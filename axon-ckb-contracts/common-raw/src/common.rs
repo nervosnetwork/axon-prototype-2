@@ -39,12 +39,20 @@ impl Serialize for HashType {
 
 pub type MerkleHash = [u8; 32];
 pub type PubKeyHash = [u8; 20];
+
+impl FromRaw for PubKeyHash {
+    fn from_raw(raw_data: &[u8]) -> Option<Self> {
+        let mut buf = Self::default();
+        buf.copy_from_slice(raw_data);
+        Some(buf)
+    }
+}
 pub type ScriptHash = [u8; 32];
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct BlockSlice {
-    from: BlockHeight,
-    to:   BlockHeight,
+    pub from: BlockHeight,
+    pub to:   BlockHeight,
 }
 
 impl FromRaw for BlockSlice {
