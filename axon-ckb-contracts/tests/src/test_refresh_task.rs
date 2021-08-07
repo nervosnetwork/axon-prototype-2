@@ -10,7 +10,7 @@ use common_raw::{
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs},
     },
-    witness::collator_refresh_task::CollatorRefreshTaskWitness,
+    witness::anyone_refresh_task::AnyoneRefreshTaskWitness,
 };
 
 const MAX_CYCLES: u64 = 10_000_000;
@@ -110,7 +110,7 @@ fn test_success() {
         task_cell_data.serialize(),
     ];
 
-    let witness = CollatorRefreshTaskWitness::default();
+    let witness = AnyoneRefreshTaskWitness::default();
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 
     // build transaction

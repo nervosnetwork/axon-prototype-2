@@ -11,7 +11,7 @@ pub fn main() -> Result<(), Error> {
     1. CollatorPublishTask
     2. CollatorSubmitTask
     3. CollatorSubmitChallenge
-    4. CollatorRefreshTask
+    4. AnyoneRefreshTask
     5. CheckerSubmitTask
     6. CheckerPublishChallenge
     7. CheckerSubmitChallenge

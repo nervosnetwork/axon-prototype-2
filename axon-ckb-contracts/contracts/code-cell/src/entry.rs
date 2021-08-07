@@ -1,6 +1,7 @@
 // Import from `core` instead of from `std` since we are in no-std mode
 use core::result::Result;
 
+use crate::anyone_refresh_task::anyone_refresh_task;
 use crate::{
     cell::*, checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_publish_challenge::checker_publish_challenge, checker_quit_sidechain::checker_quit_sidechain,
@@ -182,7 +183,7 @@ pub fn main() -> Result<(), Error> {
         Pattern::CollatorSubmitSuccessChallenge => collator_submit_success_challenge(raw_witness),
 
         /*
-        CollatorRefreshTask,
+        RefreshTask,
 
         Dep:    0 Global Config Cell
         Dep:    1 Sidechain Config Cell
@@ -191,7 +192,7 @@ pub fn main() -> Result<(), Error> {
         [Task Cell]                 ->          [Task Cell]
 
         */
-        Pattern::CollatorRefreshTask => collator_refresh_task(raw_witness),
+        Pattern::AnyoneRefreshTask => anyone_refresh_task(raw_witness),
 
         /*
         CollatorUnlockBond,
