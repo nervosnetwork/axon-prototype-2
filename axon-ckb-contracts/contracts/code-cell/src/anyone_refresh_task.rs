@@ -9,7 +9,7 @@ use common_raw::{
         sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs},
     },
-    witness::collator_refresh_task::CollatorRefreshTaskWitness,
+    witness::anyone_refresh_task::AnyoneRefreshTaskWitness,
     FromRaw,
 };
 use core::convert::TryFrom;
@@ -19,7 +19,7 @@ const CONFIG_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const STATE_INPUT: CellOrigin = CellOrigin(2, Source::Input);
 const STATE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
-pub fn collator_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
+pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
     /*
     CollatorRefreshTask,
 
@@ -31,9 +31,9 @@ pub fn collator_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
     [Task Cell]                 ->          [Task Cell]
 
     */
-    is_collator_refresh_task()?;
+    is_anyone_refresh_task()?;
 
-    let witness = CollatorRefreshTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
+    let witness = AnyoneRefreshTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
     let (config_input_type_args, config_input, state_input_type_args, state_input) = load_entities! {
         SidechainConfigCellTypeArgs: CONFIG_INPUT,
@@ -138,7 +138,7 @@ pub fn collator_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
     Ok(())
 }
 
-fn is_collator_refresh_task() -> Result<(), Error> {
+fn is_anyone_refresh_task() -> Result<(), Error> {
     let global = check_global_cell()?;
 
     if is_cell_count_smaller(3, Source::Input) || is_cell_count_smaller(3, Source::Output) {
