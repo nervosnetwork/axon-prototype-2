@@ -138,19 +138,6 @@ pub fn main() -> Result<(), Error> {
 
         */
         Pattern::CollatorPublishTask => collator_publish_task(raw_witness, signer),
-
-        /*
-        CollatorSubmitTasks,
-
-        Dep:    0 Global Config Cell
-        Dep:    1 Sidechain Config Cell
-
-        Code Cell                   ->          Code Cell
-        Sidechain State Cell        ->          Sidechain State Cell
-        Sidechain Fee Cell          ->          Sidechain Fee Cell
-        [Checker Info Cell]         ->          [Checker Info Cell]
-
-        */
         Pattern::CollatorSubmitTasks => collator_submit_tasks(raw_witness, signer),
 
         /*
