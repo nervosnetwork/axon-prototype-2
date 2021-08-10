@@ -119,27 +119,25 @@ impl Serialize for ExistedCommittedCheckerInfo {
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct CollatorSubmitTasksWitness {
-    pattern: Pattern,
-    pub chain_id: u8, // TODO: Change to ChainId
-    pub commit: Vec<ExistedCommittedCheckerInfo>,
+    pattern:                Pattern,
+    pub chain_id:           u8, // TODO: Change to ChainId
+    pub commit:             Vec<ExistedCommittedCheckerInfo>,
     pub origin_random_seed: RandomSeed,
-    pub new_random_seed: RandomSeed,
-    pub fee: u128,
-    pub fee_per_checker: u128,
-    pub sidechain_config_dep_index: usize,
+    pub new_random_seed:    RandomSeed,
+    pub fee:                u128,
+    pub fee_per_checker:    u128,
 }
 
 impl Default for CollatorSubmitTasksWitness {
     fn default() -> Self {
         Self {
-            pattern: Pattern::CollatorSubmitTasks,
-            chain_id: 0,
-            commit: Vec::default(),
+            pattern:            Pattern::CollatorSubmitTasks,
+            chain_id:           0,
+            commit:             Vec::default(),
             origin_random_seed: RandomSeed::default(),
-            new_random_seed: RandomSeed::default(),
-            fee: 0,
-            fee_per_checker: 0,
-            sidechain_config_dep_index: 0,
+            new_random_seed:    RandomSeed::default(),
+            fee:                0,
+            fee_per_checker:    0,
         }
     }
 }
@@ -167,7 +165,6 @@ impl FromRaw for CollatorSubmitTasksWitness {
 
         let fee = u128::from_raw(reader.fee().raw_data())?;
         let fee_per_checker = u128::from_raw(reader.fee_per_checker().raw_data())?;
-        let sidechain_config_dep_index = u32::from_raw(reader.sidechain_config_dep_index().raw_data())? as usize; // TODO: Change to usize
 
         Some(CollatorSubmitTasksWitness {
             pattern,
@@ -177,7 +174,6 @@ impl FromRaw for CollatorSubmitTasksWitness {
             new_random_seed,
             fee,
             fee_per_checker,
-            sidechain_config_dep_index,
         })
     }
 }
@@ -198,7 +194,6 @@ impl Serialize for CollatorSubmitTasksWitness {
 
         let fee = Uint128Reader::new_unchecked(&self.fee.serialize()).to_entity();
         let fee_per_checker = Uint128Reader::new_unchecked(&self.fee_per_checker.serialize()).to_entity();
-        let sidechain_config_dep_index = Uint32Reader::new_unchecked(&(self.sidechain_config_dep_index as u32).serialize()).to_entity();
 
         let builder = CollatorSubmitTasksWitnessBuilder::default()
             .chain_id(chain_id)
@@ -206,8 +201,7 @@ impl Serialize for CollatorSubmitTasksWitness {
             .origin_random_seed(origin_random_seed)
             .new_random_seed(new_random_seed)
             .fee(fee)
-            .fee_per_checker(fee_per_checker)
-            .sidechain_config_dep_index(sidechain_config_dep_index);
+            .fee_per_checker(fee_per_checker);
 
         let mut buf = Vec::new();
         buf.extend_from_slice(&self.pattern.serialize());
