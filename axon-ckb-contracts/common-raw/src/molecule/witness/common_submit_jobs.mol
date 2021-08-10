@@ -1,0 +1,19 @@
+import ../common;
+
+table ExistedCommittedCheckerInfo {
+    index: Uint32Opt,
+    checker_lock_arg: PubKeyHash,
+    origin_committed_hash: CommittedHashOpt,
+    new_committed_hash: CommittedHashOpt,
+}
+
+vector ExistedCommittedCheckerInfos <ExistedCommittedCheckerInfo>;
+
+table CommonSubmitJobsWitness {
+  chain_id: ChainId,
+  commit: ExistedCommittedCheckerInfos,
+  origin_random_seed: RandomSeed,
+  new_random_seed: RandomSeed,
+  fee: Uint128,
+  fee_per_checker: Uint128,
+}

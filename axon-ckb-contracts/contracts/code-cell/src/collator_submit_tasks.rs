@@ -9,7 +9,7 @@ use common_raw::{
         task::{TaskCell, TaskCellTypeArgs, TaskStatus},
     },
     common::*,
-    witness::collator_submit_tasks::CollatorSubmitTasksWitness,
+    witness::{collator_submit_tasks::CollatorSubmitTasksWitness, common_submit_jobs::CommonSubmitJobsWitness},
     FromRaw,
 };
 use core::convert::TryFrom;
@@ -82,7 +82,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_config_input_type_args,
         &sidechain_config_output,
         &sidechain_config_output_type_args,
-        &witness,
+        &witness.common,
         &signer,
     )?;
 
@@ -91,7 +91,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_state_input_type_args,
         &sidechain_state_output,
         &sidechain_state_output_type_args,
-        &witness,
+        &witness.common,
     )?;
 
     check_sidechain_fee(
@@ -99,7 +99,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_fee_input_lock_args,
         &sidechain_fee_output,
         &sidechain_fee_output_lock_args,
-        &witness,
+        &witness.common,
     )?;
 
     let mut i = FIXED_INPUT_CELLS;
@@ -120,7 +120,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
 
             Ok(Some(result))
         },
-        &witness,
+        &witness.common,
     )?;
 
     Ok(())
@@ -131,7 +131,7 @@ fn check_sidechain_config(
     sidechain_config_input_type_args: &SidechainConfigCellTypeArgs,
     sidechain_config_output: &SidechainConfigCell,
     sidechain_config_output_type_args: &SidechainConfigCellTypeArgs,
-    witness: &CollatorSubmitTasksWitness,
+    witness: &CommonSubmitJobsWitness,
     signer: &[u8; 20],
 ) -> Result<(), Error> {
     let mut sidechain_config_res = sidechain_config_input.clone();
@@ -174,7 +174,7 @@ fn check_sidechain_state(
     sidechain_state_input_type_args: &SidechainStateCellTypeArgs,
     sidechain_state_output: &SidechainStateCell,
     sidechain_state_output_type_args: &SidechainStateCellTypeArgs,
-    witness: &CollatorSubmitTasksWitness,
+    witness: &CommonSubmitJobsWitness,
 ) -> Result<(), Error> {
     if sidechain_state_input.random_seed != witness.origin_random_seed {
         return Err(Error::SidechainStateMismatch);
@@ -276,7 +276,7 @@ fn check_sidechain_fee(
     sidechain_fee_input_lock_args: &SidechainFeeCellLockArgs,
     sidechain_fee_output: &SidechainFeeCell,
     sidechain_fee_output_lock_args: &SidechainFeeCellLockArgs,
-    witness: &CollatorSubmitTasksWitness,
+    witness: &CommonSubmitJobsWitness,
 ) -> Result<(), Error> {
     let mut sidechain_fee_res_lock_args = sidechain_fee_input_lock_args.clone();
     if sidechain_fee_res_lock_args.surplus < witness.fee {
@@ -293,7 +293,7 @@ fn check_sidechain_fee(
 
 fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>>(
     mut next_task: T,
-    witness: &CollatorSubmitTasksWitness,
+    witness: &CommonSubmitJobsWitness,
 ) -> Result<(), Error> {
     let mut random_seed_calculator = Blake2b::default();
     random_seed_calculator.update(&witness.origin_random_seed);

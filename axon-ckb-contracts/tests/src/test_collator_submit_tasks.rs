@@ -11,7 +11,7 @@ use common_raw::{
         task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     common::*,
-    witness::collator_submit_tasks::{CollatorSubmitTasksWitness, ExistedCommittedCheckerInfo},
+    witness::{collator_submit_tasks::CollatorSubmitTasksWitness, common_submit_jobs::ExistedCommittedCheckerInfo},
 };
 const MAX_CYCLES: u64 = 10_000_000;
 
@@ -222,11 +222,14 @@ fn test_success() {
         origin_committed_hash: Some(BLANK_HASH),
         new_committed_hash:    None,
     };
-    witness.commit = vec![existed_checker_info, new_checker_info, invalid_checker_info];
+    witness.common.commit = vec![existed_checker_info, new_checker_info, invalid_checker_info];
 
-    witness.fee_per_checker = FEE_RATE as u128 * CHECKED_SIZE;
-    witness.fee = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
-    witness.new_random_seed.copy_from_slice(&sidechain_state_data_output.random_seed);
+    witness.common.fee_per_checker = FEE_RATE as u128 * CHECKED_SIZE;
+    witness.common.fee = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
+    witness
+        .common
+        .new_random_seed
+        .copy_from_slice(&sidechain_state_data_output.random_seed);
 
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 
