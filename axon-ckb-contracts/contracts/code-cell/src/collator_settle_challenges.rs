@@ -25,7 +25,7 @@ const SIDECHAIN_FEE_OUTPUT: CellOrigin = CellOrigin(3, Source::Output);
 const INPUT_NORMAL_CELL_COUNT: usize = 5;
 const OUTPUT_NORMAL_CELL_COUNT: usize = INPUT_NORMAL_CELL_COUNT - 1;
 
-pub fn is_collator_submit_faild_challenge(witness: &CollatorSubmitChallengeWitness) -> Result<(), Error> {
+pub fn is_collator_settle_challenges(witness: &CollatorSubmitChallengeWitness) -> Result<(), Error> {
     /*
     CollatorSubmitChallenge,
 
@@ -74,7 +74,7 @@ pub fn is_collator_submit_faild_challenge(witness: &CollatorSubmitChallengeWitne
     CheckerInfoCell::range_check(OUTPUT_NORMAL_CELL_COUNT.., Source::Output, &global)
 }
 
-pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
+pub fn collator_settle_challenges(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorSubmitChallenge,
 
@@ -100,7 +100,7 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
     {
         return Err(Error::CollatorSubmitChallengeWitnessMismatch);
     }
-    is_collator_submit_faild_challenge(&witness)?;
+    is_collator_settle_challenges(&witness)?;
 
     //load inputs
     let (

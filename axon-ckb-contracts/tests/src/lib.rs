@@ -21,7 +21,7 @@ mod test_checker_withdraw;
 #[cfg(test)]
 mod test_collator_publish_task;
 #[cfg(test)]
-mod test_collator_submit_faild_challenge;
+mod test_collator_settle_challenges;
 #[cfg(test)]
 mod test_collator_submit_success_challenge;
 #[cfg(test)]

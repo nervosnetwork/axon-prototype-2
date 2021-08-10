@@ -15,7 +15,7 @@ pub struct CollatorSubmitChallengeWitness {
 impl Default for CollatorSubmitChallengeWitness {
     fn default() -> Self {
         Self {
-            pattern:               Pattern::CollatorSubmitFaildChallenge,
+            pattern:               Pattern::CollatorSettleChallenges,
             chain_id:              0,
             fee:                   0,
             fee_per_checker:       0,
