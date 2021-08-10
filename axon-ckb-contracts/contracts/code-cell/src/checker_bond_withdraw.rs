@@ -34,7 +34,7 @@ pub fn checker_bond_withdraw(signer: [u8; 20]) -> Result<(), Error> {
 
     let checker_bond_input = CheckerBondCellLockArgs::load(BOND_INPUT)?;
 
-    if checker_bond_input.chain_id_bitmap != EMPTY_BIT_MAP || signer != checker_bond_input.checker_lock_arg {
+    if !checker_bond_input.participated_chain_id.is_empty() || signer != checker_bond_input.checker_lock_arg {
         return Err(Error::CheckerBondMismatch);
     }
 

@@ -180,9 +180,9 @@ pub fn collator_submit_faild_challenge(raw_witness: &[u8], signer: [u8; 20]) -> 
     let _valid_challenge_count = 0u8;
     for i in INPUT_NORMAL_CELL_COUNT..INPUT_NORMAL_CELL_COUNT + usize::from(witness.valid_challenge_count + witness.task_count) {
         let checker_info_data_input = CheckerInfoCell::load(CellOrigin(i, Source::Input))?;
-        ckb_std::debug!("checker_info_data_input{:?}", checker_info_data_input);
+
         let checker_info_type_args_input = CheckerInfoCellTypeArgs::load(CellOrigin(i, Source::Input))?;
-        ckb_std::debug!("checker_info_type_args_input{:?}", checker_info_type_args_input);
+
         let checker_info_data_output = CheckerInfoCell::load(CellOrigin(i - 1, Source::Output))?;
         let checker_info_type_args_output = CheckerInfoCellTypeArgs::load(CellOrigin(i - 1, Source::Output))?;
 
