@@ -28,35 +28,6 @@ const FIXED_INPUT_CELLS: usize = 4;
 
 const DEFAULT_REVEAL_VALUE: RandomSeed = [0u8; 32];
 
-fn is_collator_submit_tasks(sidechain_config: &SidechainConfigCell) -> Result<(), Error> {
-    let global = check_global_cell()?;
-
-    let len_input = usize::try_from(sidechain_config.commit_threshold).or(Err(Error::Encoding))? + FIXED_INPUT_CELLS;
-
-    if is_cell_count_not_equals(len_input, Source::Input) || is_cell_count_not_equals(4, Source::Output) {
-        return Err(Error::CellNumberMismatch);
-    }
-    check_cells! {
-        &global,
-        {
-            CodeCell: CODE_INPUT,
-            SidechainConfigCell: SIDECHAIN_STATE_INPUT,
-            SidechainStateCell: SIDECHAIN_STATE_INPUT,
-            SidechainFeeCell: SIDECHAIN_FEE_INPUT,
-
-            CodeCell: CODE_OUTPUT,
-            SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
-            SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
-            SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
-        },
-    };
-
-    TaskCell::range_check(FIXED_INPUT_CELLS..len_input, Source::Input, &global)?;
-
-    Ok(())
-}
-
-// TODO: refactor this long function
 pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(), Error> {
     /*
     CollatorSubmitTasks,
@@ -106,6 +77,63 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         SidechainFeeCellLockArgs: SIDECHAIN_FEE_OUTPUT,
     );
 
+    check_sidechain_config(
+        &sidechain_config_input,
+        &sidechain_config_input_type_args,
+        &sidechain_config_output,
+        &sidechain_config_output_type_args,
+        &witness,
+        &signer,
+    )?;
+
+    check_sidechain_state(
+        &sidechain_state_input,
+        &sidechain_state_input_type_args,
+        &sidechain_state_output,
+        &sidechain_state_output_type_args,
+        &witness,
+    )?;
+
+    check_sidechain_fee(
+        &sidechain_fee_input,
+        &sidechain_fee_input_lock_args,
+        &sidechain_fee_output,
+        &sidechain_fee_output_lock_args,
+        &witness,
+    )?;
+
+    let mut i = FIXED_INPUT_CELLS;
+    let len_input = usize::try_from(sidechain_config_input.commit_threshold).or(Err(Error::Encoding))? + FIXED_INPUT_CELLS;
+
+    check_tasks(
+        || {
+            if i >= len_input {
+                return Ok(None);
+            }
+
+            let result = load_entities!(
+                TaskCell: CellOrigin(i, Source::Input),
+                TaskCellTypeArgs: CellOrigin(i, Source::Input),
+            );
+
+            i += 1;
+
+            Ok(Some(result))
+        },
+        &witness,
+    )?;
+
+    Ok(())
+}
+
+fn check_sidechain_config(
+    sidechain_config_input: &SidechainConfigCell,
+    sidechain_config_input_type_args: &SidechainConfigCellTypeArgs,
+    sidechain_config_output: &SidechainConfigCell,
+    sidechain_config_output_type_args: &SidechainConfigCellTypeArgs,
+    witness: &CollatorSubmitTasksWitness,
+    signer: &[u8; 20],
+) -> Result<(), Error> {
     let mut sidechain_config_res = sidechain_config_input.clone();
 
     sidechain_config_res.activated_checkers = sidechain_config_res
@@ -130,14 +158,24 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     );
 
     if sidechain_config_input_type_args.chain_id != witness.chain_id
-        || sidechain_config_input.collator_lock_arg != signer
+        || sidechain_config_input.collator_lock_arg != *signer
         || u128::from(sidechain_config_input.commit_threshold) * witness.fee_per_checker != witness.fee
-        || sidechain_config_res != sidechain_config_output
+        || sidechain_config_res != *sidechain_config_output
         || sidechain_config_input_type_args != sidechain_config_output_type_args
     {
         return Err(Error::SidechainConfigMismatch);
     }
 
+    Ok(())
+}
+
+fn check_sidechain_state(
+    sidechain_state_input: &SidechainStateCell,
+    sidechain_state_input_type_args: &SidechainStateCellTypeArgs,
+    sidechain_state_output: &SidechainStateCell,
+    sidechain_state_output_type_args: &SidechainStateCellTypeArgs,
+    witness: &CollatorSubmitTasksWitness,
+) -> Result<(), Error> {
     if sidechain_state_input.random_seed != witness.origin_random_seed {
         return Err(Error::SidechainStateMismatch);
     }
@@ -145,6 +183,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     let mut sidechain_state_res = sidechain_state_input.clone();
     sidechain_state_res.random_seed = witness.new_random_seed;
 
+    // check valid checkers
     for valid_checker in witness
         .commit
         .iter()
@@ -167,6 +206,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
             .copy_from_slice(&valid_checker.new_committed_hash.ok_or(Error::Encoding)?);
     }
 
+    // remove invalid checkers
     let mut invalid_checker_iter = witness
         .commit
         .iter()
@@ -207,6 +247,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     }
     sidechain_state_res.random_commit = valid_random_commit;
 
+    // add new checkers
     for new_checker in witness.commit.iter().filter(|committed_checker| committed_checker.is_new_checker()) {
         if sidechain_state_input
             .random_commit
@@ -223,31 +264,46 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         })
     }
 
-    if sidechain_state_res != sidechain_state_output || sidechain_state_input_type_args != sidechain_state_output_type_args {
+    if sidechain_state_res != *sidechain_state_output || sidechain_state_input_type_args != sidechain_state_output_type_args {
         return Err(Error::SidechainStateMismatch);
     }
 
+    Ok(())
+}
+
+fn check_sidechain_fee(
+    sidechain_fee_input: &SidechainFeeCell,
+    sidechain_fee_input_lock_args: &SidechainFeeCellLockArgs,
+    sidechain_fee_output: &SidechainFeeCell,
+    sidechain_fee_output_lock_args: &SidechainFeeCellLockArgs,
+    witness: &CollatorSubmitTasksWitness,
+) -> Result<(), Error> {
     let mut sidechain_fee_res_lock_args = sidechain_fee_input_lock_args.clone();
     if sidechain_fee_res_lock_args.surplus < witness.fee {
         return Err(Error::SidechainFeeMismatch);
     };
     sidechain_fee_res_lock_args.surplus -= witness.fee;
 
-    if sidechain_fee_input != sidechain_fee_output || sidechain_fee_res_lock_args != sidechain_fee_output_lock_args {
+    if sidechain_fee_input != sidechain_fee_output || sidechain_fee_res_lock_args != *sidechain_fee_output_lock_args {
         return Err(Error::SidechainFeeMismatch);
     }
 
-    //load tasks
+    Ok(())
+}
+
+fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>>(
+    mut next_task: T,
+    witness: &CollatorSubmitTasksWitness,
+) -> Result<(), Error> {
     let mut random_seed_calculator = Blake2b::default();
     random_seed_calculator.update(&witness.origin_random_seed);
 
     let mut committed_checker_iter = witness.commit.iter();
-    let len_input = usize::try_from(sidechain_config_input.commit_threshold).or(Err(Error::Encoding))? + FIXED_INPUT_CELLS;
-    for i in FIXED_INPUT_CELLS..len_input {
-        let (task, task_type_args) = load_entities!(
-            TaskCell: CellOrigin(i, Source::Input),
-            TaskCellTypeArgs: CellOrigin(i, Source::Input),
-        );
+    loop {
+        let (task, task_type_args) = match next_task()? {
+            Some(task) => task,
+            None => break,
+        };
 
         let committed_checker = committed_checker_iter.next().ok_or(Error::TaskMismatch)?;
 
@@ -301,6 +357,34 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     if random_seed_res != witness.new_random_seed {
         return Err(Error::TaskMismatch);
     }
+
+    Ok(())
+}
+
+fn is_collator_submit_tasks(sidechain_config: &SidechainConfigCell) -> Result<(), Error> {
+    let global = check_global_cell()?;
+
+    let len_input = usize::try_from(sidechain_config.commit_threshold).or(Err(Error::Encoding))? + FIXED_INPUT_CELLS;
+
+    if is_cell_count_not_equals(len_input, Source::Input) || is_cell_count_not_equals(4, Source::Output) {
+        return Err(Error::CellNumberMismatch);
+    }
+    check_cells! {
+        &global,
+        {
+            CodeCell: CODE_INPUT,
+            SidechainConfigCell: SIDECHAIN_STATE_INPUT,
+            SidechainStateCell: SIDECHAIN_STATE_INPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_INPUT,
+
+            CodeCell: CODE_OUTPUT,
+            SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
+            SidechainStateCell: SIDECHAIN_STATE_OUTPUT,
+            SidechainFeeCell: SIDECHAIN_FEE_OUTPUT,
+        },
+    };
+
+    TaskCell::range_check(FIXED_INPUT_CELLS..len_input, Source::Input, &global)?;
 
     Ok(())
 }
