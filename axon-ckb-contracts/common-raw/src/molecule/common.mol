@@ -27,3 +27,11 @@ array RandomSeed [byte; 32];
 array CommittedHash [byte; 32];
 
 vector String <byte>;
+
+option Uint8Opt (Uint8);
+option Uint16Opt (Uint16);
+option Uint32Opt (Uint32);
+option Uint64Opt (Uint64);
+option Uint128Opt (Uint128);
+
+option CommittedHashOpt(CommittedHash);

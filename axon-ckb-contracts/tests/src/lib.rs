@@ -25,6 +25,8 @@ mod test_collator_submit_faild_challenge;
 #[cfg(test)]
 mod test_collator_submit_success_challenge;
 #[cfg(test)]
+mod test_collator_submit_tasks;
+#[cfg(test)]
 mod test_collator_unlock;
 #[cfg(test)]
 mod test_join_sidechain;

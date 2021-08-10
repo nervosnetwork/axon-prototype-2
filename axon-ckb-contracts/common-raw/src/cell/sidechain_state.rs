@@ -30,8 +30,8 @@ use molecule::prelude::*;
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CommittedCheckerInfo {
-    checker_lock_arg: PubKeyHash,
-    committed_hash:   CommittedHash,
+    pub checker_lock_arg: PubKeyHash,
+    pub committed_hash:   CommittedHash,
 }
 
 impl CommittedCheckerInfo {

@@ -157,7 +157,7 @@ impl FromRaw for SidechainConfigCell {
             activated_checkers.push(result);
         }
 
-        let jailed_checkers_reader = reader.activated_checkers();
+        let jailed_checkers_reader = reader.jailed_checkers();
         let jailed_checkers_len = jailed_checkers_reader.len();
         let mut jailed_checkers = Vec::with_capacity(jailed_checkers_len);
 

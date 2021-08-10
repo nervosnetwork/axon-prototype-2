@@ -8728,3 +8728,1095 @@ impl ::core::iter::IntoIterator for String {
         StringIterator(self, 0, len)
     }
 }
+#[derive(Clone)]
+pub struct Uint8Opt(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Uint8Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for Uint8Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for Uint8Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl ::core::default::Default for Uint8Opt {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![];
+        Uint8Opt::new_unchecked(v.into())
+    }
+}
+impl Uint8Opt {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint8> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint8::new_unchecked(self.0.clone()))
+        }
+    }
+
+    pub fn as_reader<'r>(&'r self) -> Uint8OptReader<'r> {
+        Uint8OptReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for Uint8Opt {
+    type Builder = Uint8OptBuilder;
+
+    const NAME: &'static str = "Uint8Opt";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        Uint8Opt(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint8OptReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint8OptReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_opt())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct Uint8OptReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for Uint8OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for Uint8OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for Uint8OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl<'r> Uint8OptReader<'r> {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint8Reader<'r>> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint8Reader::new_unchecked(self.as_slice()))
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for Uint8OptReader<'r> {
+    type Entity = Uint8Opt;
+
+    const NAME: &'static str = "Uint8OptReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        Uint8OptReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        if !slice.is_empty() {
+            Uint8Reader::verify(&slice[..], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct Uint8OptBuilder(pub(crate) Option<Uint8>);
+impl Uint8OptBuilder {
+    pub fn set(mut self, v: Option<Uint8>) -> Self {
+        self.0 = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for Uint8OptBuilder {
+    type Entity = Uint8Opt;
+
+    const NAME: &'static str = "Uint8OptBuilder";
+
+    fn expected_length(&self) -> usize {
+        self.0.as_ref().map(|ref inner| inner.as_slice().len()).unwrap_or(0)
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        self.0
+            .as_ref()
+            .map(|ref inner| writer.write_all(inner.as_slice()))
+            .unwrap_or(Ok(()))
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        Uint8Opt::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct Uint16Opt(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Uint16Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for Uint16Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for Uint16Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl ::core::default::Default for Uint16Opt {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![];
+        Uint16Opt::new_unchecked(v.into())
+    }
+}
+impl Uint16Opt {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint16> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint16::new_unchecked(self.0.clone()))
+        }
+    }
+
+    pub fn as_reader<'r>(&'r self) -> Uint16OptReader<'r> {
+        Uint16OptReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for Uint16Opt {
+    type Builder = Uint16OptBuilder;
+
+    const NAME: &'static str = "Uint16Opt";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        Uint16Opt(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint16OptReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint16OptReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_opt())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct Uint16OptReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for Uint16OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for Uint16OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for Uint16OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl<'r> Uint16OptReader<'r> {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint16Reader<'r>> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint16Reader::new_unchecked(self.as_slice()))
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for Uint16OptReader<'r> {
+    type Entity = Uint16Opt;
+
+    const NAME: &'static str = "Uint16OptReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        Uint16OptReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        if !slice.is_empty() {
+            Uint16Reader::verify(&slice[..], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct Uint16OptBuilder(pub(crate) Option<Uint16>);
+impl Uint16OptBuilder {
+    pub fn set(mut self, v: Option<Uint16>) -> Self {
+        self.0 = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for Uint16OptBuilder {
+    type Entity = Uint16Opt;
+
+    const NAME: &'static str = "Uint16OptBuilder";
+
+    fn expected_length(&self) -> usize {
+        self.0.as_ref().map(|ref inner| inner.as_slice().len()).unwrap_or(0)
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        self.0
+            .as_ref()
+            .map(|ref inner| writer.write_all(inner.as_slice()))
+            .unwrap_or(Ok(()))
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        Uint16Opt::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct Uint32Opt(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Uint32Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for Uint32Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for Uint32Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl ::core::default::Default for Uint32Opt {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![];
+        Uint32Opt::new_unchecked(v.into())
+    }
+}
+impl Uint32Opt {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint32> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint32::new_unchecked(self.0.clone()))
+        }
+    }
+
+    pub fn as_reader<'r>(&'r self) -> Uint32OptReader<'r> {
+        Uint32OptReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for Uint32Opt {
+    type Builder = Uint32OptBuilder;
+
+    const NAME: &'static str = "Uint32Opt";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        Uint32Opt(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint32OptReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint32OptReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_opt())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct Uint32OptReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for Uint32OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for Uint32OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for Uint32OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl<'r> Uint32OptReader<'r> {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint32Reader<'r>> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint32Reader::new_unchecked(self.as_slice()))
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for Uint32OptReader<'r> {
+    type Entity = Uint32Opt;
+
+    const NAME: &'static str = "Uint32OptReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        Uint32OptReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        if !slice.is_empty() {
+            Uint32Reader::verify(&slice[..], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct Uint32OptBuilder(pub(crate) Option<Uint32>);
+impl Uint32OptBuilder {
+    pub fn set(mut self, v: Option<Uint32>) -> Self {
+        self.0 = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for Uint32OptBuilder {
+    type Entity = Uint32Opt;
+
+    const NAME: &'static str = "Uint32OptBuilder";
+
+    fn expected_length(&self) -> usize {
+        self.0.as_ref().map(|ref inner| inner.as_slice().len()).unwrap_or(0)
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        self.0
+            .as_ref()
+            .map(|ref inner| writer.write_all(inner.as_slice()))
+            .unwrap_or(Ok(()))
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        Uint32Opt::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct Uint64Opt(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Uint64Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for Uint64Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for Uint64Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl ::core::default::Default for Uint64Opt {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![];
+        Uint64Opt::new_unchecked(v.into())
+    }
+}
+impl Uint64Opt {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint64> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint64::new_unchecked(self.0.clone()))
+        }
+    }
+
+    pub fn as_reader<'r>(&'r self) -> Uint64OptReader<'r> {
+        Uint64OptReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for Uint64Opt {
+    type Builder = Uint64OptBuilder;
+
+    const NAME: &'static str = "Uint64Opt";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        Uint64Opt(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint64OptReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint64OptReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_opt())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct Uint64OptReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for Uint64OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for Uint64OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for Uint64OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl<'r> Uint64OptReader<'r> {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint64Reader<'r>> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint64Reader::new_unchecked(self.as_slice()))
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for Uint64OptReader<'r> {
+    type Entity = Uint64Opt;
+
+    const NAME: &'static str = "Uint64OptReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        Uint64OptReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        if !slice.is_empty() {
+            Uint64Reader::verify(&slice[..], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct Uint64OptBuilder(pub(crate) Option<Uint64>);
+impl Uint64OptBuilder {
+    pub fn set(mut self, v: Option<Uint64>) -> Self {
+        self.0 = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for Uint64OptBuilder {
+    type Entity = Uint64Opt;
+
+    const NAME: &'static str = "Uint64OptBuilder";
+
+    fn expected_length(&self) -> usize {
+        self.0.as_ref().map(|ref inner| inner.as_slice().len()).unwrap_or(0)
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        self.0
+            .as_ref()
+            .map(|ref inner| writer.write_all(inner.as_slice()))
+            .unwrap_or(Ok(()))
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        Uint64Opt::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct Uint128Opt(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for Uint128Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for Uint128Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for Uint128Opt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl ::core::default::Default for Uint128Opt {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![];
+        Uint128Opt::new_unchecked(v.into())
+    }
+}
+impl Uint128Opt {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint128> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint128::new_unchecked(self.0.clone()))
+        }
+    }
+
+    pub fn as_reader<'r>(&'r self) -> Uint128OptReader<'r> {
+        Uint128OptReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for Uint128Opt {
+    type Builder = Uint128OptBuilder;
+
+    const NAME: &'static str = "Uint128Opt";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        Uint128Opt(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint128OptReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        Uint128OptReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_opt())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct Uint128OptReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for Uint128OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for Uint128OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for Uint128OptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl<'r> Uint128OptReader<'r> {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<Uint128Reader<'r>> {
+        if self.is_none() {
+            None
+        } else {
+            Some(Uint128Reader::new_unchecked(self.as_slice()))
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for Uint128OptReader<'r> {
+    type Entity = Uint128Opt;
+
+    const NAME: &'static str = "Uint128OptReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        Uint128OptReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        if !slice.is_empty() {
+            Uint128Reader::verify(&slice[..], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct Uint128OptBuilder(pub(crate) Option<Uint128>);
+impl Uint128OptBuilder {
+    pub fn set(mut self, v: Option<Uint128>) -> Self {
+        self.0 = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for Uint128OptBuilder {
+    type Entity = Uint128Opt;
+
+    const NAME: &'static str = "Uint128OptBuilder";
+
+    fn expected_length(&self) -> usize {
+        self.0.as_ref().map(|ref inner| inner.as_slice().len()).unwrap_or(0)
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        self.0
+            .as_ref()
+            .map(|ref inner| writer.write_all(inner.as_slice()))
+            .unwrap_or(Ok(()))
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        Uint128Opt::new_unchecked(inner.into())
+    }
+}
+#[derive(Clone)]
+pub struct CommittedHashOpt(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for CommittedHashOpt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for CommittedHashOpt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for CommittedHashOpt {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl ::core::default::Default for CommittedHashOpt {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![];
+        CommittedHashOpt::new_unchecked(v.into())
+    }
+}
+impl CommittedHashOpt {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<CommittedHash> {
+        if self.is_none() {
+            None
+        } else {
+            Some(CommittedHash::new_unchecked(self.0.clone()))
+        }
+    }
+
+    pub fn as_reader<'r>(&'r self) -> CommittedHashOptReader<'r> {
+        CommittedHashOptReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for CommittedHashOpt {
+    type Builder = CommittedHashOptBuilder;
+
+    const NAME: &'static str = "CommittedHashOpt";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        CommittedHashOpt(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CommittedHashOptReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        CommittedHashOptReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().set(self.to_opt())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct CommittedHashOptReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for CommittedHashOptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for CommittedHashOptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for CommittedHashOptReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        if let Some(v) = self.to_opt() {
+            write!(f, "{}(Some({}))", Self::NAME, v)
+        } else {
+            write!(f, "{}(None)", Self::NAME)
+        }
+    }
+}
+impl<'r> CommittedHashOptReader<'r> {
+    pub fn is_none(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn is_some(&self) -> bool {
+        !self.0.is_empty()
+    }
+
+    pub fn to_opt(&self) -> Option<CommittedHashReader<'r>> {
+        if self.is_none() {
+            None
+        } else {
+            Some(CommittedHashReader::new_unchecked(self.as_slice()))
+        }
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for CommittedHashOptReader<'r> {
+    type Entity = CommittedHashOpt;
+
+    const NAME: &'static str = "CommittedHashOptReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        CommittedHashOptReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], compatible: bool) -> molecule::error::VerificationResult<()> {
+        if !slice.is_empty() {
+            CommittedHashReader::verify(&slice[..], compatible)?;
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct CommittedHashOptBuilder(pub(crate) Option<CommittedHash>);
+impl CommittedHashOptBuilder {
+    pub fn set(mut self, v: Option<CommittedHash>) -> Self {
+        self.0 = v;
+        self
+    }
+}
+impl molecule::prelude::Builder for CommittedHashOptBuilder {
+    type Entity = CommittedHashOpt;
+
+    const NAME: &'static str = "CommittedHashOptBuilder";
+
+    fn expected_length(&self) -> usize {
+        self.0.as_ref().map(|ref inner| inner.as_slice().len()).unwrap_or(0)
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        self.0
+            .as_ref()
+            .map(|ref inner| writer.write_all(inner.as_slice()))
+            .unwrap_or(Ok(()))
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        CommittedHashOpt::new_unchecked(inner.into())
+    }
+}

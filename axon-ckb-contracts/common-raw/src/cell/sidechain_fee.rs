@@ -31,7 +31,7 @@ PureSudtTokenCell!(SidechainFeeCell);
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainFeeCellLockArgs {
     pub chain_id: u8, // TODO: Change to ChainId
-    pub surplus: u128,
+    pub surplus:  u128,
 }
 
 impl FromRaw for SidechainFeeCellLockArgs {
