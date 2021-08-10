@@ -11,6 +11,7 @@ vector ExistedCommittedCheckerInfos <ExistedCommittedCheckerInfo>;
 
 table CommonSubmitJobsWitness {
   chain_id: ChainId,
+  challenge_times: Uint32,
   commit: ExistedCommittedCheckerInfos,
   origin_random_seed: RandomSeed,
   new_random_seed: RandomSeed,

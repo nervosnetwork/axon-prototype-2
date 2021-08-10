@@ -726,6 +726,7 @@ impl ::core::fmt::Display for CommonSubmitJobsWitness {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "chain_id", self.chain_id())?;
+        write!(f, ", {}: {}", "challenge_times", self.challenge_times())?;
         write!(f, ", {}: {}", "commit", self.commit())?;
         write!(f, ", {}: {}", "origin_random_seed", self.origin_random_seed())?;
         write!(f, ", {}: {}", "new_random_seed", self.new_random_seed())?;
@@ -741,16 +742,16 @@ impl ::core::fmt::Display for CommonSubmitJobsWitness {
 impl ::core::default::Default for CommonSubmitJobsWitness {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            132, 0, 0, 0, 28, 0, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 68, 0, 0, 0, 100, 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0,
+            140, 0, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 40, 0, 0, 0, 44, 0, 0, 0, 76, 0, 0, 0, 108, 0, 0, 0, 124, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         CommonSubmitJobsWitness::new_unchecked(v.into())
     }
 }
 impl CommonSubmitJobsWitness {
-    pub const FIELD_COUNT: usize = 6;
+    pub const FIELD_COUNT: usize = 7;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -779,39 +780,46 @@ impl CommonSubmitJobsWitness {
         ChainId::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn commit(&self) -> ExistedCommittedCheckerInfos {
+    pub fn challenge_times(&self) -> Uint32 {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[8..]) as usize;
         let end = molecule::unpack_number(&slice[12..]) as usize;
+        Uint32::new_unchecked(self.0.slice(start..end))
+    }
+
+    pub fn commit(&self) -> ExistedCommittedCheckerInfos {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[12..]) as usize;
+        let end = molecule::unpack_number(&slice[16..]) as usize;
         ExistedCommittedCheckerInfos::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn origin_random_seed(&self) -> RandomSeed {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[12..]) as usize;
-        let end = molecule::unpack_number(&slice[16..]) as usize;
-        RandomSeed::new_unchecked(self.0.slice(start..end))
-    }
-
-    pub fn new_random_seed(&self) -> RandomSeed {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[16..]) as usize;
         let end = molecule::unpack_number(&slice[20..]) as usize;
         RandomSeed::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn fee(&self) -> Uint128 {
+    pub fn new_random_seed(&self) -> RandomSeed {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[20..]) as usize;
         let end = molecule::unpack_number(&slice[24..]) as usize;
+        RandomSeed::new_unchecked(self.0.slice(start..end))
+    }
+
+    pub fn fee(&self) -> Uint128 {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[24..]) as usize;
+        let end = molecule::unpack_number(&slice[28..]) as usize;
         Uint128::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn fee_per_checker(&self) -> Uint128 {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[24..]) as usize;
+        let start = molecule::unpack_number(&slice[28..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[28..]) as usize;
+            let end = molecule::unpack_number(&slice[32..]) as usize;
             Uint128::new_unchecked(self.0.slice(start..end))
         } else {
             Uint128::new_unchecked(self.0.slice(start..))
@@ -854,6 +862,7 @@ impl molecule::prelude::Entity for CommonSubmitJobsWitness {
     fn as_builder(self) -> Self::Builder {
         Self::new_builder()
             .chain_id(self.chain_id())
+            .challenge_times(self.challenge_times())
             .commit(self.commit())
             .origin_random_seed(self.origin_random_seed())
             .new_random_seed(self.new_random_seed())
@@ -881,6 +890,7 @@ impl<'r> ::core::fmt::Display for CommonSubmitJobsWitnessReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
         write!(f, "{}: {}", "chain_id", self.chain_id())?;
+        write!(f, ", {}: {}", "challenge_times", self.challenge_times())?;
         write!(f, ", {}: {}", "commit", self.commit())?;
         write!(f, ", {}: {}", "origin_random_seed", self.origin_random_seed())?;
         write!(f, ", {}: {}", "new_random_seed", self.new_random_seed())?;
@@ -894,7 +904,7 @@ impl<'r> ::core::fmt::Display for CommonSubmitJobsWitnessReader<'r> {
     }
 }
 impl<'r> CommonSubmitJobsWitnessReader<'r> {
-    pub const FIELD_COUNT: usize = 6;
+    pub const FIELD_COUNT: usize = 7;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -923,39 +933,46 @@ impl<'r> CommonSubmitJobsWitnessReader<'r> {
         ChainIdReader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn commit(&self) -> ExistedCommittedCheckerInfosReader<'r> {
+    pub fn challenge_times(&self) -> Uint32Reader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[8..]) as usize;
         let end = molecule::unpack_number(&slice[12..]) as usize;
+        Uint32Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+
+    pub fn commit(&self) -> ExistedCommittedCheckerInfosReader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[12..]) as usize;
+        let end = molecule::unpack_number(&slice[16..]) as usize;
         ExistedCommittedCheckerInfosReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn origin_random_seed(&self) -> RandomSeedReader<'r> {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[12..]) as usize;
-        let end = molecule::unpack_number(&slice[16..]) as usize;
-        RandomSeedReader::new_unchecked(&self.as_slice()[start..end])
-    }
-
-    pub fn new_random_seed(&self) -> RandomSeedReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[16..]) as usize;
         let end = molecule::unpack_number(&slice[20..]) as usize;
         RandomSeedReader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn fee(&self) -> Uint128Reader<'r> {
+    pub fn new_random_seed(&self) -> RandomSeedReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[20..]) as usize;
         let end = molecule::unpack_number(&slice[24..]) as usize;
+        RandomSeedReader::new_unchecked(&self.as_slice()[start..end])
+    }
+
+    pub fn fee(&self) -> Uint128Reader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[24..]) as usize;
+        let end = molecule::unpack_number(&slice[28..]) as usize;
         Uint128Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn fee_per_checker(&self) -> Uint128Reader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[24..]) as usize;
+        let start = molecule::unpack_number(&slice[28..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[28..]) as usize;
+            let end = molecule::unpack_number(&slice[32..]) as usize;
             Uint128Reader::new_unchecked(&self.as_slice()[start..end])
         } else {
             Uint128Reader::new_unchecked(&self.as_slice()[start..])
@@ -1017,17 +1034,19 @@ impl<'r> molecule::prelude::Reader<'r> for CommonSubmitJobsWitnessReader<'r> {
             return ve!(Self, OffsetsNotMatch);
         }
         ChainIdReader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
-        ExistedCommittedCheckerInfosReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
-        RandomSeedReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
+        ExistedCommittedCheckerInfosReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
         RandomSeedReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Uint128Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        RandomSeedReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
         Uint128Reader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        Uint128Reader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
 pub struct CommonSubmitJobsWitnessBuilder {
     pub(crate) chain_id:           ChainId,
+    pub(crate) challenge_times:    Uint32,
     pub(crate) commit:             ExistedCommittedCheckerInfos,
     pub(crate) origin_random_seed: RandomSeed,
     pub(crate) new_random_seed:    RandomSeed,
@@ -1035,10 +1054,15 @@ pub struct CommonSubmitJobsWitnessBuilder {
     pub(crate) fee_per_checker:    Uint128,
 }
 impl CommonSubmitJobsWitnessBuilder {
-    pub const FIELD_COUNT: usize = 6;
+    pub const FIELD_COUNT: usize = 7;
 
     pub fn chain_id(mut self, v: ChainId) -> Self {
         self.chain_id = v;
+        self
+    }
+
+    pub fn challenge_times(mut self, v: Uint32) -> Self {
+        self.challenge_times = v;
         self
     }
 
@@ -1075,6 +1099,7 @@ impl molecule::prelude::Builder for CommonSubmitJobsWitnessBuilder {
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE * (Self::FIELD_COUNT + 1)
             + self.chain_id.as_slice().len()
+            + self.challenge_times.as_slice().len()
             + self.commit.as_slice().len()
             + self.origin_random_seed.as_slice().len()
             + self.new_random_seed.as_slice().len()
@@ -1087,6 +1112,8 @@ impl molecule::prelude::Builder for CommonSubmitJobsWitnessBuilder {
         let mut offsets = Vec::with_capacity(Self::FIELD_COUNT);
         offsets.push(total_size);
         total_size += self.chain_id.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.challenge_times.as_slice().len();
         offsets.push(total_size);
         total_size += self.commit.as_slice().len();
         offsets.push(total_size);
@@ -1102,6 +1129,7 @@ impl molecule::prelude::Builder for CommonSubmitJobsWitnessBuilder {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
         }
         writer.write_all(self.chain_id.as_slice())?;
+        writer.write_all(self.challenge_times.as_slice())?;
         writer.write_all(self.commit.as_slice())?;
         writer.write_all(self.origin_random_seed.as_slice())?;
         writer.write_all(self.new_random_seed.as_slice())?;

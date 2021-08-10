@@ -81,16 +81,20 @@ impl ExistedCommittedCheckerInfo {
             .new_committed_hash(new_committed_hash)
     }
 
-    pub fn is_valid_existed_checker(&self) -> bool {
-        self.index.is_some() && self.new_committed_hash.is_some()
+    pub fn is_existed(&self) -> bool {
+        self.index.is_some()
     }
 
-    pub fn is_invalid_existed_checker(&self) -> bool {
-        self.index.is_some() && self.new_committed_hash.is_none()
+    pub fn is_valid(&self) -> bool {
+        self.new_committed_hash.is_some()
     }
 
-    pub fn is_new_checker(&self) -> bool {
+    pub fn is_new(&self) -> bool {
         self.index.is_none()
+    }
+
+    pub fn is_invalid(&self) -> bool {
+        self.new_committed_hash.is_none()
     }
 }
 
@@ -119,6 +123,7 @@ impl Serialize for ExistedCommittedCheckerInfo {
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct CommonSubmitJobsWitness {
     pub chain_id:           u8, // TODO: Change to ChainId
+    pub challenge_times:    usize,
     pub commit:             Vec<ExistedCommittedCheckerInfo>,
     pub origin_random_seed: RandomSeed,
     pub new_random_seed:    RandomSeed,
@@ -129,6 +134,8 @@ pub struct CommonSubmitJobsWitness {
 impl CommonSubmitJobsWitness {
     pub fn from_reader(reader: CommonSubmitJobsWitnessReader) -> Option<Self> {
         let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
+
+        let challenge_times = u32::from_raw(reader.challenge_times().raw_data())? as usize; // TODO: Change to usize
 
         let commit = reader
             .commit()
@@ -148,6 +155,7 @@ impl CommonSubmitJobsWitness {
 
         Some(CommonSubmitJobsWitness {
             chain_id,
+            challenge_times,
             commit,
             origin_random_seed,
             new_random_seed,
@@ -158,6 +166,8 @@ impl CommonSubmitJobsWitness {
 
     pub fn as_builder(&self) -> CommonSubmitJobsWitnessBuilder {
         let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as u32).serialize()).to_entity();
+
+        let challenge_times = Uint32Reader::new_unchecked(&(self.challenge_times as u32).serialize()).to_entity(); // TODO: Change to usize
 
         let mut commit = ExistedCommittedCheckerInfosBuilder::default();
         for info in &self.commit {
@@ -172,6 +182,7 @@ impl CommonSubmitJobsWitness {
 
         CommonSubmitJobsWitnessBuilder::default()
             .chain_id(chain_id)
+            .challenge_times(challenge_times)
             .commit(commit.build())
             .origin_random_seed(origin_random_seed)
             .new_random_seed(new_random_seed)
@@ -184,6 +195,7 @@ impl Default for CommonSubmitJobsWitness {
     fn default() -> Self {
         Self {
             chain_id:           0,
+            challenge_times:    0,
             commit:             Vec::default(),
             origin_random_seed: RandomSeed::default(),
             new_random_seed:    RandomSeed::default(),

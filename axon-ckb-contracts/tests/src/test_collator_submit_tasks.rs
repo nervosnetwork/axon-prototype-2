@@ -15,7 +15,9 @@ use common_raw::{
 };
 const MAX_CYCLES: u64 = 10_000_000;
 
-const TASK_NUMBER: u32 = 3;
+const COMMIT_THRESHOLD: u32 = 4;
+const CHALLENGE_THRESHOLD: u32 = 2;
+const TASK_NUMBER: u32 = 5; // 4 - once challenge + 2
 const CHECKED_SIZE: u128 = 10;
 const FEE_RATE: u32 = 1;
 
@@ -27,6 +29,8 @@ const BLANK_HASH: [u8; 32] = [
 const VALID_CHECKER_LOCK_ARG: PubKeyHash = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const NEW_CHECKER_LOCK_ARG: PubKeyHash = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const INVALID_CHECKER_LOCK_ARG: PubKeyHash = [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const VALID_CHALLENGE_CHECKER_LOCK_ARG: PubKeyHash = [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const INVALID_CHALLENGE_CHECKER_LOCK_ARG: PubKeyHash = [4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 #[test]
 fn test_success() {
@@ -89,12 +93,31 @@ fn test_success() {
         .build_script(&always_success_code, task_type_args.serialize())
         .expect("script");
 
+    task_type_args.checker_lock_arg = VALID_CHALLENGE_CHECKER_LOCK_ARG;
+    let valid_challenge_type_script = builder
+        .context
+        .build_script(&always_success_code, task_type_args.serialize())
+        .expect("script");
+
+    task_type_args.checker_lock_arg = INVALID_CHALLENGE_CHECKER_LOCK_ARG;
+    let invalid_challenge_type_script = builder
+        .context
+        .build_script(&always_success_code, task_type_args.serialize())
+        .expect("script");
+
     //prepare inputs
     let mut sidechain_config_input_data = SidechainConfigCell::default();
-    sidechain_config_input_data.commit_threshold = TASK_NUMBER;
+    sidechain_config_input_data.commit_threshold = COMMIT_THRESHOLD;
+    sidechain_config_input_data.challenge_threshold = CHALLENGE_THRESHOLD;
     sidechain_config_input_data.collator_lock_arg.copy_from_slice(&pubkey_hash);
     sidechain_config_input_data.check_fee_rate = FEE_RATE;
-    sidechain_config_input_data.activated_checkers = vec![VALID_CHECKER_LOCK_ARG, NEW_CHECKER_LOCK_ARG, INVALID_CHECKER_LOCK_ARG];
+    sidechain_config_input_data.activated_checkers = vec![
+        VALID_CHECKER_LOCK_ARG,
+        NEW_CHECKER_LOCK_ARG,
+        INVALID_CHECKER_LOCK_ARG,
+        VALID_CHALLENGE_CHECKER_LOCK_ARG,
+        INVALID_CHECKER_LOCK_ARG,
+    ];
 
     let sidechain_config_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &sidechain_config_type_script),
@@ -115,8 +138,21 @@ fn test_success() {
         checker_lock_arg: INVALID_CHECKER_LOCK_ARG,
         committed_hash:   BLANK_HASH,
     };
+    let valid_challenge_checker_info = CommittedCheckerInfo {
+        checker_lock_arg: VALID_CHALLENGE_CHECKER_LOCK_ARG,
+        committed_hash:   BLANK_HASH,
+    };
+    let invalid_challenge_checker_info = CommittedCheckerInfo {
+        checker_lock_arg: INVALID_CHALLENGE_CHECKER_LOCK_ARG,
+        committed_hash:   BLANK_HASH,
+    };
 
-    sidechain_state_input_data.random_commit = vec![existed_checker_info, invalid_checker_info];
+    sidechain_state_input_data.random_commit = vec![
+        existed_checker_info,
+        invalid_checker_info,
+        valid_challenge_checker_info,
+        invalid_challenge_checker_info,
+    ];
 
     let sidechain_state_input_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &sidechain_state_type_script),
@@ -167,17 +203,41 @@ fn test_success() {
     let invalid_task_input = CellInput::new_builder()
         .previous_output(invalid_task_input_outpoint.clone())
         .build();
-    let builder = builder.input(invalid_task_input);
+    let mut builder = builder.input(invalid_task_input);
+
+    task_input_data.reveal = RandomSeed::default();
+    task_input_data.mode = TaskMode::Challenge;
+    task_input_data.status = TaskStatus::ChallengeRejected;
+
+    let valid_challenge_input_outpoint = builder.context.create_cell(
+        new_type_cell_output(1000, &always_success, &valid_challenge_type_script),
+        task_input_data.serialize(),
+    );
+    let valid_challenge_input = CellInput::new_builder()
+        .previous_output(valid_challenge_input_outpoint.clone())
+        .build();
+    let mut builder = builder.input(valid_challenge_input);
+
+    task_input_data.status = TaskStatus::ChallengePassed;
+
+    let invalid_challenge_input_outpoint = builder.context.create_cell(
+        new_type_cell_output(1000, &always_success, &invalid_challenge_type_script),
+        task_input_data.serialize(),
+    );
+    let invalid_challenge_input = CellInput::new_builder()
+        .previous_output(invalid_challenge_input_outpoint.clone())
+        .build();
+    let builder = builder.input(invalid_challenge_input);
 
     //prepare outputs
     let mut sidechain_config_output_data = sidechain_config_input_data.clone();
-    sidechain_config_output_data.activated_checkers = vec![VALID_CHECKER_LOCK_ARG, NEW_CHECKER_LOCK_ARG];
-    sidechain_config_output_data.jailed_checkers = vec![INVALID_CHECKER_LOCK_ARG];
+    sidechain_config_output_data.activated_checkers = vec![VALID_CHECKER_LOCK_ARG, NEW_CHECKER_LOCK_ARG, VALID_CHALLENGE_CHECKER_LOCK_ARG];
+    sidechain_config_output_data.jailed_checkers = vec![INVALID_CHECKER_LOCK_ARG, INVALID_CHALLENGE_CHECKER_LOCK_ARG];
 
     let mut sidechain_state_data_output = sidechain_state_input_data.clone();
     sidechain_state_data_output.random_seed = [
-        199, 140, 197, 101, 91, 10, 193, 233, 100, 238, 240, 190, 214, 36, 133, 117, 247, 185, 179, 65, 179, 46, 55, 131, 48, 188, 242,
-        127, 123, 122, 81, 228,
+        221, 69, 216, 101, 62, 143, 232, 10, 142, 65, 192, 13, 1, 143, 107, 149, 92, 153, 26, 231, 162, 9, 76, 81, 63, 187, 104, 92, 156,
+        86, 150, 48,
     ];
 
     let new_checker_info = CommittedCheckerInfo {
@@ -185,7 +245,7 @@ fn test_success() {
         committed_hash:   BLANK_HASH,
     };
 
-    sidechain_state_data_output.random_commit = vec![existed_checker_info, new_checker_info];
+    sidechain_state_data_output.random_commit = vec![existed_checker_info, valid_challenge_checker_info, new_checker_info];
 
     let sidechain_fee_data_output = SidechainFeeCell::default();
 
@@ -222,8 +282,27 @@ fn test_success() {
         origin_committed_hash: Some(BLANK_HASH),
         new_committed_hash:    None,
     };
-    witness.common.commit = vec![existed_checker_info, new_checker_info, invalid_checker_info];
+    let valid_challenge_checker_info = ExistedCommittedCheckerInfo {
+        index:                 Some(2),
+        checker_lock_arg:      VALID_CHALLENGE_CHECKER_LOCK_ARG,
+        origin_committed_hash: Some(BLANK_HASH),
+        new_committed_hash:    Some(BLANK_HASH),
+    };
+    let invalid_challenge_checker_info = ExistedCommittedCheckerInfo {
+        index:                 Some(3),
+        checker_lock_arg:      INVALID_CHALLENGE_CHECKER_LOCK_ARG,
+        origin_committed_hash: Some(BLANK_HASH),
+        new_committed_hash:    None,
+    };
+    witness.common.commit = vec![
+        existed_checker_info,
+        new_checker_info,
+        invalid_checker_info,
+        valid_challenge_checker_info,
+        invalid_challenge_checker_info,
+    ];
 
+    witness.common.challenge_times = 1;
     witness.common.fee_per_checker = FEE_RATE as u128 * CHECKED_SIZE;
     witness.common.fee = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
     witness
