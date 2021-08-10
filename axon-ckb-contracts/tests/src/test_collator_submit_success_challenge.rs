@@ -9,7 +9,6 @@ use common_raw::cell::checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs};
 use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs};
-use common_raw::pattern::Pattern;
 use common_raw::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
 use core::convert::TryFrom;
 
@@ -150,7 +149,6 @@ fn test_success() {
     witness.task_count = 1;
     witness.punish_checker_bitmap = [0; 32];
     witness.punish_checker_bitmap[0] = 0x40;
-    witness.pattern = Pattern::CollatorSubmitSuccessChallenge;
 
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
 

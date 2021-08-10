@@ -5,9 +5,8 @@ use crate::{
     anyone_refresh_task::anyone_refresh_task, cell::*, checker_bond_withdraw::checker_bond_withdraw,
     checker_join_sidechain::checker_join_sidechain, checker_publish_challenge::checker_publish_challenge,
     checker_quit_sidechain::checker_quit_sidechain, checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote,
-    collator_publish_task::collator_publish_task, collator_settle_challenges::collator_settle_challenges,
-    collator_submit_success_challenge::collator_submit_success_challenge, collator_submit_tasks::collator_submit_tasks,
-    collator_unlock_bond::collator_unlock_bond, error::Error,
+    collator_publish_task::collator_publish_task, collator_submit_success_challenge::collator_submit_success_challenge,
+    collator_submit_tasks::collator_submit_tasks, collator_unlock_bond::collator_unlock_bond, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -139,7 +138,6 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorPublishTask => collator_publish_task(raw_witness, signer),
         Pattern::CollatorSubmitTasks => collator_submit_tasks(raw_witness, signer),
-        Pattern::CollatorSettleChallenges => collator_settle_challenges(raw_witness, signer),
         Pattern::CollatorSubmitSuccessChallenge => collator_submit_success_challenge(raw_witness),
 
         /*
