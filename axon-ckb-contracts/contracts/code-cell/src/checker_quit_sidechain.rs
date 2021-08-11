@@ -65,8 +65,7 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     // TODO: Remove checker from config checkers
 
     let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
-    checker_bond_res_lock_args.chain_id_bitmap =
-        bit_map_remove(checker_bond_res_lock_args.chain_id_bitmap, witness.chain_id).ok_or(Error::CheckerBondMismatch)?;
+    //TODO: Remove chain_id from checker_bond.
 
     if config_input_type_args.chain_id != witness.chain_id || config_res != config_output {
         return Err(Error::SidechainConfigMismatch);

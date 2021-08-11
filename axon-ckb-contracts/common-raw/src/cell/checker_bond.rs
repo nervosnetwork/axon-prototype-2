@@ -1,4 +1,14 @@
-use crate::{check_args_len, FromRaw, PureSudtTokenCell, Serialize};
+use molecule::prelude::Reader;
+use molecule::prelude::*;
+
+use crate::{
+    common::{ChainId, PubKeyHash},
+    molecule::{
+        cell::checker_bond::{CheckerBondCellLockArgsBuilder, CheckerBondCellLockArgsReader},
+        common::{ChainIdListBuilder, ChainIdReader, PubKeyHashReader},
+    },
+    FromRaw, PureSudtTokenCell, Serialize,
+};
 
 const CHECKER_BOND_LOCK_ARGS_LEN: usize = 52;
 
@@ -23,38 +33,57 @@ pub struct CheckerBondCell {
 
 PureSudtTokenCell!(CheckerBondCell);
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
+#[derive(Debug, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CheckerBondCellLockArgs {
-    pub checker_lock_arg: [u8; 20],
-    pub chain_id_bitmap:  [u8; 32],
+    pub checker_lock_arg:      PubKeyHash,
+    pub participated_chain_id: Vec<ChainId>,
 }
 
 impl FromRaw for CheckerBondCellLockArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerBondCellLockArgs> {
-        check_args_len(arg_raw_data.len(), CHECKER_BOND_LOCK_ARGS_LEN)?;
+        let reader = CheckerBondCellLockArgsReader::from_slice(arg_raw_data).ok()?;
 
         let mut checker_lock_arg = [0u8; 20];
-        checker_lock_arg.copy_from_slice(&arg_raw_data[0..20]);
+        checker_lock_arg.copy_from_slice(reader.checker_lock_arg().raw_data());
 
-        let mut chain_id_bitmap = [0u8; 32];
-        chain_id_bitmap.copy_from_slice(&arg_raw_data[20..52]);
+        let participated_chain_id = reader
+            .participated_chain_id()
+            .iter()
+            .fold(Vec::new(), |mut participated_chain_id, chain_id_reader| {
+                participated_chain_id.push(ChainId::from_raw(chain_id_reader.raw_data()));
+                participated_chain_id
+            })
+            .into_iter()
+            .collect::<Option<Vec<ChainId>>>()?;
 
         Some(CheckerBondCellLockArgs {
             checker_lock_arg,
-            chain_id_bitmap,
+            participated_chain_id,
         })
     }
 }
 
 impl Serialize for CheckerBondCellLockArgs {
-    type RawType = [u8; CHECKER_BOND_LOCK_ARGS_LEN];
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; CHECKER_BOND_LOCK_ARGS_LEN];
+        let lock_arg = PubKeyHashReader::new_unchecked(&self.checker_lock_arg).to_entity();
+        let participated_chain_id = self
+            .participated_chain_id
+            .iter()
+            .fold(ChainIdListBuilder::default(), |chain_id_list, chain_id| {
+                chain_id_list.push(ChainIdReader::new_unchecked(&chain_id.serialize()).to_entity())
+            })
+            .build();
 
-        buf[0..20].copy_from_slice(&self.checker_lock_arg);
-        buf[20..52].copy_from_slice(&self.chain_id_bitmap);
+        let builder = CheckerBondCellLockArgsBuilder::default()
+            .checker_lock_arg(lock_arg)
+            .participated_chain_id(participated_chain_id);
 
+        let mut buf = Vec::new();
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing CheckerBondCellLockArgs");
         buf
     }
 }
