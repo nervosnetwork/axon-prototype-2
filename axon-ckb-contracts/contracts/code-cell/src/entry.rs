@@ -2,10 +2,10 @@
 use core::result::Result;
 
 use crate::{
-    anyone_refresh_task::anyone_refresh_task, cell::*, checker_bond_withdraw::checker_bond_withdraw,
-    checker_join_sidechain::checker_join_sidechain, checker_publish_challenge::checker_publish_challenge,
-    checker_quit_sidechain::checker_quit_sidechain, checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote,
-    collator_publish_task::collator_publish_task, collator_submit_success_challenge::collator_submit_success_challenge,
+    anyone_refresh_task::anyone_refresh_task, anyone_shutdown_sidechain::anyone_shutdown_sidechain, cell::*,
+    checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
+    checker_publish_challenge::checker_publish_challenge, checker_quit_sidechain::checker_quit_sidechain,
+    checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote, collator_publish_task::collator_publish_task,
     collator_submit_tasks::collator_submit_tasks, collator_unlock_bond::collator_unlock_bond, error::Error,
 };
 
@@ -138,7 +138,7 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorPublishTask => collator_publish_task(raw_witness, signer),
         Pattern::CollatorSubmitTasks => collator_submit_tasks(raw_witness, signer),
-        Pattern::CollatorSubmitSuccessChallenge => collator_submit_success_challenge(raw_witness),
+        Pattern::AnyoneShutdownSidechain => anyone_shutdown_sidechain(raw_witness),
 
         /*
         RefreshTask,

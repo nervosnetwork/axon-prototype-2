@@ -1,8 +1,8 @@
 use crate::{pattern::Pattern, FromRaw, Serialize};
 
-const COLLATOR_SUBMIT_FAILD_CHALLENGE_WITNESS_LEN: usize = 68;
+const ANYONE_SHUTDOWN_SIDECHAIN_WITNESS_LEN: usize = 68;
 #[derive(Debug)]
-pub struct CollatorSubmitChallengeWitness {
+pub struct AnyoneShutdownSidechainWitness {
     pub pattern:               Pattern,
     pub chain_id:              u8,
     pub fee:                   u128,
@@ -12,10 +12,10 @@ pub struct CollatorSubmitChallengeWitness {
     pub valid_challenge_count: u8,
 }
 
-impl Default for CollatorSubmitChallengeWitness {
+impl Default for AnyoneShutdownSidechainWitness {
     fn default() -> Self {
         Self {
-            pattern:               Pattern::CollatorSubmitSuccessChallenge,
+            pattern:               Pattern::AnyoneShutdownSidechain,
             chain_id:              0,
             fee:                   0,
             fee_per_checker:       0,
@@ -26,8 +26,8 @@ impl Default for CollatorSubmitChallengeWitness {
     }
 }
 
-impl FromRaw for CollatorSubmitChallengeWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Option<CollatorSubmitChallengeWitness> {
+impl FromRaw for AnyoneShutdownSidechainWitness {
+    fn from_raw(witness_raw_data: &[u8]) -> Option<AnyoneShutdownSidechainWitness> {
         if witness_raw_data.len() < 2 {
             return None;
         }
@@ -42,7 +42,7 @@ impl FromRaw for CollatorSubmitChallengeWitness {
 
         let task_count = u8::from_raw(&witness_raw_data[66..67])?;
         let valid_challenge_count = u8::from_raw(&witness_raw_data[67..68])?;
-        Some(CollatorSubmitChallengeWitness {
+        Some(AnyoneShutdownSidechainWitness {
             pattern,
             chain_id,
             fee,
@@ -54,11 +54,11 @@ impl FromRaw for CollatorSubmitChallengeWitness {
     }
 }
 
-impl Serialize for CollatorSubmitChallengeWitness {
-    type RawType = [u8; COLLATOR_SUBMIT_FAILD_CHALLENGE_WITNESS_LEN];
+impl Serialize for AnyoneShutdownSidechainWitness {
+    type RawType = [u8; ANYONE_SHUTDOWN_SIDECHAIN_WITNESS_LEN];
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; COLLATOR_SUBMIT_FAILD_CHALLENGE_WITNESS_LEN];
+        let mut buf = [0u8; ANYONE_SHUTDOWN_SIDECHAIN_WITNESS_LEN];
 
         buf[0..1].copy_from_slice(&self.pattern.serialize());
         buf[1..2].copy_from_slice(&self.chain_id.serialize());

@@ -8,7 +8,7 @@ use common_raw::{
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
         sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs},
     },
-    witness::collator_submit_challenge::CollatorSubmitChallengeWitness,
+    witness::anyone_shutdown_sidechain::AnyoneShutdownSidechainWitness,
     FromRaw,
 };
 
@@ -21,25 +21,12 @@ const SIDECHAIN_FEE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
 
 const INPUT_NORMAL_CELL_COUNT: usize = 4;
 const OUTPUT_NORMAL_CELL_COUNT: usize = INPUT_NORMAL_CELL_COUNT - 1;
-pub fn is_collator_submit_success_challenge(witness: &CollatorSubmitChallengeWitness) -> Result<(), Error> {
-    /*
-    CollatorSubmitChallenge,
-
-    Dep:    0 Global Config Cell
-
-    Code Cell                   ->          Code Cell
-    Sidechain Config Cell       ->          Sidechain Config Cell
-    Sidechain Fee Cell          ->          Sidechain Fee Cell
-    SidechainBondCell           ->
-    [Checker Info Cell]         ->          [Checker Info Cell]
-
-    */
-
+pub fn is_anyone_shutdown_sidechain(witness: &AnyoneShutdownSidechainWitness) -> Result<(), Error> {
     let global = check_global_cell()?;
 
     let cell_input_count = INPUT_NORMAL_CELL_COUNT
         + usize::from(witness.valid_challenge_count)
-        + usize::from(bit_map_count(witness.punish_checker_bitmap).ok_or(Error::CollatorSubmitChallengeWitnessMismatch)?);
+        + usize::from(bit_map_count(witness.punish_checker_bitmap).ok_or(Error::WitnessMismatch)?);
     let cell_output_conut = OUTPUT_NORMAL_CELL_COUNT + usize::from(witness.valid_challenge_count);
 
     if is_cell_count_not_equals(cell_input_count, Source::Input) || is_cell_count_not_equals(cell_output_conut, Source::Output) {
@@ -62,9 +49,9 @@ pub fn is_collator_submit_success_challenge(witness: &CollatorSubmitChallengeWit
     CheckerInfoCell::range_check(OUTPUT_NORMAL_CELL_COUNT.., Source::Output, &global)
 }
 
-pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error> {
+pub fn anyone_shutdown_sidechain(raw_witness: &[u8]) -> Result<(), Error> {
     /*
-    CollatorSubmitChallenge,
+    AnyoneShutdownSidechain,
 
     Dep:    0 Global Config Cell
 
@@ -72,19 +59,19 @@ pub fn collator_submit_success_challenge(raw_witness: &[u8]) -> Result<(), Error
     Sidechain Config Cell       ->          Sidechain Config Cell
     Sidechain Fee Cell          ->          Sidechain Fee Cell
     SidechainBondCell           ->
-    [Checker Info Cell]         ->          [Checker Info Cell]
 
+    [Checker Info Cell]         ->          [Checker Info Cell]
     */
 
-    let witness = CollatorSubmitChallengeWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
-    let punish_count = bit_map_count(witness.punish_checker_bitmap).ok_or(Error::CollatorSubmitChallengeWitnessMismatch)?;
+    let witness = AnyoneShutdownSidechainWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
+    let punish_count = bit_map_count(witness.punish_checker_bitmap).ok_or(Error::WitnessMismatch)?;
     let checker_info_count = witness.valid_challenge_count + punish_count;
     let challenge_count = witness.valid_challenge_count + punish_count - witness.task_count;
 
     if u128::from(witness.valid_challenge_count) * witness.fee_per_checker != witness.fee || witness.valid_challenge_count <= punish_count {
-        return Err(Error::CollatorSubmitChallengeWitnessMismatch);
+        return Err(Error::WitnessMismatch);
     }
-    is_collator_submit_success_challenge(&witness)?;
+    is_anyone_shutdown_sidechain(&witness)?;
 
     //load inputs
     let (

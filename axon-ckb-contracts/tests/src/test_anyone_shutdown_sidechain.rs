@@ -9,7 +9,7 @@ use common_raw::cell::checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs};
 use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs};
-use common_raw::witness::collator_submit_challenge::CollatorSubmitChallengeWitness;
+use common_raw::witness::anyone_shutdown_sidechain::AnyoneShutdownSidechainWitness;
 use core::convert::TryFrom;
 
 const MAX_CYCLES: u64 = 10_000_000;
@@ -142,7 +142,7 @@ fn test_success() {
         outputs_data.push(checker_info_data_output.serialize());
     }
 
-    let mut witness = CollatorSubmitChallengeWitness::default();
+    let mut witness = AnyoneShutdownSidechainWitness::default();
     witness.fee = u128::from(REJECT_TASK_COUNT) * CHECKE_SIZE * FEE_RATE;
     witness.fee_per_checker = CHECKE_SIZE * FEE_RATE;
     witness.valid_challenge_count = 2;
