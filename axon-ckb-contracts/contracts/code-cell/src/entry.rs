@@ -5,9 +5,8 @@ use crate::{
     anyone_refresh_task::anyone_refresh_task, cell::*, checker_bond_withdraw::checker_bond_withdraw,
     checker_join_sidechain::checker_join_sidechain, checker_publish_challenge::checker_publish_challenge,
     checker_quit_sidechain::checker_quit_sidechain, checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote,
-    collator_publish_task::collator_publish_task, collator_submit_faild_challenge::collator_submit_faild_challenge,
-    collator_submit_success_challenge::collator_submit_success_challenge, collator_submit_tasks::collator_submit_tasks,
-    collator_unlock_bond::collator_unlock_bond, error::Error,
+    collator_publish_task::collator_publish_task, collator_submit_success_challenge::collator_submit_success_challenge,
+    collator_submit_tasks::collator_submit_tasks, collator_unlock_bond::collator_unlock_bond, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -139,34 +138,6 @@ pub fn main() -> Result<(), Error> {
         */
         Pattern::CollatorPublishTask => collator_publish_task(raw_witness, signer),
         Pattern::CollatorSubmitTasks => collator_submit_tasks(raw_witness, signer),
-
-        /*
-        CollatorSubmitChallenge,
-
-        Dep:    0 Global Config Cell
-
-        Code Cell                   ->          Code Cell
-        Sidechain Config Cell       ->          Sidechain Config Cell
-        Sidechain State Cell        ->          Sidechain State Cell
-        Sidechain Fee Cell          ->          Sidechain Fee Cell
-        Muse Token Cell
-        [Checker Info Cell]         ->          [Checker Info Cell]
-
-        */
-        Pattern::CollatorSubmitFaildChallenge => collator_submit_faild_challenge(raw_witness, signer),
-
-        /*
-        CollatorSubmitChallenge,
-
-        Dep:    0 Global Config Cell
-
-        Code Cell                   ->          Code Cell
-        Sidechain Config Cell       ->          Sidechain Config Cell
-        Sidechain Fee Cell          ->          Sidechain Fee Cell
-        Sidechain Bond Cell
-        [Checker Info Cell]         ->          [Checker Info Cell]
-
-        */
         Pattern::CollatorSubmitSuccessChallenge => collator_submit_success_challenge(raw_witness),
 
         /*

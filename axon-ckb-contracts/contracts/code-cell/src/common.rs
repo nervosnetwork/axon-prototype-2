@@ -11,8 +11,6 @@ use core::convert::TryInto;
 pub const CODE_INPUT: CellOrigin = CellOrigin(0, Source::Input);
 pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
 
-pub const EMPTY_BIT_MAP: [u8; 32] = [0; 32];
-
 pub const CKB_HASH_PERSONALIZATION: &[u8] = b"ckb-default-hash";
 
 pub fn is_cell_count_greater(n: usize, source: Source) -> bool {
@@ -32,38 +30,6 @@ macro_rules! check_cells {
     ($global: expr, {$($type: ty: $origin: expr), * $(,)?} $(,)?) => {
         $(<$type>::check($origin, $global)?;)*
     }
-}
-
-pub fn bit_map_add(input: &[u8; 32], checker_id: u8) -> Option<[u8; 32]> {
-    let mut input = BitVec::from_bytes(&input[..]);
-
-    //should be false
-    if input.get(checker_id as usize)? {
-        return None;
-    }
-
-    input.set(checker_id as usize, true);
-
-    let mut ret = [0u8; 32];
-    ret.copy_from_slice(input.to_bytes().as_slice());
-
-    Some(ret)
-}
-
-pub fn bit_map_remove(input: [u8; 32], checker_id: u8) -> Option<[u8; 32]> {
-    let mut input = BitVec::from_bytes(&input[..]);
-
-    //should be true
-    if !input.get(checker_id as usize)? {
-        return None;
-    }
-
-    input.set(checker_id as usize, false);
-
-    let mut ret = [0u8; 32];
-    ret.copy_from_slice(&input.to_bytes().as_slice()[0..32]);
-
-    Some(ret)
 }
 
 pub fn bit_map_count(input: [u8; 32]) -> Option<u8> {

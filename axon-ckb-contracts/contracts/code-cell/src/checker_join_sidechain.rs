@@ -54,7 +54,7 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     config_res.checker_total_count += 1;
     // TODO: add checker to config checkers
 
-    let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
+    let checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
     //TODO: add chain_id to checker_bond.
 
     let mut checker_info_res = checker_info_output.clone();
