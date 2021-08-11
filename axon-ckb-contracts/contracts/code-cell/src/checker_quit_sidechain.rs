@@ -64,7 +64,7 @@ pub fn checker_quit_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
     config_res.checker_total_count -= 1;
     // TODO: Remove checker from config checkers
 
-    let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
+    let checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
     //TODO: Remove chain_id from checker_bond.
 
     if config_input_type_args.chain_id != witness.chain_id || config_res != config_output {
