@@ -226,7 +226,6 @@ fn test_success() {
 
     witness.fee_per_checker = FEE_RATE as u128 * CHECKED_SIZE;
     witness.fee = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
-    witness.sidechain_config_dep_index = EnvironmentBuilder::BOOTSTRAP_CELL_DEPS_LENGTH;
     witness.new_random_seed.copy_from_slice(&sidechain_state_data_output.random_seed);
 
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];

@@ -731,7 +731,6 @@ impl ::core::fmt::Display for CollatorSubmitTasksWitness {
         write!(f, ", {}: {}", "new_random_seed", self.new_random_seed())?;
         write!(f, ", {}: {}", "fee", self.fee())?;
         write!(f, ", {}: {}", "fee_per_checker", self.fee_per_checker())?;
-        write!(f, ", {}: {}", "sidechain_config_dep_index", self.sidechain_config_dep_index())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -742,16 +741,16 @@ impl ::core::fmt::Display for CollatorSubmitTasksWitness {
 impl ::core::default::Default for CollatorSubmitTasksWitness {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            140, 0, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 40, 0, 0, 0, 72, 0, 0, 0, 104, 0, 0, 0, 120, 0, 0, 0, 136, 0, 0, 0, 0, 0, 0, 0, 4, 0,
+            132, 0, 0, 0, 28, 0, 0, 0, 32, 0, 0, 0, 36, 0, 0, 0, 68, 0, 0, 0, 100, 0, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         CollatorSubmitTasksWitness::new_unchecked(v.into())
     }
 }
 impl CollatorSubmitTasksWitness {
-    pub const FIELD_COUNT: usize = 7;
+    pub const FIELD_COUNT: usize = 6;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -811,18 +810,11 @@ impl CollatorSubmitTasksWitness {
     pub fn fee_per_checker(&self) -> Uint128 {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[24..]) as usize;
-        let end = molecule::unpack_number(&slice[28..]) as usize;
-        Uint128::new_unchecked(self.0.slice(start..end))
-    }
-
-    pub fn sidechain_config_dep_index(&self) -> Uint32 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[28..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[32..]) as usize;
-            Uint32::new_unchecked(self.0.slice(start..end))
+            let end = molecule::unpack_number(&slice[28..]) as usize;
+            Uint128::new_unchecked(self.0.slice(start..end))
         } else {
-            Uint32::new_unchecked(self.0.slice(start..))
+            Uint128::new_unchecked(self.0.slice(start..))
         }
     }
 
@@ -867,7 +859,6 @@ impl molecule::prelude::Entity for CollatorSubmitTasksWitness {
             .new_random_seed(self.new_random_seed())
             .fee(self.fee())
             .fee_per_checker(self.fee_per_checker())
-            .sidechain_config_dep_index(self.sidechain_config_dep_index())
     }
 }
 #[derive(Clone, Copy)]
@@ -895,7 +886,6 @@ impl<'r> ::core::fmt::Display for CollatorSubmitTasksWitnessReader<'r> {
         write!(f, ", {}: {}", "new_random_seed", self.new_random_seed())?;
         write!(f, ", {}: {}", "fee", self.fee())?;
         write!(f, ", {}: {}", "fee_per_checker", self.fee_per_checker())?;
-        write!(f, ", {}: {}", "sidechain_config_dep_index", self.sidechain_config_dep_index())?;
         let extra_count = self.count_extra_fields();
         if extra_count != 0 {
             write!(f, ", .. ({} fields)", extra_count)?;
@@ -904,7 +894,7 @@ impl<'r> ::core::fmt::Display for CollatorSubmitTasksWitnessReader<'r> {
     }
 }
 impl<'r> CollatorSubmitTasksWitnessReader<'r> {
-    pub const FIELD_COUNT: usize = 7;
+    pub const FIELD_COUNT: usize = 6;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -964,18 +954,11 @@ impl<'r> CollatorSubmitTasksWitnessReader<'r> {
     pub fn fee_per_checker(&self) -> Uint128Reader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[24..]) as usize;
-        let end = molecule::unpack_number(&slice[28..]) as usize;
-        Uint128Reader::new_unchecked(&self.as_slice()[start..end])
-    }
-
-    pub fn sidechain_config_dep_index(&self) -> Uint32Reader<'r> {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[28..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[32..]) as usize;
-            Uint32Reader::new_unchecked(&self.as_slice()[start..end])
+            let end = molecule::unpack_number(&slice[28..]) as usize;
+            Uint128Reader::new_unchecked(&self.as_slice()[start..end])
         } else {
-            Uint32Reader::new_unchecked(&self.as_slice()[start..])
+            Uint128Reader::new_unchecked(&self.as_slice()[start..])
         }
     }
 }
@@ -1039,22 +1022,20 @@ impl<'r> molecule::prelude::Reader<'r> for CollatorSubmitTasksWitnessReader<'r> 
         RandomSeedReader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
         Uint128Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
         Uint128Reader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
         Ok(())
     }
 }
 #[derive(Debug, Default)]
 pub struct CollatorSubmitTasksWitnessBuilder {
-    pub(crate) chain_id: ChainId,
-    pub(crate) commit: ExistedCommittedCheckerInfos,
+    pub(crate) chain_id:           ChainId,
+    pub(crate) commit:             ExistedCommittedCheckerInfos,
     pub(crate) origin_random_seed: RandomSeed,
-    pub(crate) new_random_seed: RandomSeed,
-    pub(crate) fee: Uint128,
-    pub(crate) fee_per_checker: Uint128,
-    pub(crate) sidechain_config_dep_index: Uint32,
+    pub(crate) new_random_seed:    RandomSeed,
+    pub(crate) fee:                Uint128,
+    pub(crate) fee_per_checker:    Uint128,
 }
 impl CollatorSubmitTasksWitnessBuilder {
-    pub const FIELD_COUNT: usize = 7;
+    pub const FIELD_COUNT: usize = 6;
 
     pub fn chain_id(mut self, v: ChainId) -> Self {
         self.chain_id = v;
@@ -1085,11 +1066,6 @@ impl CollatorSubmitTasksWitnessBuilder {
         self.fee_per_checker = v;
         self
     }
-
-    pub fn sidechain_config_dep_index(mut self, v: Uint32) -> Self {
-        self.sidechain_config_dep_index = v;
-        self
-    }
 }
 impl molecule::prelude::Builder for CollatorSubmitTasksWitnessBuilder {
     type Entity = CollatorSubmitTasksWitness;
@@ -1104,7 +1080,6 @@ impl molecule::prelude::Builder for CollatorSubmitTasksWitnessBuilder {
             + self.new_random_seed.as_slice().len()
             + self.fee.as_slice().len()
             + self.fee_per_checker.as_slice().len()
-            + self.sidechain_config_dep_index.as_slice().len()
     }
 
     fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
@@ -1122,8 +1097,6 @@ impl molecule::prelude::Builder for CollatorSubmitTasksWitnessBuilder {
         total_size += self.fee.as_slice().len();
         offsets.push(total_size);
         total_size += self.fee_per_checker.as_slice().len();
-        offsets.push(total_size);
-        total_size += self.sidechain_config_dep_index.as_slice().len();
         writer.write_all(&molecule::pack_number(total_size as molecule::Number))?;
         for offset in offsets.into_iter() {
             writer.write_all(&molecule::pack_number(offset as molecule::Number))?;
@@ -1134,7 +1107,6 @@ impl molecule::prelude::Builder for CollatorSubmitTasksWitnessBuilder {
         writer.write_all(self.new_random_seed.as_slice())?;
         writer.write_all(self.fee.as_slice())?;
         writer.write_all(self.fee_per_checker.as_slice())?;
-        writer.write_all(self.sidechain_config_dep_index.as_slice())?;
         Ok(())
     }
 
