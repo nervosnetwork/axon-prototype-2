@@ -3,7 +3,7 @@ use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
-        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs, CheckerInfoStatus},
         code::CodeCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
     },
@@ -12,6 +12,7 @@ use common_raw::{
 };
 
 use crate::{cell::*, common::*, error::Error};
+use core::convert::TryFrom;
 
 const CONFIG_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const CHECKER_BOND_INPUT: CellOrigin = CellOrigin(2, Source::Input);
@@ -42,7 +43,16 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
         CheckerBondCellLockArgs: CHECKER_BOND_INPUT,
         CheckerBondCell: CHECKER_BOND_INPUT,
     };
-    let (config_output, checker_bond_output_lock_args, checker_bond_output, checker_info_output_type_args, checker_info_output) = load_entities! {
+
+    let (
+        config_output_type_args,
+        config_output,
+        checker_bond_output_lock_args,
+        checker_bond_output,
+        checker_info_output_type_args,
+        checker_info_output,
+    ) = load_entities! {
+        SidechainConfigCellTypeArgs: CONFIG_OUTPUT,
         SidechainConfigCell: CONFIG_OUTPUT,
         CheckerBondCellLockArgs: CHECKER_BOND_OUTPUT,
         CheckerBondCell: CHECKER_BOND_OUTPUT,
@@ -52,29 +62,48 @@ pub fn checker_join_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Result<()
 
     let mut config_res = config_input.clone();
     config_res.checker_total_count += 1;
-    // TODO: add checker to config checkers
+    config_res.checker_normal_count += 1;
+    config_res.activated_checkers.push(signer);
 
-    let checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
-    //TODO: add chain_id to checker_bond.
-
-    let mut checker_info_res = checker_info_output.clone();
-    checker_info_res.unpaid_fee = 0;
-
-    let mut checker_info_res_type_args = checker_info_output_type_args.clone();
-    checker_info_res_type_args.chain_id = witness.chain_id;
-    checker_info_res_type_args.checker_lock_arg = signer;
-
-    if config_input_type_args.chain_id != witness.chain_id || config_res != config_output {
+    if config_input_type_args != config_output_type_args
+        || config_res != config_output
+        || config_input_type_args.chain_id != witness.chain_id
+    {
         return Err(Error::SidechainConfigMismatch);
     }
+    let mut checker_bond_res_lock_args = checker_bond_input_lock_args.clone();
+    if checker_bond_res_lock_args
+        .participated_chain_id
+        .iter()
+        .find(|chain_id| Some(**chain_id) == u32::try_from(witness.chain_id).ok())
+        .is_none()
+    {
+        checker_bond_res_lock_args
+            .participated_chain_id
+            .push(u32::try_from(witness.chain_id).or(Err(Error::Encoding))?);
+    } else {
+        return Err(Error::CheckerBondMismatch);
+    }
+
     if checker_bond_res_lock_args != checker_bond_output_lock_args
-        || checker_bond_input_lock_args.checker_lock_arg != signer
+        || checker_bond_res_lock_args.checker_lock_arg != signer
         || checker_bond_input != checker_bond_output
-        || checker_bond_output.amount < config_input.minimal_bond
+        || checker_bond_input.amount < config_res.minimal_bond
     {
         return Err(Error::CheckerBondMismatch);
     }
-    if checker_info_res != checker_info_output || checker_info_res_type_args != checker_info_output_type_args {
+
+    let mut checker_info_res = checker_info_output.clone();
+    checker_info_res.unpaid_fee = 0;
+    checker_info_res.status = CheckerInfoStatus::Relaying;
+
+    let mut checker_info_res_type_args = checker_info_output_type_args.clone();
+    checker_info_res_type_args.checker_lock_arg = signer;
+
+    if checker_info_res != checker_info_output
+        || checker_info_res_type_args != checker_info_output_type_args
+        || checker_info_res_type_args.chain_id != witness.chain_id
+    {
         return Err(Error::CheckerInfoMismatch);
     }
 

@@ -2,7 +2,7 @@ use crate::common::*;
 use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
 use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
-use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
+use ckb_tool::ckb_types::{bytes::Bytes, packed::*, prelude::*};
 
 use common_raw::{
     cell::{
@@ -15,15 +15,6 @@ use common_raw::{
 
 const MAX_CYCLES: u64 = 10_000_000;
 
-fn with_time_header(mut builder: EnvironmentBuilder, timestamp: u64) -> (EnvironmentBuilder, core::HeaderView) {
-    let header = core::HeaderBuilder::default().timestamp(timestamp.pack()).build();
-    builder.context.insert_header(header.clone());
-
-    let builder = builder.header_dep(header.hash());
-
-    (builder, header)
-}
-
 #[test]
 fn test_success() {
     // generate key pair
@@ -33,7 +24,7 @@ fn test_success() {
 
     // deploy contract
     let (
-        builder,
+        mut builder,
         AxonScripts {
             always_success_code,
             always_success_script: always_success,
@@ -42,22 +33,21 @@ fn test_success() {
         },
     ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
 
-    // prepare headers
-    let (builder, config_header) = with_time_header(builder, 1000);
-    let (mut builder, _) = with_time_header(builder, 1100);
-
     // prepare scripts
-    let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
-    checker_bond_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+    let mut checker_bond_input_lock_args = CheckerBondCellLockArgs::default();
+    checker_bond_input_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+
+    let mut checker_bond_output_lock_args = checker_bond_input_lock_args.clone();
+    checker_bond_output_lock_args.participated_chain_id.push(0);
 
     let checker_bond_lock_input_script = builder
         .context
-        .build_script(&always_success_code, checker_bond_lock_args.serialize())
+        .build_script(&always_success_code, checker_bond_input_lock_args.serialize())
         .expect("script");
 
     let checker_bond_lock_output_script = builder
         .context
-        .build_script(&always_success_code, checker_bond_lock_args.serialize())
+        .build_script(&always_success_code, checker_bond_output_lock_args.serialize())
         .expect("script");
 
     let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
@@ -83,6 +73,7 @@ fn test_success() {
         config_input_data.serialize(),
     );
     let config_input = CellInput::new_builder().previous_output(config_input_out_point.clone()).build();
+    let mut builder = builder.input(config_input);
 
     let mut checker_bond_input_data = CheckerBondCell::default();
     checker_bond_input_data.amount = 100;
@@ -91,22 +82,19 @@ fn test_success() {
         new_type_cell_output(1000, &checker_bond_lock_input_script, &always_success),
         checker_bond_input_data.serialize(),
     );
-
-    builder
-        .context
-        .link_cell_with_block(config_input_out_point.clone(), config_header.hash(), 0);
-    let builder = builder.input(config_input).input(checker_bond_input);
+    let builder = builder.input(checker_bond_input);
 
     // prepare outputs
     let mut config_output = config_input_data.clone();
     config_output.checker_total_count = 1;
-
+    config_output.checker_normal_count = 1;
+    config_output.activated_checkers.push(pubkey_hash);
     let checker_bond_output = checker_bond_input_data.clone();
     let checker_info_output = CheckerInfoCell::default();
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &config_script),
         new_type_cell_output(1000, &checker_bond_lock_output_script, &always_success),
         new_type_cell_output(1000, &always_success, &checker_info_script),
     ];
