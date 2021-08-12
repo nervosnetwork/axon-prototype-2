@@ -4,11 +4,12 @@ use crate::{
     common::*,
     molecule::{
         cell::sidechain_config::{
-            CheckerInfoListBuilder, SidechainConfigCellBuilder, SidechainConfigCellReader, SidechainConfigCellTypeArgsBuilder,
-            SidechainConfigCellTypeArgsReader, SidechainStatusReader,
+            SidechainConfigCellBuilder, SidechainConfigCellReader, SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader,
+            SidechainStatusReader,
         },
         common::{
-            BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashReader, Uint128Reader, Uint32Reader, Uint8Reader,
+            BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashListBuilder, PubKeyHashReader, Uint128Reader,
+            Uint32Reader, Uint8Reader,
         },
     },
     FromRaw, Serialize,
@@ -193,12 +194,12 @@ impl Serialize for SidechainConfigCell {
         let checker_threshold = Uint32Reader::new_unchecked(&self.checker_threshold.serialize()).to_entity();
         let checker_total_count = Uint32Reader::new_unchecked(&self.checker_total_count.serialize()).to_entity();
 
-        let mut activated_checkers = CheckerInfoListBuilder::default();
+        let mut activated_checkers = PubKeyHashListBuilder::default();
         for checker in &self.activated_checkers {
             activated_checkers = activated_checkers.push(PubKeyHashReader::new_unchecked(checker).to_entity());
         }
 
-        let mut jailed_checkers = CheckerInfoListBuilder::default();
+        let mut jailed_checkers = PubKeyHashListBuilder::default();
         for checker in &self.jailed_checkers {
             jailed_checkers = jailed_checkers.push(PubKeyHashReader::new_unchecked(checker).to_entity());
         }
