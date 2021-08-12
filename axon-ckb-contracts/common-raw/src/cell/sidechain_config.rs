@@ -4,8 +4,8 @@ use crate::{
     common::*,
     molecule::{
         cell::sidechain_config::{
-            CheckerInfoListBuilder, CheckerStatusReader, SidechainConfigCellBuilder, SidechainConfigCellReader,
-            SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader, SidechainStatusReader,
+            CheckerInfoListBuilder, SidechainConfigCellBuilder, SidechainConfigCellReader, SidechainConfigCellTypeArgsBuilder,
+            SidechainConfigCellTypeArgsReader, SidechainStatusReader,
         },
         common::{
             BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashReader, Uint128Reader, Uint32Reader, Uint8Reader,
@@ -46,45 +46,6 @@ impl FromRaw for SidechainStatus {
 }
 
 impl Serialize for SidechainStatus {
-    type RawType = [u8; 1];
-
-    fn serialize(&self) -> Self::RawType {
-        (*self as u8).serialize()
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
-#[repr(u8)]
-pub enum CheckerStatus {
-    Normal,
-    Jailed,
-}
-
-impl CheckerStatus {
-    fn from_reader(reader: CheckerStatusReader) -> Option<Self> {
-        let status = u8::from_raw(reader.raw_data())?;
-        match status {
-            0u8 => Some(Self::Normal),
-            1u8 => Some(Self::Jailed),
-            _ => None,
-        }
-    }
-}
-
-impl Default for CheckerStatus {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
-
-impl FromRaw for CheckerStatus {
-    fn from_raw(raw: &[u8]) -> Option<Self> {
-        let reader = CheckerStatusReader::from_slice(raw).ok()?;
-        Self::from_reader(reader)
-    }
-}
-
-impl Serialize for CheckerStatus {
     type RawType = [u8; 1];
 
     fn serialize(&self) -> Self::RawType {

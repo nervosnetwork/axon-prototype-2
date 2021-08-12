@@ -2,7 +2,6 @@ import ../common;
 
 array SidechainStatus [byte; 1];
 
-array CheckerStatus [byte; 1];
 vector CheckerInfoList <PubKeyHash>;
 
 table SidechainConfigCell {
