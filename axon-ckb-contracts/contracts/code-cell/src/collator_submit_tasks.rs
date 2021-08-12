@@ -1,4 +1,3 @@
-use alloc::vec::Vec;
 use ckb_std::ckb_constants::Source;
 use common_raw::{
     cell::{
@@ -199,82 +198,48 @@ fn check_sidechain_state(
     let mut sidechain_state_res = sidechain_state_input.clone();
     sidechain_state_res.random_seed = witness.new_random_seed;
 
-    // check valid existed checkers
-    for valid_checker in witness
-        .commit
-        .iter()
-        .filter(|committed_checker| committed_checker.is_valid() && committed_checker.is_existed())
-    {
-        let index = valid_checker.index.ok_or(Error::Encoding)?;
+    // verify all existed checker
+    for existed_checker in witness.commit.iter().filter(|committed_checker| committed_checker.is_existed()) {
+        let index = existed_checker.index.ok_or(Error::Encoding)?;
         if index >= sidechain_state_res.random_commit.len() {
             return Err(Error::SidechainStateMismatch);
         }
 
         let mut saved_commit = sidechain_state_res.random_commit[index];
 
-        if saved_commit.checker_lock_arg != valid_checker.checker_lock_arg
-            || saved_commit.committed_hash != valid_checker.origin_committed_hash.ok_or(Error::SidechainStateMismatch)?
+        if saved_commit.checker_lock_arg != existed_checker.checker_lock_arg
+            || saved_commit.committed_hash != existed_checker.origin_committed_hash.ok_or(Error::SidechainStateMismatch)?
         {
             return Err(Error::SidechainStateMismatch);
         }
-        saved_commit
-            .committed_hash
-            .copy_from_slice(&valid_checker.new_committed_hash.ok_or(Error::Encoding)?);
+
+        // edit valid existed checker
+        if existed_checker.is_valid() {
+            saved_commit
+                .committed_hash
+                .copy_from_slice(&existed_checker.new_committed_hash.ok_or(Error::Encoding)?);
+        }
     }
 
     // remove invalid existed checkers
-    let mut invalid_checker_iter = witness
+    let invalid_checker_iter = witness
         .commit
         .iter()
         .filter(|committed_checker| committed_checker.is_invalid() && committed_checker.is_existed());
-    let mut invalid_checker_opt = invalid_checker_iter.next();
-    let mut invalid_checker_index = match invalid_checker_opt {
-        Some(checker) => checker.index.ok_or(Error::Encoding)?,
-        None => 0,
-    };
 
-    let mut valid_random_commit = Vec::new();
+    sidechain_state_res.random_commit = sidechain_state_res
+        .random_commit
+        .into_iter()
+        .filter(|saved_commit| {
+            invalid_checker_iter
+                .clone()
+                .find(|checker| checker.checker_lock_arg == saved_commit.checker_lock_arg)
+                .is_none()
+        })
+        .collect();
 
-    for i in 0..sidechain_state_res.random_commit.len() {
-        let saved_commit = sidechain_state_res.random_commit[i];
-
-        if i != invalid_checker_index {
-            valid_random_commit.push(saved_commit);
-            continue;
-        }
-
-        let invalid_checker = match invalid_checker_opt {
-            Some(checker) => checker,
-            None => {
-                valid_random_commit.push(saved_commit);
-                continue;
-            }
-        };
-
-        if invalid_checker_index >= sidechain_state_res.random_commit.len() {
-            return Err(Error::SidechainStateMismatch);
-        }
-
-        if saved_commit.checker_lock_arg != invalid_checker.checker_lock_arg
-            || saved_commit.committed_hash != invalid_checker.origin_committed_hash.ok_or(Error::SidechainStateMismatch)?
-        {
-            return Err(Error::SidechainStateMismatch);
-        }
-
-        invalid_checker_opt = invalid_checker_iter.next();
-        invalid_checker_index = match invalid_checker_opt {
-            Some(checker) => checker.index.ok_or(Error::Encoding)?,
-            None => 0,
-        };
-    }
-    sidechain_state_res.random_commit = valid_random_commit;
-
-    // add valid new checkers
-    for new_checker in witness
-        .commit
-        .iter()
-        .filter(|committed_checker| committed_checker.is_valid() && committed_checker.is_new())
-    {
+    // verify all new checkers
+    for new_checker in witness.commit.iter().filter(|committed_checker| committed_checker.is_new()) {
         if sidechain_state_input
             .random_commit
             .iter()
@@ -284,10 +249,13 @@ fn check_sidechain_state(
             return Err(Error::SidechainStateMismatch);
         }
 
-        sidechain_state_res.random_commit.push(CommittedCheckerInfo {
-            checker_lock_arg: new_checker.checker_lock_arg,
-            committed_hash:   new_checker.new_committed_hash.ok_or(Error::Encoding)?,
-        })
+        // add valid new checker
+        if new_checker.is_valid() {
+            sidechain_state_res.random_commit.push(CommittedCheckerInfo {
+                checker_lock_arg: new_checker.checker_lock_arg,
+                committed_hash:   new_checker.new_committed_hash.ok_or(Error::Encoding)?,
+            })
+        }
     }
 
     if sidechain_state_res != *sidechain_state_output
