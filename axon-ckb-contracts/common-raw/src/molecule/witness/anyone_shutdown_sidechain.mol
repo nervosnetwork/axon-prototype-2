@@ -1,0 +1,7 @@
+import ../common;
+
+table AnyoneShutdownSidechainWitness {
+  challenge_times: Uint32,
+  check_data_size: Uint128,
+  jailed_checkers: PubKeyHashList,
+}

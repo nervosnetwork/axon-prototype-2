@@ -36,7 +36,6 @@ pub enum Error {
     CheckerInfoMismatch,
     MuseTokenMismatch,
     TaskMismatch,
-    WitnessMismatch,
 }
 
 impl From<SysError> for Error {

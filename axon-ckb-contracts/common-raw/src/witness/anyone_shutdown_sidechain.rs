@@ -1,73 +1,83 @@
-use crate::{pattern::Pattern, FromRaw, Serialize};
+use crate::{
+    common::*,
+    molecule::{
+        common::{PubKeyHashListBuilder, PubKeyHashReader, Uint128Reader, Uint32Reader},
+        witness::anyone_shutdown_sidechain::{AnyoneShutdownSidechainWitnessBuilder, AnyoneShutdownSidechainWitnessReader},
+    },
+    pattern::Pattern,
+    FromRaw, Serialize,
+};
+use molecule::prelude::*;
 
-const ANYONE_SHUTDOWN_SIDECHAIN_WITNESS_LEN: usize = 68;
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct AnyoneShutdownSidechainWitness {
-    pub pattern:               Pattern,
-    pub chain_id:              u8,
-    pub fee:                   u128,
-    pub fee_per_checker:       u128,
-    pub punish_checker_bitmap: [u8; 32],
-    pub task_count:            u8,
-    pub valid_challenge_count: u8,
+    pub pattern:         Pattern,
+    pub challenge_times: usize,
+    pub check_data_size: u128,
+    pub jailed_checkers: Vec<PubKeyHash>,
 }
 
 impl Default for AnyoneShutdownSidechainWitness {
     fn default() -> Self {
         Self {
-            pattern:               Pattern::AnyoneShutdownSidechain,
-            chain_id:              0,
-            fee:                   0,
-            fee_per_checker:       0,
-            punish_checker_bitmap: [0u8; 32],
-            task_count:            0,
-            valid_challenge_count: 0,
+            pattern:         Pattern::AnyoneShutdownSidechain,
+            challenge_times: 0,
+            check_data_size: 0,
+            jailed_checkers: Vec::new(),
         }
     }
 }
 
 impl FromRaw for AnyoneShutdownSidechainWitness {
-    fn from_raw(witness_raw_data: &[u8]) -> Option<AnyoneShutdownSidechainWitness> {
-        if witness_raw_data.len() < 2 {
-            return None;
-        }
-
+    fn from_raw(witness_raw_data: &[u8]) -> Option<Self> {
         let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
-        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
-        let fee = u128::from_raw(&witness_raw_data[2..18])?;
-        let fee_per_checker = u128::from_raw(&witness_raw_data[18..34])?;
 
-        let mut punish_checker_bitmap = [0u8; 32];
-        punish_checker_bitmap.copy_from_slice(&witness_raw_data[34..66]);
+        let reader = AnyoneShutdownSidechainWitnessReader::from_slice(&witness_raw_data[1..]).ok()?;
 
-        let task_count = u8::from_raw(&witness_raw_data[66..67])?;
-        let valid_challenge_count = u8::from_raw(&witness_raw_data[67..68])?;
-        Some(AnyoneShutdownSidechainWitness {
+        let challenge_times = u32::from_raw(reader.challenge_times().raw_data())? as usize; // TODO: Change to usize
+
+        let check_data_size = u128::from_raw(reader.check_data_size().raw_data())?;
+
+        let jailed_checkers = reader
+            .jailed_checkers()
+            .iter()
+            .map(|checker_reader| PubKeyHash::from_raw(checker_reader.raw_data()))
+            .collect::<Option<Vec<PubKeyHash>>>()?;
+
+        Some(Self {
             pattern,
-            chain_id,
-            fee,
-            fee_per_checker,
-            punish_checker_bitmap,
-            task_count,
-            valid_challenge_count,
+            challenge_times,
+            check_data_size,
+            jailed_checkers,
         })
     }
 }
 
 impl Serialize for AnyoneShutdownSidechainWitness {
-    type RawType = [u8; ANYONE_SHUTDOWN_SIDECHAIN_WITNESS_LEN];
+    type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let mut buf = [0u8; ANYONE_SHUTDOWN_SIDECHAIN_WITNESS_LEN];
+        let challenge_times = Uint32Reader::new_unchecked(&(self.challenge_times as u32).serialize()).to_entity(); // TODO: Change to usize
 
-        buf[0..1].copy_from_slice(&self.pattern.serialize());
-        buf[1..2].copy_from_slice(&self.chain_id.serialize());
+        let check_data_size = Uint128Reader::new_unchecked(&self.check_data_size.serialize()).to_entity();
 
-        buf[2..18].copy_from_slice(&self.fee.serialize());
-        buf[18..34].copy_from_slice(&self.fee_per_checker.serialize());
-        buf[34..66].copy_from_slice(&self.punish_checker_bitmap);
-        buf[66..67].copy_from_slice(&self.task_count.serialize());
-        buf[67..68].copy_from_slice(&self.valid_challenge_count.serialize());
+        let mut jailed_checkers = PubKeyHashListBuilder::default();
+        for checker in &self.jailed_checkers {
+            let checker_entity = PubKeyHashReader::new_unchecked(checker).to_entity();
+            jailed_checkers = jailed_checkers.push(checker_entity);
+        }
+
+        let builder = AnyoneShutdownSidechainWitnessBuilder::default()
+            .challenge_times(challenge_times)
+            .check_data_size(check_data_size)
+            .jailed_checkers(jailed_checkers.build());
+
+        let mut buf = Vec::new();
+        buf.extend_from_slice(&self.pattern.serialize());
+
+        builder
+            .write(&mut buf)
+            .expect("Unable to write buffer while serializing AnyoneShutdownSidechainWitness");
 
         buf
     }
