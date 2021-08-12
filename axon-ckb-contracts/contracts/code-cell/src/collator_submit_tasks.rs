@@ -50,9 +50,18 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_INPUT,
     );
 
+    // prepare arguments
     let task_count = usize::try_from(sidechain_config_input.commit_threshold).or(Err(Error::Encoding))? - witness.challenge_times;
     let challenge_count = witness.challenge_times * usize::try_from(sidechain_config_input.challenge_threshold).or(Err(Error::Encoding))?;
     let job_count = task_count + challenge_count;
+
+    let correct_vote_count = witness.commit.iter().filter(|commit| commit.is_valid()).count();
+
+    let fee = u128::try_from(correct_vote_count).or(Err(Error::Encoding))?
+        * u128::try_from(sidechain_config_input.check_fee_rate).or(Err(Error::Encoding))?
+        * witness.check_data_size;
+
+    let chain_id = sidechain_config_input_type_args.chain_id;
 
     is_collator_submit_tasks(job_count)?;
 
@@ -88,7 +97,6 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_config_output_type_args,
         &witness,
         &signer,
-        job_count,
     )?;
 
     check_sidechain_state(
@@ -97,6 +105,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_state_output,
         &sidechain_state_output_type_args,
         &witness,
+        u32::from(chain_id), // TODO: change chain_id to u32
     )?;
 
     check_sidechain_fee(
@@ -104,7 +113,8 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_fee_input_lock_args,
         &sidechain_fee_output,
         &sidechain_fee_output_lock_args,
-        &witness,
+        fee,
+        chain_id,
     )?;
 
     let mut i = FIXED_INPUT_CELLS;
@@ -127,6 +137,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &witness,
         task_count,
         challenge_count,
+        chain_id,
     )?;
 
     Ok(())
@@ -139,7 +150,6 @@ fn check_sidechain_config(
     sidechain_config_output_type_args: &SidechainConfigCellTypeArgs,
     witness: &CollatorSubmitTasksWitness,
     signer: &[u8; 20],
-    job_count: usize,
 ) -> Result<(), Error> {
     let mut sidechain_config_res = sidechain_config_input.clone();
 
@@ -164,9 +174,7 @@ fn check_sidechain_config(
             .map(|invalid_checker| invalid_checker.checker_lock_arg),
     );
 
-    if sidechain_config_input_type_args.chain_id != witness.chain_id
-        || sidechain_config_input.collator_lock_arg != *signer
-        || u128::try_from(job_count).or(Err(Error::Encoding))? * witness.fee_per_checker != witness.fee
+    if sidechain_config_input.collator_lock_arg != *signer
         || sidechain_config_res != *sidechain_config_output
         || sidechain_config_input_type_args != sidechain_config_output_type_args
     {
@@ -182,6 +190,7 @@ fn check_sidechain_state(
     sidechain_state_output: &SidechainStateCell,
     sidechain_state_output_type_args: &SidechainStateCellTypeArgs,
     witness: &CollatorSubmitTasksWitness,
+    chain_id: u32,
 ) -> Result<(), Error> {
     if sidechain_state_input.random_seed != witness.origin_random_seed {
         return Err(Error::SidechainStateMismatch);
@@ -281,7 +290,10 @@ fn check_sidechain_state(
         })
     }
 
-    if sidechain_state_res != *sidechain_state_output || sidechain_state_input_type_args != sidechain_state_output_type_args {
+    if sidechain_state_res != *sidechain_state_output
+        || sidechain_state_input_type_args.chain_id != chain_id
+        || sidechain_state_input_type_args != sidechain_state_output_type_args
+    {
         return Err(Error::SidechainStateMismatch);
     }
 
@@ -293,15 +305,19 @@ fn check_sidechain_fee(
     sidechain_fee_input_lock_args: &SidechainFeeCellLockArgs,
     sidechain_fee_output: &SidechainFeeCell,
     sidechain_fee_output_lock_args: &SidechainFeeCellLockArgs,
-    witness: &CollatorSubmitTasksWitness,
+    fee: u128,
+    chain_id: u8,
 ) -> Result<(), Error> {
     let mut sidechain_fee_res_lock_args = sidechain_fee_input_lock_args.clone();
-    if sidechain_fee_res_lock_args.surplus < witness.fee {
+    if sidechain_fee_res_lock_args.surplus < fee {
         return Err(Error::SidechainFeeMismatch);
     };
-    sidechain_fee_res_lock_args.surplus -= witness.fee;
+    sidechain_fee_res_lock_args.surplus -= fee;
 
-    if sidechain_fee_input != sidechain_fee_output || sidechain_fee_res_lock_args != *sidechain_fee_output_lock_args {
+    if sidechain_fee_input != sidechain_fee_output
+        || sidechain_fee_res_lock_args.chain_id != chain_id
+        || sidechain_fee_res_lock_args != *sidechain_fee_output_lock_args
+    {
         return Err(Error::SidechainFeeMismatch);
     }
 
@@ -313,6 +329,7 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
     witness: &CollatorSubmitTasksWitness,
     mut task_count: usize,
     mut challenge_count: usize,
+    chain_id: u8,
 ) -> Result<(), Error> {
     let mut settle_count = 0;
     let mut shutdown_count = 0;
@@ -321,10 +338,26 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
     random_seed_calculator.update(&witness.origin_random_seed);
 
     let mut committed_checker_iter = witness.commit.iter();
+
+    let mut is_first_time = true;
+    let mut task_first = TaskCell::default();
+    let mut task_first_type_args = TaskCellTypeArgs::default();
+
     loop {
         let (task, task_type_args) = match next_task()? {
             Some(task) => task,
             None => break,
+        };
+
+        if is_first_time {
+            is_first_time = false;
+
+            task_first = task.clone();
+            task_first_type_args = task_type_args.clone();
+
+            if task_first_type_args.chain_id != chain_id || task_first.check_data_size != witness.check_data_size {
+                return Err(Error::TaskMismatch);
+            }
         };
 
         match task.status {
@@ -367,6 +400,10 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
             } {
                 return Err(Error::TaskMismatch);
             }
+
+            if task.commit != committed_checker.new_committed_hash.ok_or(Error::TaskMismatch)? {
+                return Err(Error::TaskMismatch);
+            }
         } else {
             let hash = committed_checker.origin_committed_hash.ok_or(Error::Encoding)?;
 
@@ -381,16 +418,21 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
             }
         }
 
-        match committed_checker.new_committed_hash {
-            Some(hash) => {
-                if task.commit != hash {
-                    return Err(Error::TaskMismatch);
-                }
-            }
-            None => (),
-        }
+        let mut task_res = task.clone();
+        let mut task_res_type_args = task_type_args.clone();
 
-        if task_type_args.chain_id != witness.chain_id || task_type_args.checker_lock_arg != committed_checker.checker_lock_arg {
+        task_res.mode = task_first.mode;
+        task_res.status = task_first.status;
+        task_res.commit = task_first.commit;
+        task_res.reveal = task_first.reveal;
+        task_res.refresh_sidechain_height = task_first.refresh_sidechain_height;
+
+        task_res_type_args.checker_lock_arg = task_first_type_args.checker_lock_arg;
+
+        if task_type_args.checker_lock_arg != committed_checker.checker_lock_arg
+            || task_res != task_first
+            || task_res_type_args != task_first_type_args
+        {
             return Err(Error::TaskMismatch);
         }
     }

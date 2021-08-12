@@ -10,11 +10,9 @@ table ExistedCommittedCheckerInfo {
 vector ExistedCommittedCheckerInfos <ExistedCommittedCheckerInfo>;
 
 table CollatorSubmitTasksWitness {
-  chain_id: ChainId,
   challenge_times: Uint32,
+  check_data_size: Uint128,
   commit: ExistedCommittedCheckerInfos,
   origin_random_seed: RandomSeed,
   new_random_seed: RandomSeed,
-  fee: Uint128,
-  fee_per_checker: Uint128,
 }

@@ -17,9 +17,11 @@ const MAX_CYCLES: u64 = 10_000_000;
 
 const COMMIT_THRESHOLD: u32 = 4;
 const CHALLENGE_THRESHOLD: u32 = 2;
-const TASK_NUMBER: u32 = 5; // 4 - once challenge + 2
-const CHECKED_SIZE: u128 = 10;
+
+const CHECKED_SIZE: u128 = 1;
 const FEE_RATE: u32 = 1;
+
+const TOTAL_FEE: u128 = 3 * CHECKED_SIZE * FEE_RATE as u128;
 
 const BLANK_HASH: [u8; 32] = [
     38, 108, 236, 151, 203, 237, 226, 207, 188, 231, 54, 102, 240, 141, 238, 217, 86, 11, 223, 120, 65, 167, 165, 165, 27, 58, 63, 9, 218,
@@ -69,7 +71,7 @@ fn test_success() {
         .build_script(&always_success_code, sidechain_fee_lock_args.serialize())
         .expect("script");
 
-    sidechain_fee_lock_args.surplus = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
+    sidechain_fee_lock_args.surplus = TOTAL_FEE;
     let sidechain_fee_input_lock_script = builder
         .context
         .build_script(&always_success_code, sidechain_fee_lock_args.serialize())
@@ -174,6 +176,7 @@ fn test_success() {
     let mut builder = builder.input(sidechain_fee_input);
 
     let mut task_input_data = TaskCell::default();
+    task_input_data.check_data_size = CHECKED_SIZE;
     task_input_data.mode = TaskMode::Task;
     task_input_data.status = TaskStatus::TaskPassed;
     task_input_data.commit = BLANK_HASH;
@@ -303,8 +306,7 @@ fn test_success() {
     ];
 
     witness.challenge_times = 1;
-    witness.fee_per_checker = FEE_RATE as u128 * CHECKED_SIZE;
-    witness.fee = FEE_RATE as u128 * CHECKED_SIZE * TASK_NUMBER as u128;
+    witness.check_data_size = CHECKED_SIZE;
     witness.new_random_seed.copy_from_slice(&sidechain_state_data_output.random_seed);
 
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
