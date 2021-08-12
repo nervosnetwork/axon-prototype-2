@@ -1,6 +1,6 @@
 use crate::{cell::*, common::*, error::Error};
 use ckb_std::ckb_constants::Source;
-use common_raw::cell::sidechain_state::PunishedChecker;
+use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, PunishedChecker};
 use common_raw::cell::task::TaskStatus;
 use common_raw::{
     cell::{
@@ -92,6 +92,23 @@ pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
             || task_res_type_args != task_output_type_args
         {
             return Err(Error::TaskMismatch);
+        }
+
+        match state_res
+            .checker_last_task_sidechain_heights
+            .iter_mut()
+            .find(|checker_last_height| checker_last_height.checker_lock_arg == task_res_type_args.checker_lock_arg)
+        {
+            Some(checker_last_height) => {
+                if checker_last_height.height < task_res.sidechain_block_height_to {
+                    checker_last_height.height = task_res.sidechain_block_height_to;
+                }
+            }
+
+            None => state_res.checker_last_task_sidechain_heights.push(CheckerLastAcceptTaskHeight {
+                checker_lock_arg: task_res_type_args.checker_lock_arg,
+                height:           task_res.sidechain_block_height_to,
+            }),
         }
 
         match state_res

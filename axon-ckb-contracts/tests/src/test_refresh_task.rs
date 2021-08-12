@@ -3,7 +3,7 @@ use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
 use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, packed::*, prelude::*};
-use common_raw::cell::sidechain_state::{PunishedChecker, SidechainStateCell, SidechainStateCellTypeArgs};
+use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, PunishedChecker, SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::common::PubKeyHash;
 use common_raw::{
     cell::{
@@ -95,6 +95,9 @@ fn test_success() {
 
     let mut state_cell_output_data = SidechainStateCell::default();
     state_cell_output_data.punish_checkers.push(PunishedChecker::default());
+    state_cell_output_data
+        .checker_last_task_sidechain_heights
+        .push(CheckerLastAcceptTaskHeight::default());
     state_cell_output_data.random_offset = 1;
 
     let outputs = vec![

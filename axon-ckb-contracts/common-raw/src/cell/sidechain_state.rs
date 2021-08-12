@@ -130,8 +130,8 @@ impl Serialize for PunishedChecker {
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CheckerLastAcceptTaskHeight {
-    checker_lock_arg: PubKeyHash,
-    height:           BlockHeight,
+    pub checker_lock_arg: PubKeyHash,
+    pub height:           BlockHeight,
 }
 
 impl CheckerLastAcceptTaskHeight {
