@@ -9,7 +9,7 @@ use common_raw::{
         task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     common::*,
-    witness::{collator_submit_tasks::CollatorSubmitTasksWitness, common_submit_jobs::CommonSubmitJobsWitness},
+    witness::collator_submit_tasks::CollatorSubmitTasksWitness,
     FromRaw,
 };
 use core::convert::TryFrom;
@@ -42,7 +42,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     [Task Cell]           -> Null
     */
 
-    let witness = CollatorSubmitTasksWitness::from_raw(&raw_witness).ok_or(Error::Encoding)?.common;
+    let witness = CollatorSubmitTasksWitness::from_raw(&raw_witness).ok_or(Error::Encoding)?;
 
     //load inputs
     let (sidechain_config_input, sidechain_config_input_type_args) = load_entities!(
@@ -137,7 +137,7 @@ fn check_sidechain_config(
     sidechain_config_input_type_args: &SidechainConfigCellTypeArgs,
     sidechain_config_output: &SidechainConfigCell,
     sidechain_config_output_type_args: &SidechainConfigCellTypeArgs,
-    witness: &CommonSubmitJobsWitness,
+    witness: &CollatorSubmitTasksWitness,
     signer: &[u8; 20],
     job_count: usize,
 ) -> Result<(), Error> {
@@ -181,7 +181,7 @@ fn check_sidechain_state(
     sidechain_state_input_type_args: &SidechainStateCellTypeArgs,
     sidechain_state_output: &SidechainStateCell,
     sidechain_state_output_type_args: &SidechainStateCellTypeArgs,
-    witness: &CommonSubmitJobsWitness,
+    witness: &CollatorSubmitTasksWitness,
 ) -> Result<(), Error> {
     if sidechain_state_input.random_seed != witness.origin_random_seed {
         return Err(Error::SidechainStateMismatch);
@@ -293,7 +293,7 @@ fn check_sidechain_fee(
     sidechain_fee_input_lock_args: &SidechainFeeCellLockArgs,
     sidechain_fee_output: &SidechainFeeCell,
     sidechain_fee_output_lock_args: &SidechainFeeCellLockArgs,
-    witness: &CommonSubmitJobsWitness,
+    witness: &CollatorSubmitTasksWitness,
 ) -> Result<(), Error> {
     let mut sidechain_fee_res_lock_args = sidechain_fee_input_lock_args.clone();
     if sidechain_fee_res_lock_args.surplus < witness.fee {
@@ -310,7 +310,7 @@ fn check_sidechain_fee(
 
 fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>>(
     mut next_task: T,
-    witness: &CommonSubmitJobsWitness,
+    witness: &CollatorSubmitTasksWitness,
     mut task_count: usize,
     mut challenge_count: usize,
 ) -> Result<(), Error> {
