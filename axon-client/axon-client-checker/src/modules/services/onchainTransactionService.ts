@@ -25,7 +25,7 @@ export default class OnchainTransactionService implements TransactionService {
     logger.error(`TransactionService: ${msg}`);
   }
 
-  constructor(@inject(modules.CKBCKB) ckb: CKB) {
+  constructor(@inject(modules.CKBCKB) { ckb }: { ckb: CKB }) {
     this._ckb = ckb;
   }
 

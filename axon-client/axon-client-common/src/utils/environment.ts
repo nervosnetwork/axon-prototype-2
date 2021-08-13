@@ -14,6 +14,7 @@ function log(msg: string) {
 export const NODE_ENV: string = process.env.NODE_ENV ? process.env.NODE_ENV : "production";
 
 export const INDEXER_URL: string = process.env.INDEXER_URL!;
+export const INDEXER_DB_PATH: string = process.env.INDEXER_DB_PATH!;
 export const INDEXER_MYSQL_URL = process.env.INDEXER_MYSQL_URL!;
 export const INDEXER_MYSQL_URL_PORT: number = parseInt(process.env.INDEXER_MYSQL_URL_PORT!);
 export const INDEXER_MYSQL_USERNAME = process.env.INDEXER_MYSQL_USERNAME!;

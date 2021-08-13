@@ -1,10 +1,9 @@
 import { inject, injectable } from "inversify";
 import { modules } from "../../container";
 
-import { CellCollector, Indexer } from "@ckb-lumos/sql-indexer";
+import { CellCollector, Indexer } from "@ckb-lumos/indexer";
 import { Cell, QueryOptions } from "@ckb-lumos/base";
 
-import Knex from "knex";
 import { logger } from "axon-client-common/src/utils/logger";
 
 import {
@@ -37,8 +36,6 @@ interface FromCell<T> {
 export default class OnchainScanService implements ScanService {
   private readonly _indexer!: Indexer;
 
-  private readonly _knex: Knex;
-
   // @ts-expect-error Unused
   // istanbul ignore next
   private info(msg: string) {
@@ -51,14 +48,13 @@ export default class OnchainScanService implements ScanService {
     logger.error(`ScanService: ${msg}`);
   }
 
-  constructor(@inject(modules.Knex) { knex }: { knex: Knex }, @inject(modules.CKBIndexer) indexer: Indexer) {
-    this._knex = knex;
+  constructor(@inject(modules.CKBIndexer) { indexer }: { indexer: Indexer }) {
     this._indexer = indexer;
   }
 
   // istanbul ignore next
   public createCollector(options: QueryOptions, tip?: string): CellCollector {
-    return new CellCollector(this._knex, {
+    return new CellCollector(this._indexer, {
       toBlock: tip,
       ...options,
       order: "desc",

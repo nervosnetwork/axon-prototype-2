@@ -12,7 +12,7 @@ describe("OnchainRpcService", () => {
     mockRpc.sendTransaction = jest.fn(() => {
       throw "Error";
     });
-    const rpcService = new OnchainRpcService(mockRpc);
+    const rpcService = new OnchainRpcService({ rpc: mockRpc });
 
     const mockTransaction = createMock<CKBComponents.RawTransaction>();
 
@@ -25,7 +25,7 @@ describe("OnchainRpcService", () => {
 
   test("sendTransaction should success", async () => {
     const mockRpc = createMock<Rpc>();
-    const rpcService = new OnchainRpcService(mockRpc);
+    const rpcService = new OnchainRpcService({ rpc: mockRpc });
 
     const mockTransaction = createMock<CKBComponents.RawTransaction>();
 
