@@ -6,7 +6,8 @@ use crate::{
     checker_bond_withdraw::checker_bond_withdraw, checker_join_sidechain::checker_join_sidechain,
     checker_publish_challenge::checker_publish_challenge, checker_quit_sidechain::checker_quit_sidechain,
     checker_take_beneficiary::checker_take_beneficiary, checker_vote::checker_vote, collator_publish_task::collator_publish_task,
-    collator_submit_tasks::collator_submit_tasks, collator_unlock_bond::collator_unlock_bond, error::Error,
+    collator_shutdown_sidechain::collator_shutdown_sidechain, collator_submit_tasks::collator_submit_tasks,
+    collator_unlock_bond::collator_unlock_bond, error::Error,
 };
 
 use ckb_std::ckb_constants::Source;
@@ -164,6 +165,16 @@ pub fn main() -> Result<(), Error> {
 
         */
         Pattern::CollatorUnlockBond => collator_unlock_bond(raw_witness, signer),
+        /*
+        AnyoneShutdownSidechain,
+
+        Dep:    0 Global Config Cell
+
+        Code Cell                   -> ~
+        Sidechain Config Cell       -> ~
+        Sidechain Fee Cell          -> ~
+        */
+        Pattern::CollatorShutdownSidechain => collator_shutdown_sidechain(raw_witness, signer),
     }
 }
 

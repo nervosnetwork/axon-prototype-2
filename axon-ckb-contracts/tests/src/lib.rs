@@ -23,6 +23,8 @@ mod test_checker_withdraw;
 #[cfg(test)]
 mod test_collator_publish_task;
 #[cfg(test)]
+mod test_collator_shutdown_sidechain;
+#[cfg(test)]
 mod test_collator_submit_tasks;
 #[cfg(test)]
 mod test_collator_unlock;
