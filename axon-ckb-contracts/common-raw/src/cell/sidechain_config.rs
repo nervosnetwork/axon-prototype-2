@@ -4,11 +4,12 @@ use crate::{
     common::*,
     molecule::{
         cell::sidechain_config::{
-            CheckerInfoListBuilder, CheckerStatusReader, SidechainConfigCellBuilder, SidechainConfigCellReader,
-            SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader, SidechainStatusReader,
+            SidechainConfigCellBuilder, SidechainConfigCellReader, SidechainConfigCellTypeArgsBuilder, SidechainConfigCellTypeArgsReader,
+            SidechainStatusReader,
         },
         common::{
-            BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashReader, Uint128Reader, Uint32Reader, Uint8Reader,
+            BlockHeightReader, ChainIdReader, CodeHashReader, HashTypeReader, PubKeyHashListBuilder, PubKeyHashReader, Uint128Reader,
+            Uint32Reader, Uint8Reader,
         },
     },
     FromRaw, Serialize,
@@ -46,45 +47,6 @@ impl FromRaw for SidechainStatus {
 }
 
 impl Serialize for SidechainStatus {
-    type RawType = [u8; 1];
-
-    fn serialize(&self) -> Self::RawType {
-        (*self as u8).serialize()
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq)]
-#[repr(u8)]
-pub enum CheckerStatus {
-    Normal,
-    Jailed,
-}
-
-impl CheckerStatus {
-    fn from_reader(reader: CheckerStatusReader) -> Option<Self> {
-        let status = u8::from_raw(reader.raw_data())?;
-        match status {
-            0u8 => Some(Self::Normal),
-            1u8 => Some(Self::Jailed),
-            _ => None,
-        }
-    }
-}
-
-impl Default for CheckerStatus {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
-
-impl FromRaw for CheckerStatus {
-    fn from_raw(raw: &[u8]) -> Option<Self> {
-        let reader = CheckerStatusReader::from_slice(raw).ok()?;
-        Self::from_reader(reader)
-    }
-}
-
-impl Serialize for CheckerStatus {
     type RawType = [u8; 1];
 
     fn serialize(&self) -> Self::RawType {
@@ -232,12 +194,12 @@ impl Serialize for SidechainConfigCell {
         let checker_threshold = Uint32Reader::new_unchecked(&self.checker_threshold.serialize()).to_entity();
         let checker_total_count = Uint32Reader::new_unchecked(&self.checker_total_count.serialize()).to_entity();
 
-        let mut activated_checkers = CheckerInfoListBuilder::default();
+        let mut activated_checkers = PubKeyHashListBuilder::default();
         for checker in &self.activated_checkers {
             activated_checkers = activated_checkers.push(PubKeyHashReader::new_unchecked(checker).to_entity());
         }
 
-        let mut jailed_checkers = CheckerInfoListBuilder::default();
+        let mut jailed_checkers = PubKeyHashListBuilder::default();
         for checker in &self.jailed_checkers {
             jailed_checkers = jailed_checkers.push(PubKeyHashReader::new_unchecked(checker).to_entity());
         }

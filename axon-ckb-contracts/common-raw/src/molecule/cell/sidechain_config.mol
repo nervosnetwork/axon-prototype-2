@@ -2,9 +2,6 @@ import ../common;
 
 array SidechainStatus [byte; 1];
 
-array CheckerStatus [byte; 1];
-vector CheckerInfoList <PubKeyHash>;
-
 table SidechainConfigCell {
   sidechain_status: SidechainStatus,
 
@@ -14,8 +11,8 @@ table SidechainConfigCell {
   checker_normal_count: Uint32,
   checker_threshold : Uint32,
   checker_total_count : Uint32,
-  activated_checkers: CheckerInfoList,
-  jailed_checkers: CheckerInfoList,
+  activated_checkers: PubKeyHashList,
+  jailed_checkers: PubKeyHashList,
   refresh_punish_points: Uint32,
   refresh_punish_release_points: Uint32,
   refresh_punish_threshold: Uint32,
