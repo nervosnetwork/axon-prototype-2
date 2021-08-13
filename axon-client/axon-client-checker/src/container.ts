@@ -43,6 +43,7 @@ class CKBIndexer {
 
   constructor() {
     this.indexer = new Indexer(INDEXER_URL, INDEXER_DB_PATH);
+    this.indexer.startForever();
   }
 }
 
