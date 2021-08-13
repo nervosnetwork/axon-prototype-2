@@ -5,9 +5,6 @@ use ckb_std::high_level::load_cell_capacity;
 
 use common_raw::cell::global_config::GlobalConfigCellData;
 
-use bit_vec::*;
-use core::convert::TryInto;
-
 pub const CODE_INPUT: CellOrigin = CellOrigin(0, Source::Input);
 pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
 
@@ -30,11 +27,6 @@ macro_rules! check_cells {
     ($global: expr, {$($type: ty: $origin: expr), * $(,)?} $(,)?) => {
         $(<$type>::check($origin, $global)?;)*
     }
-}
-
-pub fn bit_map_count(input: [u8; 32]) -> Option<u8> {
-    let input = BitVec::from_bytes(&input);
-    input.into_iter().filter(|&x| x).count().try_into().ok()
 }
 
 pub fn check_global_cell() -> Result<GlobalConfigCellData, Error> {

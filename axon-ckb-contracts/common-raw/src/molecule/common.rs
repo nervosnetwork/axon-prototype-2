@@ -6356,6 +6356,308 @@ impl molecule::prelude::Builder for ScriptHashBuilder {
     }
 }
 #[derive(Clone)]
+pub struct PubKeyHashList(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for PubKeyHashList {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl ::core::fmt::Debug for PubKeyHashList {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl ::core::fmt::Display for PubKeyHashList {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} [", Self::NAME)?;
+        for i in 0..self.len() {
+            if i == 0 {
+                write!(f, "{}", self.get_unchecked(i))?;
+            } else {
+                write!(f, ", {}", self.get_unchecked(i))?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+impl ::core::default::Default for PubKeyHashList {
+    fn default() -> Self {
+        let v: Vec<u8> = vec![0, 0, 0, 0];
+        PubKeyHashList::new_unchecked(v.into())
+    }
+}
+impl PubKeyHashList {
+    pub const ITEM_SIZE: usize = 20;
+
+    pub fn total_size(&self) -> usize {
+        molecule::NUMBER_SIZE * (self.item_count() + 1)
+    }
+
+    pub fn item_count(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn get(&self, idx: usize) -> Option<PubKeyHash> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+
+    pub fn get_unchecked(&self, idx: usize) -> PubKeyHash {
+        let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
+        let end = start + Self::ITEM_SIZE;
+        PubKeyHash::new_unchecked(self.0.slice(start..end))
+    }
+
+    pub fn as_reader<'r>(&'r self) -> PubKeyHashListReader<'r> {
+        PubKeyHashListReader::new_unchecked(self.as_slice())
+    }
+}
+impl molecule::prelude::Entity for PubKeyHashList {
+    type Builder = PubKeyHashListBuilder;
+
+    const NAME: &'static str = "PubKeyHashList";
+
+    fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
+        PubKeyHashList(data)
+    }
+
+    fn as_bytes(&self) -> molecule::bytes::Bytes {
+        self.0.clone()
+    }
+
+    fn as_slice(&self) -> &[u8] {
+        &self.0[..]
+    }
+
+    fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        PubKeyHashListReader::from_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
+        PubKeyHashListReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+    }
+
+    fn new_builder() -> Self::Builder {
+        ::core::default::Default::default()
+    }
+
+    fn as_builder(self) -> Self::Builder {
+        Self::new_builder().extend(self.into_iter())
+    }
+}
+#[derive(Clone, Copy)]
+pub struct PubKeyHashListReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for PubKeyHashListReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        use molecule::hex_string;
+        if f.alternate() {
+            write!(f, "0x")?;
+        }
+        write!(f, "{}", hex_string(self.as_slice()))
+    }
+}
+impl<'r> ::core::fmt::Debug for PubKeyHashListReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{}({:#x})", Self::NAME, self)
+    }
+}
+impl<'r> ::core::fmt::Display for PubKeyHashListReader<'r> {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+        write!(f, "{} [", Self::NAME)?;
+        for i in 0..self.len() {
+            if i == 0 {
+                write!(f, "{}", self.get_unchecked(i))?;
+            } else {
+                write!(f, ", {}", self.get_unchecked(i))?;
+            }
+        }
+        write!(f, "]")
+    }
+}
+impl<'r> PubKeyHashListReader<'r> {
+    pub const ITEM_SIZE: usize = 20;
+
+    pub fn total_size(&self) -> usize {
+        molecule::NUMBER_SIZE * (self.item_count() + 1)
+    }
+
+    pub fn item_count(&self) -> usize {
+        molecule::unpack_number(self.as_slice()) as usize
+    }
+
+    pub fn len(&self) -> usize {
+        self.item_count()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    pub fn get(&self, idx: usize) -> Option<PubKeyHashReader<'r>> {
+        if idx >= self.len() {
+            None
+        } else {
+            Some(self.get_unchecked(idx))
+        }
+    }
+
+    pub fn get_unchecked(&self, idx: usize) -> PubKeyHashReader<'r> {
+        let start = molecule::NUMBER_SIZE + Self::ITEM_SIZE * idx;
+        let end = start + Self::ITEM_SIZE;
+        PubKeyHashReader::new_unchecked(&self.as_slice()[start..end])
+    }
+}
+impl<'r> molecule::prelude::Reader<'r> for PubKeyHashListReader<'r> {
+    type Entity = PubKeyHashList;
+
+    const NAME: &'static str = "PubKeyHashListReader";
+
+    fn to_entity(&self) -> Self::Entity {
+        Self::Entity::new_unchecked(self.as_slice().to_owned().into())
+    }
+
+    fn new_unchecked(slice: &'r [u8]) -> Self {
+        PubKeyHashListReader(slice)
+    }
+
+    fn as_slice(&self) -> &'r [u8] {
+        self.0
+    }
+
+    fn verify(slice: &[u8], _compatible: bool) -> molecule::error::VerificationResult<()> {
+        use molecule::verification_error as ve;
+        let slice_len = slice.len();
+        if slice_len < molecule::NUMBER_SIZE {
+            return ve!(Self, HeaderIsBroken, molecule::NUMBER_SIZE, slice_len);
+        }
+        let item_count = molecule::unpack_number(slice) as usize;
+        if item_count == 0 {
+            if slice_len != molecule::NUMBER_SIZE {
+                return ve!(Self, TotalSizeNotMatch, molecule::NUMBER_SIZE, slice_len);
+            }
+            return Ok(());
+        }
+        let total_size = molecule::NUMBER_SIZE + Self::ITEM_SIZE * item_count;
+        if slice_len != total_size {
+            return ve!(Self, TotalSizeNotMatch, total_size, slice_len);
+        }
+        Ok(())
+    }
+}
+#[derive(Debug, Default)]
+pub struct PubKeyHashListBuilder(pub(crate) Vec<PubKeyHash>);
+impl PubKeyHashListBuilder {
+    pub const ITEM_SIZE: usize = 20;
+
+    pub fn set(mut self, v: Vec<PubKeyHash>) -> Self {
+        self.0 = v;
+        self
+    }
+
+    pub fn push(mut self, v: PubKeyHash) -> Self {
+        self.0.push(v);
+        self
+    }
+
+    pub fn extend<T: ::core::iter::IntoIterator<Item = PubKeyHash>>(mut self, iter: T) -> Self {
+        for elem in iter {
+            self.0.push(elem);
+        }
+        self
+    }
+}
+impl molecule::prelude::Builder for PubKeyHashListBuilder {
+    type Entity = PubKeyHashList;
+
+    const NAME: &'static str = "PubKeyHashListBuilder";
+
+    fn expected_length(&self) -> usize {
+        molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.0.len()
+    }
+
+    fn write<W: ::molecule::io::Write>(&self, writer: &mut W) -> ::molecule::io::Result<()> {
+        writer.write_all(&molecule::pack_number(self.0.len() as molecule::Number))?;
+        for inner in &self.0[..] {
+            writer.write_all(inner.as_slice())?;
+        }
+        Ok(())
+    }
+
+    fn build(&self) -> Self::Entity {
+        let mut inner = Vec::with_capacity(self.expected_length());
+        self.write(&mut inner)
+            .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
+        PubKeyHashList::new_unchecked(inner.into())
+    }
+}
+pub struct PubKeyHashListIterator(PubKeyHashList, usize, usize);
+impl ::core::iter::Iterator for PubKeyHashListIterator {
+    type Item = PubKeyHash;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl ::core::iter::ExactSizeIterator for PubKeyHashListIterator {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+impl ::core::iter::IntoIterator for PubKeyHashList {
+    type IntoIter = PubKeyHashListIterator;
+    type Item = PubKeyHash;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let len = self.len();
+        PubKeyHashListIterator(self, 0, len)
+    }
+}
+impl<'r> PubKeyHashListReader<'r> {
+    pub fn iter<'t>(&'t self) -> PubKeyHashListReaderIterator<'t, 'r> {
+        PubKeyHashListReaderIterator(&self, 0, self.len())
+    }
+}
+pub struct PubKeyHashListReaderIterator<'t, 'r>(&'t PubKeyHashListReader<'r>, usize, usize);
+impl<'t: 'r, 'r> ::core::iter::Iterator for PubKeyHashListReaderIterator<'t, 'r> {
+    type Item = PubKeyHashReader<'t>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.1 >= self.2 {
+            None
+        } else {
+            let ret = self.0.get_unchecked(self.1);
+            self.1 += 1;
+            Some(ret)
+        }
+    }
+}
+impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for PubKeyHashListReaderIterator<'t, 'r> {
+    fn len(&self) -> usize {
+        self.2 - self.1
+    }
+}
+#[derive(Clone)]
 pub struct BlockSlice(molecule::bytes::Bytes);
 impl ::core::fmt::LowerHex for BlockSlice {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
