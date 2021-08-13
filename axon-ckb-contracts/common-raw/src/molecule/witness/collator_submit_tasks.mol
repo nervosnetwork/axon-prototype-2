@@ -1,5 +1,18 @@
-import common_submit_jobs;
+import ../common;
+
+table ExistedCommittedCheckerInfo {
+    index: Uint32Opt,
+    checker_lock_arg: PubKeyHash,
+    origin_committed_hash: CommittedHashOpt,
+    new_committed_hash: CommittedHashOpt,
+}
+
+vector ExistedCommittedCheckerInfos <ExistedCommittedCheckerInfo>;
 
 table CollatorSubmitTasksWitness {
-    common: CommonSubmitJobsWitness,
+  challenge_times: Uint32,
+  check_data_size: Uint128,
+  commit: ExistedCommittedCheckerInfos,
+  origin_random_seed: RandomSeed,
+  new_random_seed: RandomSeed,
 }

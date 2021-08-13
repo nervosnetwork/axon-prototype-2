@@ -10,6 +10,5 @@ pub mod checker_vote;
 pub mod collator_publish_task;
 pub mod collator_submit_tasks;
 pub mod collator_unlock_bond;
-pub mod common_submit_jobs;
 
 pub mod code_cell_witness;
