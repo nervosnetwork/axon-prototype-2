@@ -32,7 +32,7 @@ function prepareContext(): Context {
     }),
   );
 
-  const transactionService = new OnchainTransactionService(mockCKB);
+  const transactionService = new OnchainTransactionService({ ckb: mockCKB });
 
   return new Context(mockCKB, transactionService);
 }

@@ -19,8 +19,8 @@ export default class OnchainRpcService implements RpcService {
     logger.error(`RpcService: ${msg}`);
   }
 
-  constructor(@inject(modules.CKBRpc) client: Rpc) {
-    this.#client = client;
+  constructor(@inject(modules.CKBRpc) { rpc }: { rpc: Rpc }) {
+    this.#client = rpc;
   }
 
   sendTransaction = async (rawTx: CKBComponents.RawTransaction): Promise<boolean> => {

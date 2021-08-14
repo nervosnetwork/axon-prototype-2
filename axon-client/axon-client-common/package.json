@@ -17,6 +17,7 @@
   "dependencies": {
     "@ckb-lumos/base": "0.14.2-rc6",
     "@ckb-lumos/hd": "0.14.2-rc6",
+    "@ckb-lumos/indexer": "^0.16.0",
     "@ckb-lumos/sql-indexer": "0.14.2-rc6",
     "@nervosnetwork/ckb-sdk-core": "0.39",
     "@nervosnetwork/ckb-sdk-rpc": "0.39",

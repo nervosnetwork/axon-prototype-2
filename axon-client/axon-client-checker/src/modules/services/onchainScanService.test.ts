@@ -18,9 +18,7 @@ import JSONbig from "json-bigint";
 import { createMock } from "ts-auto-mock";
 
 import { Cell, QueryOptions } from "@ckb-lumos/base";
-import { CellCollector, Indexer } from "@ckb-lumos/sql-indexer";
-
-import Knex from "knex";
+import { CellCollector, Indexer } from "@ckb-lumos/indexer";
 
 class Context {
   scanService: ScanService;
@@ -31,7 +29,7 @@ class Context {
 }
 
 function prepareContext(data: string): Context {
-  const scanService = new OnchainScanService({ knex: createMock<Knex>() }, createMock<Indexer>());
+  const scanService = new OnchainScanService({ indexer: createMock<Indexer>() });
   scanService.createCollector = (_options: QueryOptions, _tip?: string) => {
     const mockCollector = createMock<CellCollector>();
     mockCollector.collect = () => {
@@ -107,7 +105,7 @@ expect.extend({
 describe("OnchainScanService", () => {
   test("getTip should get tip from indexer", async () => {
     const indexer = createMock<Indexer>();
-    const scanService = new OnchainScanService({ knex: createMock<Knex>() }, indexer);
+    const scanService = new OnchainScanService({ indexer });
 
     const tip = indexer.tip as jest.Mock;
     await expect(scanService.getTip()).resolves.toBe(BigInt((await tip.mock.results[0].value).block_number));
