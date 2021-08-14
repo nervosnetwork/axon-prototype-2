@@ -2,13 +2,12 @@ use crate::molecule::cell::checker_info::CheckerInfoCellTypeArgsBuilder;
 use crate::molecule::cell::checker_info::{
     CheckerInfoCellBuilder, CheckerInfoCellReader, CheckerInfoCellTypeArgsReader, CheckerInfoStatusReader,
 };
-use crate::molecule::common::{ChainIdReader, PubKeyHashReader, StringBuilder, Uint128Reader};
+use crate::molecule::common::{ChainIdReader, MolStringBuilder, PubKeyHashReader, Uint128Reader};
 use crate::{FromRaw, Serialize};
 use core::convert::TryFrom;
 use core::result::Result;
 use molecule::prelude::*;
-const CHECKER_INFO_DATA_LEN: usize = 546;
-const CHECKER_INFO_TYPE_ARGS_LEN: usize = 21;
+
 /**
     Checker Info Cell
     Data:
@@ -77,7 +76,7 @@ impl Serialize for CheckerInfoCell {
     fn serialize(&self) -> Self::RawType {
         let status = CheckerInfoStatusReader::new_unchecked(&(self.status as u8).serialize()).to_entity();
         let unpaid_fee = Uint128Reader::new_unchecked(&self.unpaid_fee.serialize()).to_entity();
-        let mut rpc_url_builder = StringBuilder::default();
+        let mut rpc_url_builder = MolStringBuilder::default();
         for &v in self.rpc_url.iter() {
             rpc_url_builder = rpc_url_builder.push(Byte::new(v));
         }

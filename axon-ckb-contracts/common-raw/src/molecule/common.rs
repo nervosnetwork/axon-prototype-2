@@ -8757,8 +8757,8 @@ impl molecule::prelude::Builder for CommittedHashBuilder {
     }
 }
 #[derive(Clone)]
-pub struct String(molecule::bytes::Bytes);
-impl ::core::fmt::LowerHex for String {
+pub struct MolString(molecule::bytes::Bytes);
+impl ::core::fmt::LowerHex for MolString {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -8767,25 +8767,25 @@ impl ::core::fmt::LowerHex for String {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl ::core::fmt::Debug for String {
+impl ::core::fmt::Debug for MolString {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl ::core::fmt::Display for String {
+impl ::core::fmt::Display for MolString {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         let raw_data = hex_string(&self.raw_data());
         write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-impl ::core::default::Default for String {
+impl ::core::default::Default for MolString {
     fn default() -> Self {
         let v: Vec<u8> = vec![0, 0, 0, 0];
-        String::new_unchecked(v.into())
+        MolString::new_unchecked(v.into())
     }
 }
-impl String {
+impl MolString {
     pub const ITEM_SIZE: usize = 1;
 
     pub fn total_size(&self) -> usize {
@@ -8822,17 +8822,17 @@ impl String {
         self.0.slice(molecule::NUMBER_SIZE..)
     }
 
-    pub fn as_reader<'r>(&'r self) -> StringReader<'r> {
-        StringReader::new_unchecked(self.as_slice())
+    pub fn as_reader<'r>(&'r self) -> MolStringReader<'r> {
+        MolStringReader::new_unchecked(self.as_slice())
     }
 }
-impl molecule::prelude::Entity for String {
-    type Builder = StringBuilder;
+impl molecule::prelude::Entity for MolString {
+    type Builder = MolStringBuilder;
 
-    const NAME: &'static str = "String";
+    const NAME: &'static str = "MolString";
 
     fn new_unchecked(data: molecule::bytes::Bytes) -> Self {
-        String(data)
+        MolString(data)
     }
 
     fn as_bytes(&self) -> molecule::bytes::Bytes {
@@ -8844,11 +8844,11 @@ impl molecule::prelude::Entity for String {
     }
 
     fn from_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        StringReader::from_slice(slice).map(|reader| reader.to_entity())
+        MolStringReader::from_slice(slice).map(|reader| reader.to_entity())
     }
 
     fn from_compatible_slice(slice: &[u8]) -> molecule::error::VerificationResult<Self> {
-        StringReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
+        MolStringReader::from_compatible_slice(slice).map(|reader| reader.to_entity())
     }
 
     fn new_builder() -> Self::Builder {
@@ -8860,8 +8860,8 @@ impl molecule::prelude::Entity for String {
     }
 }
 #[derive(Clone, Copy)]
-pub struct StringReader<'r>(&'r [u8]);
-impl<'r> ::core::fmt::LowerHex for StringReader<'r> {
+pub struct MolStringReader<'r>(&'r [u8]);
+impl<'r> ::core::fmt::LowerHex for MolStringReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         if f.alternate() {
@@ -8870,19 +8870,19 @@ impl<'r> ::core::fmt::LowerHex for StringReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-impl<'r> ::core::fmt::Debug for StringReader<'r> {
+impl<'r> ::core::fmt::Debug for MolStringReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-impl<'r> ::core::fmt::Display for StringReader<'r> {
+impl<'r> ::core::fmt::Display for MolStringReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
         let raw_data = hex_string(&self.raw_data());
         write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-impl<'r> StringReader<'r> {
+impl<'r> MolStringReader<'r> {
     pub const ITEM_SIZE: usize = 1;
 
     pub fn total_size(&self) -> usize {
@@ -8919,17 +8919,17 @@ impl<'r> StringReader<'r> {
         &self.as_slice()[molecule::NUMBER_SIZE..]
     }
 }
-impl<'r> molecule::prelude::Reader<'r> for StringReader<'r> {
-    type Entity = String;
+impl<'r> molecule::prelude::Reader<'r> for MolStringReader<'r> {
+    type Entity = MolString;
 
-    const NAME: &'static str = "StringReader";
+    const NAME: &'static str = "MolStringReader";
 
     fn to_entity(&self) -> Self::Entity {
         Self::Entity::new_unchecked(self.as_slice().to_owned().into())
     }
 
     fn new_unchecked(slice: &'r [u8]) -> Self {
-        StringReader(slice)
+        MolStringReader(slice)
     }
 
     fn as_slice(&self) -> &'r [u8] {
@@ -8957,8 +8957,8 @@ impl<'r> molecule::prelude::Reader<'r> for StringReader<'r> {
     }
 }
 #[derive(Debug, Default)]
-pub struct StringBuilder(pub(crate) Vec<Byte>);
-impl StringBuilder {
+pub struct MolStringBuilder(pub(crate) Vec<Byte>);
+impl MolStringBuilder {
     pub const ITEM_SIZE: usize = 1;
 
     pub fn set(mut self, v: Vec<Byte>) -> Self {
@@ -8978,10 +8978,10 @@ impl StringBuilder {
         self
     }
 }
-impl molecule::prelude::Builder for StringBuilder {
-    type Entity = String;
+impl molecule::prelude::Builder for MolStringBuilder {
+    type Entity = MolString;
 
-    const NAME: &'static str = "StringBuilder";
+    const NAME: &'static str = "MolStringBuilder";
 
     fn expected_length(&self) -> usize {
         molecule::NUMBER_SIZE + Self::ITEM_SIZE * self.0.len()
@@ -8999,11 +8999,11 @@ impl molecule::prelude::Builder for StringBuilder {
         let mut inner = Vec::with_capacity(self.expected_length());
         self.write(&mut inner)
             .unwrap_or_else(|_| panic!("{} build should be ok", Self::NAME));
-        String::new_unchecked(inner.into())
+        MolString::new_unchecked(inner.into())
     }
 }
-pub struct StringIterator(String, usize, usize);
-impl ::core::iter::Iterator for StringIterator {
+pub struct MolStringIterator(MolString, usize, usize);
+impl ::core::iter::Iterator for MolStringIterator {
     type Item = Byte;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -9016,18 +9016,18 @@ impl ::core::iter::Iterator for StringIterator {
         }
     }
 }
-impl ::core::iter::ExactSizeIterator for StringIterator {
+impl ::core::iter::ExactSizeIterator for MolStringIterator {
     fn len(&self) -> usize {
         self.2 - self.1
     }
 }
-impl ::core::iter::IntoIterator for String {
-    type IntoIter = StringIterator;
+impl ::core::iter::IntoIterator for MolString {
+    type IntoIter = MolStringIterator;
     type Item = Byte;
 
     fn into_iter(self) -> Self::IntoIter {
         let len = self.len();
-        StringIterator(self, 0, len)
+        MolStringIterator(self, 0, len)
     }
 }
 #[derive(Clone)]
