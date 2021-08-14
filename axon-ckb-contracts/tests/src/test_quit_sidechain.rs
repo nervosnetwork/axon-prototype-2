@@ -4,6 +4,8 @@ use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 
+use common_raw::cell::checker_info::CheckerInfoStatus;
+use common_raw::cell::sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
@@ -47,17 +49,27 @@ fn test_success() {
     let (mut builder, _) = with_time_header(builder, 1100);
 
     // prepare scripts
-    let mut checker_bond_lock_args = CheckerBondCellLockArgs::default();
-    checker_bond_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
-
-    let checker_bond_lock_output_script = builder
+    let state_dep_type_args = SidechainStateCellTypeArgs::default();
+    let state_dep_type_script = builder
         .context
-        .build_script(&always_success_code, checker_bond_lock_args.serialize())
+        .build_script(&always_success_code, state_dep_type_args.serialize())
         .expect("script");
+
+    let mut checker_bond_input_lock_args = CheckerBondCellLockArgs::default();
+    checker_bond_input_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
+    checker_bond_input_lock_args.participated_chain_id.push(0);
+
+    let mut checker_bond_output_lock_args = CheckerBondCellLockArgs::default();
+    checker_bond_output_lock_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
 
     let checker_bond_lock_input_script = builder
         .context
-        .build_script(&always_success_code, checker_bond_lock_args.serialize())
+        .build_script(&always_success_code, checker_bond_input_lock_args.serialize())
+        .expect("script");
+
+    let checker_bond_lock_output_script = builder
+        .context
+        .build_script(&always_success_code, checker_bond_output_lock_args.serialize())
         .expect("script");
 
     let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
@@ -74,10 +86,22 @@ fn test_success() {
         .build_script(&always_success_code, config_type_args.serialize())
         .expect("script");
 
+    //prepare dep
+    let state_dep_data = SidechainStateCell::default();
+
+    let state_dep_out_point = builder.context.create_cell(
+        new_type_cell_output(1000, &always_success, &state_dep_type_script),
+        state_dep_data.serialize(),
+    );
+    let state_dep = CellDep::new_builder().out_point(state_dep_out_point).build();
+    let mut builder = builder.cell_dep(state_dep);
+
     // prepare inputs
     let mut config_input_data = SidechainConfigCell::default();
     config_input_data.checker_total_count = 1;
+    config_input_data.checker_normal_count = 1;
     config_input_data.minimal_bond = 100;
+    config_input_data.activated_checkers.push(pubkey_hash.clone());
 
     let config_input_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &config_script),
@@ -105,17 +129,25 @@ fn test_success() {
     let builder = builder.input(config_input).input(checker_bond_input).input(checker_info_input);
 
     // prepare outputs
-    let mut config_output = config_input_data.clone();
-    config_output.checker_total_count = 0;
-
+    let mut config_output = SidechainConfigCell::default();
+    config_output.minimal_bond = 100;
     let checker_bond_output = checker_bond_input_data.clone();
+
+    let mut checker_info_output = CheckerInfoCell::default();
+    checker_info_output.status = CheckerInfoStatus::Quit;
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
-        new_type_cell_output(1000, &always_success, &always_success),
+        new_type_cell_output(1000, &always_success, &config_script),
         new_type_cell_output(1000, &checker_bond_lock_output_script, &always_success),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
     ];
-    let outputs_data: Vec<Bytes> = vec![Bytes::new(), config_output.serialize(), checker_bond_output.serialize()];
+    let outputs_data: Vec<Bytes> = vec![
+        Bytes::new(),
+        config_output.serialize(),
+        checker_bond_output.serialize(),
+        checker_info_output.serialize(),
+    ];
 
     let witness = CheckerQuitSidechainWitness::default();
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];
