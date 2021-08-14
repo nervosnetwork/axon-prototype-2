@@ -1,16 +1,26 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
+  arrayBufferToHex,
   defaultOutPoint,
-  leHexToBigIntUint128,
-  leHexToBigIntUint8,
   remove0xPrefix,
-  Uint128BigIntToLeHex,
+  scriptArgToArrayBuff,
   Uint64BigIntToLeHex,
-  Uint8BigIntToLeHex,
 } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { SIDECHAIN_BOND_LOCK_SCRIPT, SIDECHAIN_BOND_TYPE_SCRIPT } from "../../../utils/environment";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
+import {
+  arrayBufferToBlockHeight,
+  arrayBufferToPublicKeyHash,
+  arrayBufferToUint128,
+  blockHeightToArrayBuffer,
+  chainIdListToWrite,
+  publicKeyHashToArrayBuffer,
+  readerToChainIdList,
+  uint128ToArrayBuffer,
+} from "../../../utils/mol";
+import { SerializeSidechainBondCellLockArgs, SidechainBondCellLockArgs } from "../mol/sidechain_bond";
 
 /*
 sidechain bond
@@ -31,24 +41,24 @@ export class SidechainBond implements CellInputType, CellOutputType {
   capacity: bigint;
   sudtAmount: bigint;
 
-  chainId: bigint;
-  collatorPublicKeyHash: string;
-  unlockSidechainHeight: bigint;
+  participatedChain: Array<string>;
+  collatorLockArg: string;
+  unlockSidechainHeight: string;
 
   outPoint: OutPoint;
 
   constructor(
     capacity: bigint,
     sudtAmount: bigint,
-    chainId: bigint,
-    collatorPublicKeyHash: string,
-    unlockSidechainHeight: bigint,
+    participatedChain: Array<string>,
+    collatorLockArg: string,
+    unlockSidechainHeight: string,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
     this.sudtAmount = sudtAmount;
-    this.chainId = chainId;
-    this.collatorPublicKeyHash = collatorPublicKeyHash;
+    this.participatedChain = participatedChain;
+    this.collatorLockArg = collatorLockArg;
     this.unlockSidechainHeight = unlockSidechainHeight;
     this.outPoint = outPoint;
   }
@@ -66,21 +76,24 @@ export class SidechainBond implements CellInputType, CellOutputType {
       return null;
     }
     const capacity = BigInt(cell.cell_output.capacity);
-    const sudtAmount = leHexToBigIntUint128(cell.data);
 
-    const lockArgs = cell.cell_output.lock.args.substring(2);
+    const cellData = new SudtTokenCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const chainId = leHexToBigIntUint8(lockArgs.substring(0, 2));
-    const collatorPublicKeyHash = lockArgs.substring(2, 42);
-    const unlockSidechainHeight = leHexToBigIntUint128(lockArgs.substring(42, 74));
+    const sudtAmount = arrayBufferToUint128(cellData.getAmount().raw());
+
+    const lockArgs = new SidechainBondCellLockArgs(scriptArgToArrayBuff(cell.cell_output.lock), { validate: true });
+
+    const participatedChain = readerToChainIdList(lockArgs.getParticipatedChain());
+    const collatorLockArg = arrayBufferToPublicKeyHash(lockArgs.getCollatorLockArg().raw());
+    const unlockSidechainHeight = arrayBufferToBlockHeight(lockArgs.getUnlockSidechainHeight().raw());
 
     const outPoint = cell.out_point!;
 
-    return new SidechainBond(capacity, sudtAmount, chainId, collatorPublicKeyHash, unlockSidechainHeight, outPoint);
+    return new SidechainBond(capacity, sudtAmount, participatedChain, collatorLockArg, unlockSidechainHeight, outPoint);
   }
 
   static default(): SidechainBond {
-    return new SidechainBond(0n, 0n, 0n, ``, 0n, defaultOutPoint());
+    return new SidechainBond(0n, 0n, [], ``, "", defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -95,9 +108,18 @@ export class SidechainBond implements CellInputType, CellOutputType {
 
   toCellOutput(): CKBComponents.CellOutput {
     const lock = SIDECHAIN_BOND_LOCK_SCRIPT;
-    lock.args = `0x${remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${remove0xPrefix(
-      this.collatorPublicKeyHash,
-    )}${remove0xPrefix(Uint128BigIntToLeHex(this.unlockSidechainHeight))}`;
+
+    const sidechainBondCellLockArgs = {
+      //convert hex into array buffer
+      collator_lock_arg: publicKeyHashToArrayBuffer(this.collatorLockArg),
+      participated_chain: chainIdListToWrite(this.participatedChain),
+      unlock_sidechain_height: blockHeightToArrayBuffer(this.unlockSidechainHeight),
+    };
+
+    const arg = SerializeSidechainBondCellLockArgs(sidechainBondCellLockArgs);
+
+    lock.args = arrayBufferToHex(arg);
+
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: SIDECHAIN_BOND_TYPE_SCRIPT,
@@ -116,7 +138,10 @@ export class SidechainBond implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `${Uint128BigIntToLeHex(this.sudtAmount)}`;
+    const sidechainBondCellData = {
+      amount: uint128ToArrayBuffer(this.sudtAmount),
+    };
+    return arrayBufferToHex(SerializeSudtTokenCell(sidechainBondCellData));
   }
 
   getOutPoint(): string {

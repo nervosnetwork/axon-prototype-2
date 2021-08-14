@@ -73,11 +73,11 @@ export default class OnchainTaskService implements TaskService {
     const tasks = await this.#scanService.scanTask();
 
     //check out task belonging to self
-    const selected = tasks.some((task) => task.chainId != 0n);
+    const selected = tasks.some((task) => task.chainId != "0x00");
 
     if (selected) {
       //check out task belonging to self
-      const task = tasks.filter((task) => task.chainId != 0n)[0];
+      const task = tasks.filter((task) => task.chainId != "0x00")[0];
 
       // check if submit task or publish challenge
       const challenge = task.mode === Task.CHALLENGE;

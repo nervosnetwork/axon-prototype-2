@@ -4,10 +4,10 @@ import TransactionService from "./transactionService";
 import RpcService from "./rpcService";
 import { logger } from "axon-client-common/src/utils/logger";
 import { CheckerSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_task";
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
+//import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
 import { CheckerSubmitTaskWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_task_witness";
-import { CheckerSubmitChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_challenge_witness";
-import { CheckerPublishChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_public_challenge_witness";
+//import { CheckerSubmitChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_challenge_witness";
+//import { CheckerPublishChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_public_challenge_witness";
 import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
 import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
 import EngineService from "./engineService";
@@ -44,9 +44,13 @@ export default class OnchainEngineService implements EngineService {
       return;
     }
 
-    xfer.inputCheckerInfo.mode = CheckerInfo.TASK_PASSED;
+    xfer.inputCheckerInfo.status = "Relaying";
 
-    xfer.patternTypeWitness = new CheckerSubmitTaskWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
+    //todo change chainId of witness to string from bigint
+    xfer.patternTypeWitness = new CheckerSubmitTaskWitness(
+      0n /*xfer.depConfig.chainId*/,
+      0n /*xfer.inputCheckerInfo.chainId*/,
+    );
 
     //compose tx
 
@@ -63,9 +67,9 @@ export default class OnchainEngineService implements EngineService {
       return;
     }
 
-    xfer.inputCheckerInfo.mode = CheckerInfo.CHALLENGE_PASSED;
-
-    xfer.patternTypeWitness = new CheckerSubmitChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
+    //ToDo fix the logic while witness is fine
+    //xfer.inputCheckerInfo.status = CheckerInfo.CHALLENGE_PASSED;
+    //xfer.patternTypeWitness = new CheckerSubmitChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
 
     //compose tx
 
@@ -81,10 +85,9 @@ export default class OnchainEngineService implements EngineService {
     if (xfer.depConfig.checkerTotalCount < xfer.depConfig.checkerThreshold) {
       return;
     }
-
-    xfer.inputCheckerInfo.mode = CheckerInfo.CHALLENGE_REJECTED;
-
-    xfer.patternTypeWitness = new CheckerPublishChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
+    //ToDo fix the logic while witness is fine
+    //xfer.inputCheckerInfo.mode = CheckerInfo.CHALLENGE_REJECTED;
+    //xfer.patternTypeWitness = new CheckerPublishChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
 
     //compose tx
 

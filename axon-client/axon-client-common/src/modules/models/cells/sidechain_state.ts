@@ -1,17 +1,35 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
+  arrayBufferToHex,
   defaultOutPoint,
-  leHexToBigIntUint128,
-  leHexToBigIntUint8,
   remove0xPrefix,
-  Uint128BigIntToLeHex,
+  scriptArgToArrayBuff,
   Uint64BigIntToLeHex,
-  Uint8BigIntToLeHex,
 } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { SIDECHAIN_STATE_LOCK_SCRIPT, SIDECHAIN_STATE_TYPE_SCRIPT } from "../../../utils/environment";
 import { CellDepType } from "./interfaces/cell_dep_type";
+import {
+  arrayBufferToBlockHeader,
+  arrayBufferToBlockHeight,
+  arrayBufferToChainId,
+  arrayBufferToCommittedHash,
+  arrayBufferToMerkleHash,
+  arrayBufferToPublicKeyHash,
+  arrayBufferToRandomSeed,
+  arrayBufferToUint32,
+  arrayBufferToUint8,
+  blockHeaderToArrayBuffer,
+  blockHeightToArrayBuffer,
+  committedHashToArrayBuffer,
+  merkleHashToArrayBuffer,
+  publicKeyHashToArrayBuffer,
+  randomSeedToArrayBuffer,
+  uint32ToArrayBuffer,
+  uint8ToArrayBuffer,
+} from "../../../utils/mol";
+import { SerializeSidechainStateCell, SidechainStateCell, SidechainStateCellLockArgs } from "../mol/sidechain_state";
 
 /*
 sidechain status
@@ -40,35 +58,52 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
 
   capacity: bigint;
 
-  chainId: bigint;
   version: bigint;
-  latestBlockHeight: bigint;
-  latestBlockHash: string;
-  committedBlockHeight: bigint;
-  committedBlockHash: string;
-  status: bigint;
+  submitSidechainBlockHeight: string;
+  waitingJobs: Array<{ from: string; to: string }>;
+  confirmedJobs: Array<{ from: string; to: string }>;
+  randomSeed: string;
+  randomOffset: bigint;
+  randomCommit: { checker_lock_arg: string; committed_hash: string };
+  punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }>;
+  recentBlockHeaders: Array<string>;
+  ancientBlockHeardMerkleRoot: string;
+  checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: string }>;
+
+  //args
+  chainId: string;
 
   outPoint: OutPoint;
 
   constructor(
     capacity: bigint,
-    chainId: bigint,
     version: bigint,
-    latestBlockHeight: bigint,
-    latestBlockHash: string,
-    committedBlockHeight: bigint,
-    committedBlockHash: string,
-    status: bigint,
+    submitSidechainBlockHeight: string,
+    waitingJobs: Array<{ from: string; to: string }>,
+    confirmedJobs: Array<{ from: string; to: string }>,
+    randomSeed: string,
+    randomOffset: bigint,
+    randomCommit: { checker_lock_arg: string; committed_hash: string },
+    punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }>,
+    recentBlockHeaders: Array<string>,
+    ancientBlockHeardMerkleRoot: string,
+    checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: string }>,
+    chainId: string,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
-    this.chainId = chainId;
     this.version = version;
-    this.latestBlockHeight = latestBlockHeight;
-    this.latestBlockHash = latestBlockHash;
-    this.committedBlockHeight = committedBlockHeight;
-    this.committedBlockHash = committedBlockHash;
-    this.status = status;
+    this.submitSidechainBlockHeight = submitSidechainBlockHeight;
+    this.waitingJobs = waitingJobs;
+    this.confirmedJobs = confirmedJobs;
+    this.randomSeed = randomSeed;
+    this.randomOffset = randomOffset;
+    this.randomCommit = randomCommit;
+    this.punishCheckers = punishCheckers;
+    this.recentBlockHeaders = recentBlockHeaders;
+    this.ancientBlockHeardMerkleRoot = ancientBlockHeardMerkleRoot;
+    this.checkerLastTaskSidechainHeights = checkerLastTaskSidechainHeights;
+    this.chainId = chainId;
     this.outPoint = outPoint;
   }
 
@@ -86,36 +121,112 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
     }
     const capacity = BigInt(cell.cell_output.capacity);
 
-    const data = cell.data.substring(2);
+    const cellData = new SidechainStateCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const chainId = leHexToBigIntUint8(data.substring(0, 2));
-    const version = leHexToBigIntUint8(data.substring(2, 4));
-    const latestBlockHeight = leHexToBigIntUint128(data.substring(4, 36));
-    const latestBlockHash = data.substring(36, 100);
-    const committedBlockHeight = leHexToBigIntUint128(data.substring(100, 132));
-    const committedBlockHash = data.substring(132, 196);
+    const version = arrayBufferToUint8(cellData.getVersion().raw());
+    const submitSidechainBlockHeight = arrayBufferToBlockHeight(cellData.getSubmitSidechainBlockHeight().raw());
+    const waitingJobs: Array<{ from: string; to: string }> = [];
 
-    let status: bigint = this.STATUS_WAITING_FOR_SUBMIT;
-    if (latestBlockHeight === committedBlockHeight) {
-      status = this.STATUS_WAITING_FOR_PUBLISH;
+    for (let i = 0; i < cellData.getWaitingJobs().length(); i++) {
+      const item = cellData.getWaitingJobs().indexAt(i);
+      waitingJobs.push({
+        from: arrayBufferToBlockHeight(item.getFrom().raw()),
+        to: arrayBufferToBlockHeight(item.getTo().raw()),
+      });
     }
+
+    const confirmedJobs: Array<{ from: string; to: string }> = [];
+    for (let i = 0; i < cellData.getConfirmedJobs().length(); i++) {
+      const item = cellData.getConfirmedJobs().indexAt(i);
+      confirmedJobs.push({
+        from: arrayBufferToBlockHeight(item.getFrom().raw()),
+        to: arrayBufferToBlockHeight(item.getTo().raw()),
+      });
+    }
+
+    const randomSeed = arrayBufferToRandomSeed(cellData.getRandomSeed().raw());
+    const randomOffset = arrayBufferToUint8(cellData.getRandomOffset().raw());
+    const randomCommit = {
+      checker_lock_arg: arrayBufferToPublicKeyHash(cellData.getRandomCommit().getCheckerLockArg().raw()),
+      committed_hash: arrayBufferToCommittedHash(cellData.getRandomCommit().getCommittedHash().raw()),
+    };
+
+    const punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }> = [];
+    for (let i = 0; i < cellData.getPunishCheckers().length(); i++) {
+      const item = cellData.getPunishCheckers().indexAt(i);
+      punishCheckers.push({
+        checker_lock_arg: arrayBufferToPublicKeyHash(item.getCheckerLockArg().raw()),
+        punish_points: arrayBufferToUint32(item.getPunishPoints().raw()),
+      });
+    }
+
+    const recentBlockHeaders: Array<string> = [];
+    for (let i = 0; i < cellData.getRecentBlockHeaders().length(); i++) {
+      const item = cellData.getRecentBlockHeaders().indexAt(i);
+      recentBlockHeaders.push(arrayBufferToBlockHeader(item.raw()));
+    }
+
+    const ancientBlockHeardMerkleRoot: string = arrayBufferToMerkleHash(
+      cellData.getAncientBlockHeardMerkleRoot().raw(),
+    );
+    const checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: string }> = [];
+    for (let i = 0; i < cellData.getCheckerLastTaskSidechainHeights().length(); i++) {
+      const item = cellData.getCheckerLastTaskSidechainHeights().indexAt(i);
+      checkerLastTaskSidechainHeights.push({
+        checker_lock_arg: arrayBufferToPublicKeyHash(item.getCheckerLockArg().raw()),
+        height: arrayBufferToBlockHeight(item.getHeight().raw()),
+      });
+    }
+
+    //==============================
+
+    if (!cell.cell_output.type) {
+      return null;
+    }
+
+    const typeArgs = new SidechainStateCellLockArgs(scriptArgToArrayBuff(cell.cell_output.type), { validate: true });
+
+    const chainId = arrayBufferToChainId(typeArgs.getChainId().raw());
+
     const outPoint = cell.out_point!;
 
     return new SidechainState(
       capacity,
-      chainId,
+
       version,
-      latestBlockHeight,
-      latestBlockHash,
-      committedBlockHeight,
-      committedBlockHash,
-      status,
+      submitSidechainBlockHeight,
+      waitingJobs,
+      confirmedJobs,
+      randomSeed,
+      randomOffset,
+      randomCommit,
+      punishCheckers,
+      recentBlockHeaders,
+      ancientBlockHeardMerkleRoot,
+      checkerLastTaskSidechainHeights,
+      //args
+      chainId,
       outPoint,
     );
   }
 
   static default(): SidechainState {
-    return new SidechainState(0n, 0n, 0n, 0n, ``, 0n, ``, 0n, defaultOutPoint());
+    return new SidechainState(
+      0n,
+      0n,
+      ``,
+      [],
+      [],
+      ``,
+      0n,
+      { checker_lock_arg: "", committed_hash: "" },
+      [],
+      [],
+      "",
+      [],
+      "",
+      defaultOutPoint(),
+    );
   }
 
   toCellDep(): CKBComponents.CellDep {
@@ -139,6 +250,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
   }
 
   toCellOutput(): CKBComponents.CellOutput {
+    //skip change chainId
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: SIDECHAIN_STATE_TYPE_SCRIPT,
@@ -147,11 +259,44 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
   }
 
   toCellOutputData(): string {
-    return `0x${remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.version),
-    )}${remove0xPrefix(Uint128BigIntToLeHex(this.latestBlockHeight))}${remove0xPrefix(
-      this.latestBlockHash,
-    )}${remove0xPrefix(Uint128BigIntToLeHex(this.committedBlockHeight))}${remove0xPrefix(this.committedBlockHash)}`;
+    const sidechainStateCell = {
+      version: uint8ToArrayBuffer(this.version),
+      submitSidechainBlockHeight: blockHeightToArrayBuffer(this.submitSidechainBlockHeight),
+      waitingJobs: this.waitingJobs.map((job) => {
+        return {
+          from: blockHeightToArrayBuffer(job.from),
+          to: blockHeightToArrayBuffer(job.to),
+        };
+      }),
+      confirmedJobs: this.confirmedJobs.map((job) => {
+        return {
+          from: blockHeightToArrayBuffer(job.from),
+          to: blockHeightToArrayBuffer(job.to),
+        };
+      }),
+      randomSeed: randomSeedToArrayBuffer(this.randomSeed),
+      randomOffset: uint8ToArrayBuffer(this.randomOffset),
+      randomCommit: {
+        checker_lock_arg: publicKeyHashToArrayBuffer(this.randomCommit.checker_lock_arg),
+        committed_hash: committedHashToArrayBuffer(this.randomCommit.committed_hash),
+      },
+      punishCheckers: this.punishCheckers.map((checker) => {
+        return {
+          checker_lock_arg: publicKeyHashToArrayBuffer(checker.checker_lock_arg),
+          punish_points: uint32ToArrayBuffer(checker.punish_points),
+        };
+      }),
+      recentBlockHeaders: this.recentBlockHeaders.map((header) => blockHeaderToArrayBuffer(header)),
+      ancientBlockHeardMerkleRoot: merkleHashToArrayBuffer(this.ancientBlockHeardMerkleRoot),
+      checkerLastTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map((height) => {
+        return {
+          checker_lock_arg: publicKeyHashToArrayBuffer(height.checker_lock_arg),
+          height: blockHeightToArrayBuffer(height.height),
+        };
+      }),
+    };
+
+    return arrayBufferToHex(SerializeSidechainStateCell(sidechainStateCell));
   }
 
   getOutPoint(): string {

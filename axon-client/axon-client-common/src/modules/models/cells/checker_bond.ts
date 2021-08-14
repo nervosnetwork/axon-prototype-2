@@ -1,14 +1,24 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
+  arrayBufferToHex,
   defaultOutPoint,
-  leHexToBigIntUint128,
   remove0xPrefix,
-  Uint128BigIntToLeHex,
+  scriptArgToArrayBuff,
   Uint64BigIntToLeHex,
 } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { CHECKER_BOND_LOCK_SCRIPT, CHECKER_BOND_TYPE_SCRIPT } from "../../../utils/environment";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
+import { CheckerBondCellLockArgs, SerializeCheckerBondCellLockArgs } from "../mol/checker_bond";
+import {
+  arrayBufferToPublicKeyHash,
+  arrayBufferToUint128,
+  chainIdListToWrite,
+  publicKeyHashToArrayBuffer,
+  readerToChainIdList,
+  uint128ToArrayBuffer,
+} from "../../../utils/mol";
 
 /*
 checker bond
@@ -25,25 +35,28 @@ lock: - 85 bytes
     args: checker public key hash | chain id bitmap - 52 bytes
  */
 export class CheckerBond implements CellInputType, CellOutputType {
+  outPoint: OutPoint;
+
   capacity: bigint;
+
+  //data
   museAmount: bigint;
 
-  checkerPublicKeyHash: string;
-  chainIdBitmap: string;
-
-  outPoint: OutPoint;
+  //lock args
+  checkerLockArg: string;
+  participatedChainId: Array<string>;
 
   constructor(
     capacity: bigint,
-    sudtAmount: bigint,
-    checkerPublicKeyHash: string,
-    chainIdBitmap: string,
+    museAmount: bigint,
+    checkerLockArg: string,
+    participatedChainId: Array<string>,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
-    this.museAmount = sudtAmount;
-    this.checkerPublicKeyHash = checkerPublicKeyHash;
-    this.chainIdBitmap = chainIdBitmap;
+    this.museAmount = museAmount;
+    this.checkerLockArg = checkerLockArg;
+    this.participatedChainId = participatedChainId;
 
     this.outPoint = outPoint;
   }
@@ -61,20 +74,25 @@ export class CheckerBond implements CellInputType, CellOutputType {
       return null;
     }
     const capacity = BigInt(cell.cell_output.capacity);
-    const sudtAmount = leHexToBigIntUint128(cell.data);
 
-    const lockArgs = cell.cell_output.lock.args.substring(2);
+    const cellData = new SudtTokenCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const checkerPublicKeyHash = lockArgs.substring(0, 40);
-    const chainIdBitmap = lockArgs.substring(40, 104);
+    const sudtAmount = arrayBufferToUint128(cellData.getAmount().raw());
+
+    //==============================================================================
+
+    const lockArgs = new CheckerBondCellLockArgs(scriptArgToArrayBuff(cell.cell_output.lock), { validate: true });
+
+    const checkerLockArg = arrayBufferToPublicKeyHash(lockArgs.getCheckerLockArg().raw());
+    const participated_chain_id = readerToChainIdList(lockArgs.getParticipatedChainId());
 
     const outPoint = cell.out_point!;
 
-    return new CheckerBond(capacity, sudtAmount, checkerPublicKeyHash, chainIdBitmap, outPoint);
+    return new CheckerBond(capacity, sudtAmount, checkerLockArg, participated_chain_id, outPoint);
   }
 
   static default(): CheckerBond {
-    return new CheckerBond(0n, 0n, ``, ``, defaultOutPoint());
+    return new CheckerBond(0n, 0n, ``, [], defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -89,7 +107,17 @@ export class CheckerBond implements CellInputType, CellOutputType {
 
   toCellOutput(): CKBComponents.CellOutput {
     const lock = CHECKER_BOND_LOCK_SCRIPT;
-    lock.args = `0x${remove0xPrefix(this.checkerPublicKeyHash)}${remove0xPrefix(this.chainIdBitmap)}`;
+
+    const checkerBondCellLockArgs = {
+      //convert hex into array buffer
+      checker_lock_arg: publicKeyHashToArrayBuffer(this.checkerLockArg),
+      participated_chain_id: chainIdListToWrite(this.participatedChainId),
+    };
+
+    const arg = SerializeCheckerBondCellLockArgs(checkerBondCellLockArgs);
+
+    lock.args = arrayBufferToHex(arg);
+
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: CHECKER_BOND_TYPE_SCRIPT,
@@ -98,7 +126,10 @@ export class CheckerBond implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `${Uint128BigIntToLeHex(this.museAmount)}`;
+    const checkerBondCell = {
+      amount: uint128ToArrayBuffer(this.museAmount),
+    };
+    return arrayBufferToHex(SerializeSudtTokenCell(checkerBondCell));
   }
 
   getOutPoint(): string {

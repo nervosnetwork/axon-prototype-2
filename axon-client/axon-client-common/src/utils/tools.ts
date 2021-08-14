@@ -27,6 +27,33 @@ export function scriptSnakeToCamel(script: Script): CKBComponents.Script {
   };
 }
 
+/*export const arrayBufferToBigIntUint128 = (ab: ArrayBuffer): bigint => {
+  const b = Buffer.from(ab);
+  const hi = b.readBigUInt64LE(8) << BigInt(64);
+  const lo = b.readBigUInt64LE(0);
+  return hi + lo;
+};
+
+export const arrayBufferToBigIntUint64 = (ab: ArrayBuffer): bigint => {
+  const b = Buffer.from(ab);
+  return b.readBigUInt64LE(0);
+};
+
+export const arrayBufferToBigIntUint32 = (ab: ArrayBuffer): bigint => {
+  const b = Buffer.from(ab);
+  return BigInt(b.readUInt32LE(0));
+};
+
+export const arrayBufferToBigIntUint16 = (ab: ArrayBuffer): bigint => {
+  const b = Buffer.from(ab);
+  return BigInt(b.readUInt16LE(0));
+};
+
+export const arrayBufferToBigIntUint8 = (ab: ArrayBuffer): bigint => {
+  const b = Buffer.from(ab);
+  return BigInt(b.readUInt8(0));
+};*/
+
 export const leHexToBigIntUint128 = (rawHexString: string): bigint => {
   return utils.readBigUInt128LE(prepare0xPrefix(rawHexString));
 };
@@ -132,7 +159,7 @@ export function prepare0xPrefix(input: string): string {
   return input.startsWith("0x") ? input : "0x" + input;
 }
 
-export function bigIntToHex(bn: bigint) {
+export function bigIntToHex(bn: bigint): string {
   let hex = bn.toString(16);
   if (hex.length % 2) {
     hex = "0" + hex;
@@ -140,7 +167,7 @@ export function bigIntToHex(bn: bigint) {
   return "0x" + hex;
 }
 
-export function numberToHex(numero: number) {
+export function numberToHex(numero: number): string {
   let hex = numero.toString(16);
   if (hex.length % 2) {
     hex = "0" + hex;
@@ -189,6 +216,84 @@ export async function waitTx(txHash: CKBComponents.Hash, rpc: Rpc) {
   }
 }
 
-export function sleep(time: number) {
+export function sleep(time: number): Promise<NodeJS.Timeout> {
   return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+export function bigIntUint8ToArrayBuffer(input: bigint): ArrayBuffer {
+  const b = new ArrayBuffer(1);
+  const v = new DataView(b);
+  v.setUint8(0, Number(input));
+  return b;
+}
+
+export function bigIntUint16ToArrayBuffer(input: bigint): ArrayBuffer {
+  const b = new ArrayBuffer(2);
+  const v = new DataView(b);
+  v.setUint16(0, Number(input), true);
+  return b;
+}
+
+export function bigIntUint32ToArrayBuffer(input: bigint): ArrayBuffer {
+  const b = new ArrayBuffer(4);
+  const v = new DataView(b);
+  v.setUint32(0, Number(input), true);
+  return b;
+}
+
+export function bigIntUint64ToArrayBuffer(input: bigint): ArrayBuffer {
+  const b = new ArrayBuffer(8);
+  const v = new DataView(b);
+  v.setBigUint64(0, input, true);
+  return b;
+}
+
+export function bigIntUint128ToArrayBuffer(input: bigint): ArrayBuffer {
+  const b = new ArrayBuffer(16);
+  const v = new DataView(b);
+  v.setBigUint64(0, input & BigInt("0xFFFFFFFFFFFFFFFF"), true);
+  v.setBigUint64(8, input >> BigInt(64), true);
+  return b;
+}
+
+export function arrayBufferToBigInt(input: ArrayBuffer): bigint {
+  const v = new DataView(input);
+
+  const len = input.byteLength;
+  if (len === 1) {
+    return BigInt(v.getUint8(0));
+  } else if (len === 2) {
+    return BigInt(v.getUint16(0, true));
+  } else if (len === 4) {
+    return BigInt(v.getUint32(0, true));
+  } else if (len === 8) {
+    return v.getBigUint64(0, true);
+  } else if (len === 16) {
+    const hi = v.getBigUint64(8, true);
+    const lo = v.getBigUint64(0, true);
+    return hi << (BigInt(64) + lo);
+  } else {
+    throw new Error("arrayBufferToBigInt length not 8,16,32,64,128");
+  }
+}
+
+export function hexToArrayBuffer(input: string, len?: number): ArrayBuffer {
+  input = remove0xPrefix(input);
+  let b;
+  if (len) {
+    b = Buffer.alloc(len);
+  } else {
+    b = Buffer.alloc(input.length / 2);
+  }
+  b.write(input, "hex");
+  return b.buffer;
+}
+
+export function arrayBufferToHex(input: ArrayBuffer): string {
+  const b = Buffer.from(input);
+  return prepare0xPrefix(b.toString("hex"));
+}
+
+export function scriptArgToArrayBuff(input: Script): ArrayBuffer {
+  return Buffer.from(remove0xPrefix(input.args), "hex").buffer;
 }

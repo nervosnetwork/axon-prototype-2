@@ -1,15 +1,18 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
-import {
-  defaultOutPoint,
-  leHexToBigIntUint8,
-  remove0xPrefix,
-  Uint64BigIntToLeHex,
-  Uint8BigIntToLeHex,
-} from "../../../utils/tools";
+import { arrayBufferToHex, defaultOutPoint, remove0xPrefix, Uint64BigIntToLeHex } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { GLOBAL_CONFIG_LOCK_SCRIPT, GLOBAL_CONFIG_TYPE_SCRIPT } from "../../../utils/environment";
 import { CellDepType } from "./interfaces/cell_dep_type";
+import { GlobalConfigCell, SerializeGlobalConfigCell } from "../mol/global_config";
+import {
+  arrayBufferToCodeHash,
+  arrayBufferToHashType,
+  arrayBufferToPublicKeyHash,
+  codeHashToArrayBuffer,
+  hashTypeToArrayBuffer,
+  publicKeyHashToArrayBuffer,
+} from "../../../utils/mol";
 
 /**
 
@@ -30,21 +33,23 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
 
   adminPublicKey: string;
   codeCellTypeCodehash: string;
-  codeCellTypeHashtype: bigint;
+  codeCellTypeHashtype: string;
   sidechainConfigCellTypeCodehash: string;
-  sidechainConfigCellTypeHashtype: bigint;
+  sidechainConfigCellTypeHashtype: string;
   sidechainStateCellTypeCodehash: string;
-  sidechainStateCellTypeHashtype: bigint;
+  sidechainStateCellTypeHashtype: string;
   checkerInfoCellTypeCodehash: string;
-  checkerInfoCellTypeHashtype: bigint;
+  checkerInfoCellTypeHashtype: string;
   checkerBondCellLockCodehash: string;
-  checkerBondCellLockHashtype: bigint;
+  checkerBondCellLockHashtype: string;
   taskCellTypeCodehash: string;
-  taskCellTypeHashtype: bigint;
+  taskCellTypeHashtype: string;
+  sidechainRegistryCellTypeCodehash: string;
+  sidechainRegistryCellTypeHashtype: string;
   sidechainFeeCellLockCodehash: string;
-  sidechainFeeCellLockHashtype: bigint;
+  sidechainFeeCellLockHashtype: string;
   sidechainBondCellLockCodehash: string;
-  sidechainBondCellLockHashtype: bigint;
+  sidechainBondCellLockHashtype: string;
 
   outPoint: OutPoint;
 
@@ -52,21 +57,23 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
     capacity: bigint,
     adminPublicKey: string,
     codeCellTypeCodehash: string,
-    codeCellTypeHashtype: bigint,
+    codeCellTypeHashtype: string,
     sidechainConfigCellTypeCodehash: string,
-    sidechainConfigCellTypeHashtype: bigint,
+    sidechainConfigCellTypeHashtype: string,
     sidechain_stateCellTypeCodehash: string,
-    sidechain_stateCellTypeHashtype: bigint,
+    sidechain_stateCellTypeHashtype: string,
     checkerInfoCellTypeCodehash: string,
-    checkerInfoCellTypeHashtype: bigint,
+    checkerInfoCellTypeHashtype: string,
     checkerBondCellLockCodehash: string,
-    checkerBondCellLockHashtype: bigint,
+    checkerBondCellLockHashtype: string,
     taskCellTypeCodehash: string,
-    taskCellTypeHashtype: bigint,
+    taskCellTypeHashtype: string,
+    sidechainRegistryCellTypeCodehash: string,
+    sidechainRegistryCellTypeHashtype: string,
     sidechainFeeCellLockCodehash: string,
-    sidechainFeeCellLockHashtype: bigint,
+    sidechainFeeCellLockHashtype: string,
     sidechainBondCellLockCodehash: string,
-    sidechainBondCellLockHashtype: bigint,
+    sidechainBondCellLockHashtype: string,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
@@ -83,6 +90,8 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
     this.checkerBondCellLockHashtype = checkerBondCellLockHashtype;
     this.taskCellTypeCodehash = taskCellTypeCodehash;
     this.taskCellTypeHashtype = taskCellTypeHashtype;
+    this.sidechainRegistryCellTypeCodehash = sidechainRegistryCellTypeCodehash;
+    this.sidechainRegistryCellTypeHashtype = sidechainRegistryCellTypeHashtype;
     this.sidechainFeeCellLockCodehash = sidechainFeeCellLockCodehash;
     this.sidechainFeeCellLockHashtype = sidechainFeeCellLockHashtype;
     this.sidechainBondCellLockCodehash = sidechainBondCellLockCodehash;
@@ -103,27 +112,32 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
       return null;
     }
     const capacity = BigInt(cell.cell_output.capacity);
+    const cellData = new GlobalConfigCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const data = cell.data.substring(2);
+    const adminPublicKey = arrayBufferToPublicKeyHash(cellData.getAdminLockArg().raw());
 
-    const adminPublicKey = data.substring(0, 64);
-
-    const codeCellTypeCodehash = data.substring(0, 64);
-    const codeCellTypeHashtype = leHexToBigIntUint8(data.substring(64, 128));
-    const sidechainConfigCellTypeCodehash = data.substring(128, 130);
-    const sidechainConfigCellTypeHashtype = leHexToBigIntUint8(data.substring(130, 194));
-    const sidechainStateCellTypeCodehash = data.substring(194, 196);
-    const sidechainStateCellTypeHashtype = leHexToBigIntUint8(data.substring(196, 198));
-    const checkerInfoCellTypeCodehash = data.substring(198, 262);
-    const checkerInfoCellTypeHashtype = leHexToBigIntUint8(data.substring(262, 264));
-    const checkerBondCellLockCodehash = data.substring(264, 328);
-    const checkerBondCellLockHashtype = leHexToBigIntUint8(data.substring(328, 330));
-    const taskCellTypeCodehash = data.substring(330, 394);
-    const taskCellTypeHashtype = leHexToBigIntUint8(data.substring(394, 396));
-    const sidechainFeeCellLockCodehash = data.substring(396, 460);
-    const sidechainFeeCellLockHashtype = leHexToBigIntUint8(data.substring(460, 462));
-    const sidechainBondCellLockCodehash = data.substring(462, 526);
-    const sidechainBondCellLockHashtype = leHexToBigIntUint8(data.substring(526, 528));
+    const codeCellTypeCodehash = arrayBufferToCodeHash(cellData.getCodeCellTypeCodehash().raw());
+    const codeCellTypeHashtype = arrayBufferToHashType(cellData.getCodeCellTypeHashtype().raw());
+    const sidechainConfigCellTypeCodehash = arrayBufferToCodeHash(cellData.getSidechainConfigCellTypeCodehash().raw());
+    const sidechainConfigCellTypeHashtype = arrayBufferToHashType(cellData.getSidechainConfigCellTypeHashtype().raw());
+    const sidechainStateCellTypeCodehash = arrayBufferToCodeHash(cellData.getSidechainStateCellTypeCodehash().raw());
+    const sidechainStateCellTypeHashtype = arrayBufferToHashType(cellData.getSidechainStateCellTypeHashtype().raw());
+    const checkerInfoCellTypeCodehash = arrayBufferToCodeHash(cellData.getCheckerInfoCellTypeCodehash().raw());
+    const checkerInfoCellTypeHashtype = arrayBufferToHashType(cellData.getCheckerInfoCellTypeHashtype().raw());
+    const checkerBondCellLockCodehash = arrayBufferToCodeHash(cellData.getCheckerBondCellTypeCodehash().raw());
+    const checkerBondCellLockHashtype = arrayBufferToHashType(cellData.getCheckerBondCellTypeHashtype().raw());
+    const taskCellTypeCodehash = arrayBufferToCodeHash(cellData.getTaskCellTypeCodehash().raw());
+    const taskCellTypeHashtype = arrayBufferToHashType(cellData.getTaskCellTypeHashtype().raw());
+    const sidechainRegistryCellTypeCodehash = arrayBufferToCodeHash(
+      cellData.getSidechainRegistryCellTypeCodehash().raw(),
+    );
+    const sidechainRegistryCellTypeHashtype = arrayBufferToHashType(
+      cellData.getSidechainRegistryCellTypeHashtype().raw(),
+    );
+    const sidechainFeeCellLockCodehash = arrayBufferToCodeHash(cellData.getSidechainFeeCellTypeCodehash().raw());
+    const sidechainFeeCellLockHashtype = arrayBufferToHashType(cellData.getSidechainFeeCellTypeHashtype().raw());
+    const sidechainBondCellLockCodehash = arrayBufferToCodeHash(cellData.getSidechainBondCellTypeCodehash().raw());
+    const sidechainBondCellLockHashtype = arrayBufferToHashType(cellData.getSidechainBondCellTypeHashtype().raw());
 
     const outPoint = cell.out_point!;
 
@@ -142,6 +156,8 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
       checkerBondCellLockHashtype,
       taskCellTypeCodehash,
       taskCellTypeHashtype,
+      sidechainRegistryCellTypeCodehash,
+      sidechainRegistryCellTypeHashtype,
       sidechainFeeCellLockCodehash,
       sidechainFeeCellLockHashtype,
       sidechainBondCellLockCodehash,
@@ -151,7 +167,29 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
   }
 
   static default(): GlobalConfig {
-    return new GlobalConfig(0n, ``, ``, 0n, ``, 0n, ``, 0n, ``, 0n, ``, 0n, ``, 0n, ``, 0n, ``, 0n, defaultOutPoint());
+    return new GlobalConfig(
+      0n,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      ``,
+      defaultOutPoint(),
+    );
   }
 
   toCellDep(): CKBComponents.CellDep {
@@ -183,23 +221,38 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
   }
 
   toCellOutputData(): string {
-    return `0x${remove0xPrefix(this.adminPublicKey)}${remove0xPrefix(this.codeCellTypeCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.codeCellTypeHashtype),
-    )}${remove0xPrefix(this.sidechainConfigCellTypeCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.sidechainConfigCellTypeHashtype),
-    )}${remove0xPrefix(this.sidechainStateCellTypeCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.sidechainStateCellTypeHashtype),
-    )}${remove0xPrefix(this.checkerInfoCellTypeCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.checkerInfoCellTypeHashtype),
-    )}${remove0xPrefix(this.checkerBondCellLockCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.checkerBondCellLockHashtype),
-    )}${remove0xPrefix(this.taskCellTypeCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.taskCellTypeHashtype),
-    )}${remove0xPrefix(this.sidechainFeeCellLockCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.sidechainFeeCellLockHashtype),
-    )}${remove0xPrefix(this.sidechainBondCellLockCodehash)}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.sidechainBondCellLockHashtype),
-    )}`;
+    const globalConfigCell = {
+      admin_lock_arg: publicKeyHashToArrayBuffer(this.adminPublicKey),
+
+      checker_info_cell_type_codehash: codeHashToArrayBuffer(this.checkerInfoCellTypeCodehash),
+      checker_info_cell_type_hashtype: hashTypeToArrayBuffer(this.checkerInfoCellTypeHashtype),
+
+      checker_bond_cell_type_codehash: codeHashToArrayBuffer(this.checkerBondCellLockCodehash),
+      checker_bond_cell_type_hashtype: hashTypeToArrayBuffer(this.checkerBondCellLockHashtype),
+
+      code_cell_type_codehash: codeHashToArrayBuffer(this.codeCellTypeCodehash),
+      code_cell_type_hashtype: hashTypeToArrayBuffer(this.codeCellTypeHashtype),
+
+      sidechain_bond_cell_type_codehash: codeHashToArrayBuffer(this.sidechainBondCellLockCodehash),
+      sidechain_bond_cell_type_hashtype: hashTypeToArrayBuffer(this.sidechainBondCellLockHashtype),
+
+      sidechain_config_cell_type_codehash: codeHashToArrayBuffer(this.sidechainConfigCellTypeCodehash),
+      sidechain_config_cell_type_hashtype: hashTypeToArrayBuffer(this.sidechainConfigCellTypeHashtype),
+
+      sidechain_fee_cell_type_codehash: codeHashToArrayBuffer(this.sidechainFeeCellLockCodehash),
+      sidechain_fee_cell_type_hashtype: hashTypeToArrayBuffer(this.sidechainFeeCellLockHashtype),
+
+      sidechain_registry_cell_type_codehash: codeHashToArrayBuffer(this.sidechainRegistryCellTypeCodehash),
+      sidechain_registry_cell_type_hashtype: hashTypeToArrayBuffer(this.sidechainRegistryCellTypeHashtype),
+
+      sidechain_state_cell_type_codehash: codeHashToArrayBuffer(this.sidechainStateCellTypeCodehash),
+      sidechain_state_cell_type_hashtype: hashTypeToArrayBuffer(this.sidechainStateCellTypeHashtype),
+
+      task_cell_type_codehash: codeHashToArrayBuffer(this.taskCellTypeCodehash),
+      task_cell_type_hashtype: hashTypeToArrayBuffer(this.taskCellTypeHashtype),
+    };
+
+    return arrayBufferToHex(SerializeGlobalConfigCell(globalConfigCell));
   }
 
   getOutPoint(): string {
