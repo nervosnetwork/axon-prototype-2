@@ -4,7 +4,7 @@ array CheckerInfoStatus [byte; 1];
 table CheckerInfoCell{
     unpaid_fee: Uint128,
     status: CheckerInfoStatus,
-    rpc_url: String,
+    rpc_url: MolString,
 }
 
 struct CheckerInfoCellTypeArgs {
