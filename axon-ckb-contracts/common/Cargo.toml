@@ -14,3 +14,10 @@ common-raw = { path = "../common-raw" }
 
 [features]
 default = ["ckb-std/ckb-types","ckb-std/allocator"]
+
+# the following *_gcc feature are exclusive
+test_gcc = []
+lina_gcc = []
+aggron_gcc = []
+dev_gcc = []
+custom_gcc = []

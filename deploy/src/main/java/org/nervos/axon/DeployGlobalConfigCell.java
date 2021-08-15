@@ -35,7 +35,7 @@ public class DeployGlobalConfigCell {
 
         BigInteger gccCap = BigInteger.valueOf(1000);
 
-        Script gccTypeScript = tools.sendCell("0x1234567890abcdef", gccCap);
+        Script gccTypeScript = tools.sendCell("0x00112233", gccCap);
 
         Blake2bDigest blake2b = new Blake2bDigest(null, 32, null, CKB_HASH_PERSONALIZATION);
 
