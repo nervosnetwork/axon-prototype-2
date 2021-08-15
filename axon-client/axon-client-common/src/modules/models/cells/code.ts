@@ -1,8 +1,10 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
-import { defaultOutPoint, leHexToBigIntUint8, Uint64BigIntToLeHex } from "../../../utils/tools";
+import { defaultOutPoint, scriptArgToArrayBuff, Uint64BigIntToLeHex } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { CODE_LOCK_SCRIPT, CODE_TYPE_SCRIPT } from "../../../utils/environment";
+import { CodeCellLockArgs } from "../mol/code";
+import { arrayBufferToPublicKeyHash } from "../../../utils/mol";
 
 /*
 code
@@ -23,15 +25,14 @@ lock: - 65 bytes
 export class Code implements CellInputType, CellOutputType {
   capacity: bigint;
 
-  chainId: bigint;
-  checkerPublicKeyHash: string;
+  // lock args
+  lockArg: string;
 
   outPoint: OutPoint;
 
-  constructor(capacity: bigint, chainId: bigint, checkerPublicKeyHash: string, outPoint: OutPoint) {
+  constructor(capacity: bigint, lockArg: string, outPoint: OutPoint) {
     this.capacity = capacity;
-    this.chainId = chainId;
-    this.checkerPublicKeyHash = checkerPublicKeyHash;
+    this.lockArg = lockArg;
     this.outPoint = outPoint;
   }
 
@@ -49,18 +50,17 @@ export class Code implements CellInputType, CellOutputType {
     }
     const capacity = BigInt(cell.cell_output.capacity);
 
-    const lockArgs = cell.cell_output.lock.args.substring(2);
+    const lockArgs = new CodeCellLockArgs(scriptArgToArrayBuff(cell.cell_output.lock), { validate: true });
 
-    const chainId = leHexToBigIntUint8(lockArgs.substring(0, 2));
-    const checkerPublicKeyHash = lockArgs.substring(2, 42);
+    const lockArg = arrayBufferToPublicKeyHash(lockArgs.getLockArg().raw());
 
     const outPoint = cell.out_point!;
 
-    return new Code(capacity, chainId, checkerPublicKeyHash, outPoint);
+    return new Code(capacity, lockArg, outPoint);
   }
 
   static default(): Code {
-    return new Code(0n, 0n, ``, defaultOutPoint());
+    return new Code(0n, "", defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -74,6 +74,7 @@ export class Code implements CellInputType, CellOutputType {
   }
 
   toCellOutput(): CKBComponents.CellOutput {
+    //skip refresh reset lock args
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: CODE_TYPE_SCRIPT,

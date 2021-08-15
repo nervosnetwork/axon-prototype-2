@@ -1,8 +1,10 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
-import { defaultOutPoint, leHexToBigIntUint128, Uint128BigIntToLeHex, Uint64BigIntToLeHex } from "../../../utils/tools";
+import { arrayBufferToHex, defaultOutPoint, remove0xPrefix, Uint64BigIntToLeHex } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { MUSE_LOCK_SCRIPT, MUSE_TYPE_SCRIPT } from "../../../utils/environment";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
+import { arrayBufferToUint128, uint128ToArrayBuffer } from "../../../utils/mol";
 
 /*
 muse
@@ -44,7 +46,10 @@ export class Muse implements CellInputType, CellOutputType {
       return null;
     }
     const capacity = BigInt(cell.cell_output.capacity);
-    const museAmount = leHexToBigIntUint128(cell.data);
+
+    const cellData = new SudtTokenCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
+
+    const museAmount = arrayBufferToUint128(cellData.getAmount().raw());
 
     const outPoint = cell.out_point!;
 
@@ -74,7 +79,10 @@ export class Muse implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `${Uint128BigIntToLeHex(this.museAmount)}`;
+    const museCellData = {
+      amount: uint128ToArrayBuffer(this.museAmount),
+    };
+    return arrayBufferToHex(SerializeSudtTokenCell(museCellData));
   }
 
   getOutPoint(): string {

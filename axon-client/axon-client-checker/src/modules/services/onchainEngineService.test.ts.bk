@@ -58,9 +58,9 @@ function testSending(
 }
 
 function testSubmittingTask(xfer: CheckerSubmitTaskTransformation, context: Context) {
-  expect(xfer.inputCheckerInfo.mode).toBe(CheckerInfo.TASK_PASSED);
+  expect(xfer.inputCheckerInfo.status).toBe("Relaying");
   expect(xfer.patternTypeWitness).toEqual(
-    new CheckerSubmitTaskWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId),
+    new CheckerSubmitTaskWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.chainId),
   );
 
   testSending(xfer, context);

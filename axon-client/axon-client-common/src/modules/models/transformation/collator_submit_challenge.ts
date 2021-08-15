@@ -70,9 +70,7 @@ export class CollatorSubmitChallengeTransformation implements Transformation {
   }
 
   toCellOutput(): Array<CKBComponents.CellOutput> {
-    const checkerInfoOutputs: CheckerInfo[] = this.inputCheckInfos.filter(
-      (checkerInfo) => checkerInfo.mode === CheckerInfo.CHECKER_IDLE,
-    );
+    const checkerInfoOutputs: CheckerInfo[] = this.inputCheckInfos;
     return [
       this.inputCode.toCellOutput(),
       this.inputConfig.toCellOutput(),
@@ -83,9 +81,7 @@ export class CollatorSubmitChallengeTransformation implements Transformation {
   }
 
   toCellOutputData(): Array<string> {
-    const checkerInfoOutputs: CheckerInfo[] = this.inputCheckInfos.filter(
-      (checkerInfo) => checkerInfo.mode === CheckerInfo.CHECKER_IDLE,
-    );
+    const checkerInfoOutputs: CheckerInfo[] = this.inputCheckInfos;
     return [
       this.inputCode.toCellOutputData(),
       this.inputConfig.toCellOutputData(),

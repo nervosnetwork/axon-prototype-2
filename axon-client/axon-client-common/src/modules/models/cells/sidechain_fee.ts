@@ -1,14 +1,17 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
+  arrayBufferToHex,
   defaultOutPoint,
-  leHexToBigIntUint128,
-  leHexToBigIntUint8,
-  Uint128BigIntToLeHex,
+  remove0xPrefix,
+  scriptArgToArrayBuff,
   Uint64BigIntToLeHex,
 } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { SIDECHAIN_FEE_LOCK_SCRIPT, SIDECHAIN_FEE_TYPE_SCRIPT } from "../../../utils/environment";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
+import { arrayBufferToPublicKeyHash, arrayBufferToUint128, uint128ToArrayBuffer } from "../../../utils/mol";
+import { SidechainFeeCellLockArgs } from "../mol/sidechain_fee";
 
 /*
 sidechain fee
@@ -28,11 +31,11 @@ export class SidechainFee implements CellInputType, CellOutputType {
   capacity: bigint;
 
   museAmount: bigint;
-  chainId: bigint;
+  chainId: string;
 
   outPoint: OutPoint;
 
-  constructor(capacity: bigint, museAmount: bigint, chainId: bigint, outPoint: OutPoint) {
+  constructor(capacity: bigint, museAmount: bigint, chainId: string, outPoint: OutPoint) {
     this.capacity = capacity;
     this.museAmount = museAmount;
     this.chainId = chainId;
@@ -53,10 +56,13 @@ export class SidechainFee implements CellInputType, CellOutputType {
     }
     const capacity = BigInt(cell.cell_output.capacity);
 
-    const museAmount = leHexToBigIntUint128(cell.data);
+    const cellData = new SudtTokenCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const lockArgs = cell.cell_output.lock.args.substring(2);
-    const chainId = leHexToBigIntUint8(lockArgs.substring(0, 2));
+    const museAmount = arrayBufferToUint128(cellData.getAmount().raw());
+
+    const lockArgs = new SidechainFeeCellLockArgs(scriptArgToArrayBuff(cell.cell_output.lock), { validate: true });
+
+    const chainId = arrayBufferToPublicKeyHash(lockArgs.getChainId().raw());
 
     const outPoint = cell.out_point!;
 
@@ -64,7 +70,7 @@ export class SidechainFee implements CellInputType, CellOutputType {
   }
 
   static default(): SidechainFee {
-    return new SidechainFee(0n, 0n, 0n, defaultOutPoint());
+    return new SidechainFee(0n, 0n, ``, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -78,6 +84,7 @@ export class SidechainFee implements CellInputType, CellOutputType {
   }
 
   toCellOutput(): CKBComponents.CellOutput {
+    //skip change chainId
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: SIDECHAIN_FEE_TYPE_SCRIPT,
@@ -86,7 +93,10 @@ export class SidechainFee implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `${Uint128BigIntToLeHex(this.museAmount)}`;
+    const sidechainFeeCell = {
+      amount: uint128ToArrayBuffer(this.museAmount),
+    };
+    return arrayBufferToHex(SerializeSudtTokenCell(sidechainFeeCell));
   }
 
   getOutPoint(): string {

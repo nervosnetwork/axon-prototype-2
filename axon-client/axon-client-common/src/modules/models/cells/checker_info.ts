@@ -1,16 +1,32 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
+  arrayBufferToHex,
   defaultOutPoint,
-  leHexToBigIntUint128,
-  leHexToBigIntUint8,
   remove0xPrefix,
-  Uint128BigIntToLeHex,
+  scriptArgToArrayBuff,
   Uint64BigIntToLeHex,
-  Uint8BigIntToLeHex,
 } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { CHECKER_INFO_LOCK_SCRIPT, CHECKER_INFO_TYPE_SCRIPT } from "../../../utils/environment";
+import {
+  CheckerInfoCell,
+  CheckerInfoCellTypeArgs,
+  SerializeCheckerInfoCell,
+  SerializeCheckerInfoCellTypeArgs,
+} from "../mol/checker_info";
+import {
+  arrayBufferToBytes1,
+  arrayBufferToChainId,
+  arrayBufferToMolString,
+  arrayBufferToPublicKeyHash,
+  arrayBufferToUint128,
+  bytes1ToArrayBuffer,
+  chainIdToArrayBuffer,
+  molStringToArrayBuffer,
+  publicKeyHashToArrayBuffer,
+  uint128ToArrayBuffer,
+} from "../../../utils/mol";
 
 /*
 checker info
@@ -31,22 +47,21 @@ lock: - A.S. 33 bytes
 
  */
 export class CheckerInfo implements CellInputType, CellOutputType {
-  static CHECKER_IDLE = 0n;
-  static TASK_PASSED = 1n;
-  static CHALLENGE_PASSED = 2n;
-  static CHALLENGE_REJECTED = 3n;
+  static RELAYING = "Relaying";
+  static QUIT = "Quit";
+
+  outPoint: OutPoint;
 
   capacity: bigint;
 
-  chainId: bigint;
-  checkerPublicKeyHash: string;
-
-  checkId: bigint;
+  //data
   unpaidFee: bigint;
   rpcUrl: string;
-  mode: bigint;
-  unpaidCheckDataSize: bigint;
-  outPoint: OutPoint;
+  status: "Relaying" | "Quit";
+
+  //type args
+  chainId: string;
+  checkerLockArg: string;
 
   //type args for lumos
   //checkId:bigint
@@ -54,26 +69,25 @@ export class CheckerInfo implements CellInputType, CellOutputType {
 
   constructor(
     capacity: bigint,
-    chainId: bigint,
-    checkerPublicKeyHash: string,
-    checkId: bigint,
+
     unpaidFee: bigint,
     rpcUrl: string,
-    mode: bigint,
-    unpaidCheckDataSize: bigint,
+    status: "Relaying" | "Quit",
+
+    chainId: string,
+    checkerLockArg: string,
+
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
+    this.outPoint = outPoint;
 
-    this.chainId = chainId;
-    this.checkerPublicKeyHash = checkerPublicKeyHash;
-
-    this.checkId = checkId;
     this.unpaidFee = unpaidFee;
     this.rpcUrl = rpcUrl;
-    this.mode = mode;
-    this.unpaidCheckDataSize = unpaidCheckDataSize;
-    this.outPoint = outPoint;
+    this.status = status;
+
+    this.chainId = chainId;
+    this.checkerLockArg = checkerLockArg;
   }
 
   static validate(cell: Cell): boolean {
@@ -90,34 +104,32 @@ export class CheckerInfo implements CellInputType, CellOutputType {
     }
     const capacity = BigInt(cell.cell_output.capacity);
 
-    const data = cell.data.substring(2);
-    const lock_args = cell.cell_output.lock.args.substring(2);
+    //buf
 
-    const chainId = leHexToBigIntUint8(lock_args.substring(0, 2));
-    const checkerPublicKeyHash = cell.cell_output.lock.args.substring(2, 42);
+    const cellData = new CheckerInfoCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const checkId = leHexToBigIntUint8(data.substring(0, 2));
-    const unpaidFee = leHexToBigIntUint128(data.substring(2, 34));
-    const rpcUrl = data.substring(34, 1058);
-    const mode = leHexToBigIntUint8(data.substring(1058, 1060));
-    const unpaidCheckDataSize = leHexToBigIntUint128(data.substring(1060, 1092));
+    const unpaidFee = arrayBufferToUint128(cellData.getUnpaidFee().raw());
+    const rpcUrl = arrayBufferToMolString(cellData.getRpcUrl().raw());
+    const status = arrayBufferToBytes1(cellData.getStatus().raw()) === "0x00" ? "Relaying" : "Quit";
+
+    //args
+
+    if (!cell.cell_output.type) {
+      return null;
+    }
+
+    const typeArgs = new CheckerInfoCellTypeArgs(scriptArgToArrayBuff(cell.cell_output.type), { validate: true });
+
+    const chainId = arrayBufferToChainId(typeArgs.getChainId().raw());
+    const checkerLockArg = arrayBufferToPublicKeyHash(typeArgs.getCheckerLockArg().raw());
+
     const outPoint = cell.out_point!;
 
-    return new CheckerInfo(
-      capacity,
-      chainId,
-      checkerPublicKeyHash,
-      unpaidFee,
-      checkId,
-      rpcUrl,
-      mode,
-      unpaidCheckDataSize,
-      outPoint,
-    );
+    return new CheckerInfo(capacity, unpaidFee, rpcUrl, status, chainId, checkerLockArg, outPoint);
   }
 
   static default(): CheckerInfo {
-    return new CheckerInfo(0n, 0n, ``, 0n, 0n, ``, 0n, 0n, defaultOutPoint());
+    return new CheckerInfo(0n, 0n, ``, "Relaying", "", ``, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -132,7 +144,13 @@ export class CheckerInfo implements CellInputType, CellOutputType {
 
   toCellOutput(): CKBComponents.CellOutput {
     const type = CHECKER_INFO_TYPE_SCRIPT;
-    type.args = `0x${remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${remove0xPrefix(this.checkerPublicKeyHash)}`;
+
+    const checkerInfoCellTypeArgs = {
+      chain_id: chainIdToArrayBuffer(this.chainId),
+      checker_lock_arg: publicKeyHashToArrayBuffer(this.checkerLockArg),
+    };
+
+    type.args = arrayBufferToHex(SerializeCheckerInfoCellTypeArgs(checkerInfoCellTypeArgs));
 
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
@@ -142,11 +160,13 @@ export class CheckerInfo implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `$0x{remove0xPrefix(Uint8BigIntToLeHex(this.checkId))}${remove0xPrefix(
-      Uint128BigIntToLeHex(this.unpaidFee),
-    )}${remove0xPrefix(this.rpcUrl)}${remove0xPrefix(Uint8BigIntToLeHex(this.mode))}${remove0xPrefix(
-      Uint128BigIntToLeHex(this.unpaidCheckDataSize),
-    )}`;
+    const checkerInfoCell = {
+      unpaid_fee: uint128ToArrayBuffer(this.unpaidFee),
+      rpcUrl: molStringToArrayBuffer(this.rpcUrl),
+      status: bytes1ToArrayBuffer(this.status == "Relaying" ? "0x00" : "0x01"),
+    };
+
+    return arrayBufferToHex(SerializeCheckerInfoCell(checkerInfoCell));
   }
 
   getOutPoint(): string {

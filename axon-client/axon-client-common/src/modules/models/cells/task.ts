@@ -1,18 +1,33 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
 import {
+  arrayBufferToHex,
   defaultOutPoint,
-  leHexToBigIntUint128,
-  leHexToBigIntUint16,
-  leHexToBigIntUint8,
   remove0xPrefix,
-  Uint128BigIntToLeHex,
-  Uint16BigIntToLeHex,
+  scriptArgToArrayBuff,
   Uint64BigIntToLeHex,
-  Uint8BigIntToLeHex,
 } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { TASK_STATE_LOCK_SCRIPT, TASK_TYPE_SCRIPT } from "../../../utils/environment";
+import { SerializeTaskCell, TaskCell, TaskCellTypeArgs } from "../mol/task";
+import {
+  arrayBufferToBlockHeader,
+  arrayBufferToBlockHeight,
+  arrayBufferToBytes1,
+  arrayBufferToChainId,
+  arrayBufferToCommittedHash,
+  arrayBufferToPublicKeyHash,
+  arrayBufferToRandomSeed,
+  arrayBufferToUint128,
+  arrayBufferToUint8,
+  blockHeaderToArrayBuffer,
+  blockHeightToArrayBuffer,
+  bytes1ToArrayBuffer,
+  committedHashToArrayBuffer,
+  randomSeedToArrayBuffer,
+  uint128ToArrayBuffer,
+  uint8ToArrayBuffer,
+} from "../../../utils/mol";
 
 /*
 task
@@ -35,43 +50,56 @@ lock: - A.S. 33 bytes
 
  */
 export class Task implements CellInputType, CellOutputType {
-  static TASK = BigInt(0);
-  static CHALLENGE = BigInt(1);
+  static TASK = `0x00`;
+  static CHALLENGE = `0x01`;
 
   capacity: bigint;
 
-  chainId: bigint;
   version: bigint;
-  checkBlockHeightFrom: bigint;
-  checkBlockHeightTo: bigint;
-  checkBlockHashTo: string;
+  sidechainBlockHeightFrom: string;
+  sidechainBlockHeightTo: string;
+  refreshSidechainHeight: string;
   checkDataSize: bigint;
-  refreshInterval: bigint;
-  mode: bigint;
+  mode: string;
+  status: string;
+  reveal: string;
+  commit: string;
+  sidechainBlockHeader: Array<string>;
+
+  chainId: string;
+  checkerLockArg: string;
 
   outPoint: OutPoint;
 
   constructor(
     capacity: bigint,
-    chainId: bigint,
     version: bigint,
-    checkBlockHeightFrom: bigint,
-    checkBlockHeightTo: bigint,
-    checkBlockHashTo: string,
+    sidechainBlockHeightFrom: string,
+    sidechainBlockHeightTo: string,
+    refreshSidechainHeight: string,
     checkDataSize: bigint,
-    refreshInterval: bigint,
-    mode: bigint,
+    mode: string,
+    status: string,
+    reveal: string,
+    commit: string,
+    sidechainBlockHeader: Array<string>,
+    chainId: string,
+    checkerLockArg: string,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
-    this.chainId = chainId;
     this.version = version;
-    this.checkBlockHeightFrom = checkBlockHeightFrom;
-    this.checkBlockHeightTo = checkBlockHeightTo;
-    this.checkBlockHashTo = checkBlockHashTo;
+    this.sidechainBlockHeightFrom = sidechainBlockHeightFrom;
+    this.sidechainBlockHeightTo = sidechainBlockHeightTo;
+    this.refreshSidechainHeight = refreshSidechainHeight;
     this.checkDataSize = checkDataSize;
-    this.refreshInterval = refreshInterval;
     this.mode = mode;
+    this.status = status;
+    this.reveal = reveal;
+    this.commit = commit;
+    this.sidechainBlockHeader = sidechainBlockHeader;
+    this.chainId = chainId;
+    this.checkerLockArg = checkerLockArg;
     this.outPoint = outPoint;
   }
 
@@ -89,35 +117,56 @@ export class Task implements CellInputType, CellOutputType {
     }
     const capacity = BigInt(cell.cell_output.capacity);
 
-    const type_args = cell.cell_output.type!.args.substring(2);
-    const data = cell.data.substring(2);
+    const cellData = new TaskCell(Buffer.from(remove0xPrefix(cell.data), "hex").buffer, { validate: true });
 
-    const chainId = leHexToBigIntUint8(type_args.substring(0, 2));
-    const version = leHexToBigIntUint8(data.substring(0, 2));
-    const checkBlockHeightFrom = leHexToBigIntUint128(data.substring(2, 34));
-    const checkBlockHeightTo = leHexToBigIntUint128(data.substring(34, 66));
-    const checkBlockHashTo = data.substring(66, 130);
-    const checkDataSize = leHexToBigIntUint128(data.substring(139, 162));
-    const refreshInterval = leHexToBigIntUint16(data.substring(162, 194));
-    const mode = leHexToBigIntUint8(data.substring(194, 196));
+    const version = arrayBufferToUint8(cellData.getVersion().raw());
+    const sidechainBlockHeightFrom = arrayBufferToBlockHeight(cellData.getSidechainBlockHeightFrom().raw());
+    const sidechainBlockHeightTo = arrayBufferToBlockHeight(cellData.getSidechainBlockHeightTo().raw());
+    const refreshSidechainHeight = arrayBufferToBlockHeight(cellData.getRefreshSidechainHeight().raw());
+    const checkDataSize = arrayBufferToUint128(cellData.getCheckDataSize().raw());
+    const mode = arrayBufferToBytes1(cellData.getMode().raw());
+    const status = arrayBufferToBytes1(cellData.getStatus().raw());
+    const reveal = arrayBufferToRandomSeed(cellData.getReveal().raw());
+    const commit = arrayBufferToCommittedHash(cellData.getCommit().raw());
+    const sidechainBlockHeader: Array<string> = [];
+    for (let i = 0; i < cellData.getSidechainBlockHeader().length(); i++) {
+      const item = cellData.getSidechainBlockHeader().indexAt(i);
+      sidechainBlockHeader.push(arrayBufferToBlockHeader(item.raw()));
+    }
+
+    //==========================
+    if (!cell.cell_output.type) {
+      return null;
+    }
+
+    const typeArgs = new TaskCellTypeArgs(scriptArgToArrayBuff(cell.cell_output.type), { validate: true });
+
+    const chainId = arrayBufferToChainId(typeArgs.getChainId().raw());
+    const checkerLockArg = arrayBufferToPublicKeyHash(typeArgs.getCheckerLockArg().raw());
+
     const outPoint = cell.out_point!;
 
     return new Task(
       capacity,
-      chainId,
       version,
-      checkBlockHeightFrom,
-      checkBlockHeightTo,
-      checkBlockHashTo,
+      sidechainBlockHeightFrom,
+      sidechainBlockHeightTo,
+      refreshSidechainHeight,
       checkDataSize,
-      refreshInterval,
       mode,
+      status,
+      reveal,
+      commit,
+      sidechainBlockHeader,
+
+      chainId,
+      checkerLockArg,
       outPoint,
     );
   }
 
   static default(): Task {
-    return new Task(0n, 0n, 0n, 0n, 0n, ``, 0n, 0n, 0n, defaultOutPoint());
+    return new Task(0n, 0n, ``, ``, ``, 0n, ``, ``, ``, ``, [], ``, ``, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -131,6 +180,7 @@ export class Task implements CellInputType, CellOutputType {
   }
 
   toCellOutput(): CKBComponents.CellOutput {
+    //skip change chainId and checkerLockArg
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: TASK_TYPE_SCRIPT,
@@ -139,13 +189,20 @@ export class Task implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `0x${remove0xPrefix(Uint8BigIntToLeHex(this.chainId))}${remove0xPrefix(
-      Uint8BigIntToLeHex(this.version),
-    )}${remove0xPrefix(Uint128BigIntToLeHex(this.checkBlockHeightFrom))}${remove0xPrefix(
-      Uint128BigIntToLeHex(this.checkBlockHeightTo),
-    )}${remove0xPrefix(this.checkBlockHashTo)}${remove0xPrefix(
-      Uint128BigIntToLeHex(this.checkDataSize),
-    )}${remove0xPrefix(Uint16BigIntToLeHex(this.refreshInterval))}${remove0xPrefix(Uint8BigIntToLeHex(this.mode))}`;
+    const taskCell = {
+      version: uint8ToArrayBuffer(this.version),
+      sidechainBlockHeightFrom: blockHeightToArrayBuffer(this.sidechainBlockHeightFrom),
+      sidechainBlockHeightTo: blockHeightToArrayBuffer(this.sidechainBlockHeightTo),
+      refreshSidechainHeight: blockHeightToArrayBuffer(this.refreshSidechainHeight),
+      checkDataSize: uint128ToArrayBuffer(this.checkDataSize),
+      mode: bytes1ToArrayBuffer(this.mode),
+      status: bytes1ToArrayBuffer(this.status),
+      reveal: randomSeedToArrayBuffer(this.reveal),
+      commit: committedHashToArrayBuffer(this.commit),
+      sidechainBlockHeader: this.sidechainBlockHeader.map((header) => blockHeaderToArrayBuffer(header)),
+    };
+
+    return arrayBufferToHex(SerializeTaskCell(taskCell));
   }
 
   getOutPoint(): string {
