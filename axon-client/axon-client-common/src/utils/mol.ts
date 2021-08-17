@@ -1,6 +1,8 @@
 import { prepare0xPrefix, remove0xPrefix } from "./tools";
 import { BlockSlice, ChainIdList, MolString, SerializeBlockSlice } from "../modules/models/mol/task";
 
+export type HASH_TYPE = "type" | "code";
+
 export const uint8ToArrayBuffer = (input: bigint): ArrayBuffer => {
   const b = new ArrayBuffer(1);
   const v = new DataView(b);
@@ -71,10 +73,12 @@ export const bytesXToArrayBuffer = (input: string): ArrayBuffer => {
   return b.buffer;
 };
 
-export const arrayBufferToBytesX = (input: ArrayBuffer): string => {
+const arrayBufferToBytesInternal = (input: ArrayBuffer): string => {
   const b = Buffer.from(input);
   return prepare0xPrefix(b.toString("hex"));
 };
+
+export const arrayBufferToBytesX = arrayBufferToBytesInternal;
 
 export const bytes1ToArrayBuffer = (input: string): ArrayBuffer => {
   input = remove0xPrefix(input);
@@ -83,10 +87,7 @@ export const bytes1ToArrayBuffer = (input: string): ArrayBuffer => {
   return b.buffer;
 };
 
-export const arrayBufferToBytes1 = (input: ArrayBuffer): string => {
-  const b = Buffer.from(input);
-  return prepare0xPrefix(b.toString("hex"));
-};
+export const arrayBufferToBytes1 = arrayBufferToBytesInternal;
 
 export const bytes4ToArrayBuffer = (input: string): ArrayBuffer => {
   input = remove0xPrefix(input);
@@ -95,10 +96,7 @@ export const bytes4ToArrayBuffer = (input: string): ArrayBuffer => {
   return b.buffer;
 };
 
-export const arrayBufferToBytes4 = (input: ArrayBuffer): string => {
-  const b = Buffer.from(input);
-  return prepare0xPrefix(b.toString("hex"));
-};
+export const arrayBufferToBytes4 = arrayBufferToBytesInternal;
 
 export const bytes16ToArrayBuffer = (input: string): ArrayBuffer => {
   input = remove0xPrefix(input);
@@ -107,10 +105,7 @@ export const bytes16ToArrayBuffer = (input: string): ArrayBuffer => {
   return b.buffer;
 };
 
-export const arrayBufferToBytes16 = (input: ArrayBuffer): string => {
-  const b = Buffer.from(input);
-  return prepare0xPrefix(b.toString("hex"));
-};
+export const arrayBufferToBytes16 = arrayBufferToBytesInternal;
 
 export const bytes20ToArrayBuffer = (input: string): ArrayBuffer => {
   input = remove0xPrefix(input);
@@ -119,10 +114,7 @@ export const bytes20ToArrayBuffer = (input: string): ArrayBuffer => {
   return b.buffer;
 };
 
-export const arrayBufferToBytes20 = (input: ArrayBuffer): string => {
-  const b = Buffer.from(input);
-  return prepare0xPrefix(b.toString("hex"));
-};
+export const arrayBufferToBytes20 = arrayBufferToBytesInternal;
 
 export const bytes32ToArrayBuffer = (input: string): ArrayBuffer => {
   input = remove0xPrefix(input);
@@ -131,26 +123,51 @@ export const bytes32ToArrayBuffer = (input: string): ArrayBuffer => {
   return b.buffer;
 };
 
-export const arrayBufferToBytes32 = (input: ArrayBuffer): string => {
-  const b = Buffer.from(input);
-  return prepare0xPrefix(b.toString("hex"));
-};
+export const arrayBufferToBytes32 = arrayBufferToBytesInternal;
+
+//=======================================
 
 export const blockHeaderToArrayBuffer = bytes32ToArrayBuffer;
 
 export const arrayBufferToBlockHeader = arrayBufferToBytes32;
 
-export const blockHeightToArrayBuffer = bytes16ToArrayBuffer;
+//=======================================
+/*
+array BlockHeight [byte; 16];
+array Uint128 [byte; 16];
+ */
+export const blockHeightToArrayBuffer = uint128ToArrayBuffer;
 
-export const arrayBufferToBlockHeight = arrayBufferToBytes16;
+export const arrayBufferToBlockHeight = arrayBufferToUint128;
+
+//=======================================
 
 export const codeHashToArrayBuffer = bytes32ToArrayBuffer;
 
 export const arrayBufferToCodeHash = arrayBufferToBytes32;
 
-export const hashTypeToArrayBuffer = bytes1ToArrayBuffer;
+//=======================================
 
-export const arrayBufferToHashType = arrayBufferToBytes1;
+export const hashTypeToArrayBuffer = (input: HASH_TYPE): ArrayBuffer => {
+  let data = input === "type" ? "0x00" : "0x01";
+  data = remove0xPrefix(data);
+  const b = Buffer.alloc(1);
+  b.write(data, "hex");
+  return b.buffer;
+};
+
+export const arrayBufferToHashType = (input: ArrayBuffer): HASH_TYPE => {
+  const b = Buffer.from(input);
+  const data = prepare0xPrefix(b.toString("hex"));
+  if (data === "0x00") {
+    return "type";
+  } else if (data === "0x01") {
+    return "code";
+  }
+  throw new Error("unknown HASH_TYPE encoding");
+};
+
+//=======================================
 
 export const merkleHashToArrayBuffer = bytes32ToArrayBuffer;
 
@@ -187,15 +204,15 @@ export const arrayBufferToBlockSlice = (input: ArrayBuffer): { from: bigint; to:
   };
 };
 
-export const chainIdToArrayBuffer = bytes4ToArrayBuffer;
+export const chainIdToArrayBuffer = uint32ToArrayBuffer;
 
-export const arrayBufferToChainId = arrayBufferToBytes4;
+export const arrayBufferToChainId = arrayBufferToUint32;
 
-export const chainIdListToWrite = (input: Array<string>): Array<ArrayBuffer> => {
+export const chainIdListToWrite = (input: Array<bigint>): Array<ArrayBuffer> => {
   return input.map((chainId) => chainIdToArrayBuffer(chainId));
 };
 
-export const readerToChainIdList = (input: ChainIdList): Array<string> => {
+export const readerToChainIdList = (input: ChainIdList): Array<bigint> => {
   const output = [];
   for (let i = 0; i < input.length(); i++) {
     const item = input.indexAt(i);

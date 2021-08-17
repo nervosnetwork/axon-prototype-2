@@ -23,6 +23,7 @@ import {
   blockHeightToArrayBuffer,
   bytes1ToArrayBuffer,
   codeHashToArrayBuffer,
+  HASH_TYPE,
   hashTypeToArrayBuffer,
   publicKeyHashToArrayBuffer,
   uint128ToArrayBuffer,
@@ -79,23 +80,23 @@ export class SidechainConfig implements CellInputType, CellOutputType, CellDepTy
   refreshPunishPoints: bigint;
   refreshPunishReleasePoints: bigint;
   refreshPunishThreshold: bigint;
-  refreshSidechainHeightInterval: string;
+  refreshSidechainHeightInterval: bigint;
 
   checkDataSizeLimit: bigint;
   checkFeeRate: bigint;
   minimalBond: bigint;
   parallelJobUpperBond: bigint;
-  parallelJobMaximalHeightRange: string;
+  parallelJobMaximalHeightRange: bigint;
 
   adminLockArg: string;
   collatorLockArg: string;
 
   bondSudtTypescriptCodehash: string;
-  bondSudtTypescriptHashtype: string;
+  bondSudtTypescriptHashtype: HASH_TYPE;
 
   //type args
 
-  chainId: string;
+  chainId: bigint;
 
   outPoint: OutPoint;
 
@@ -111,17 +112,17 @@ export class SidechainConfig implements CellInputType, CellOutputType, CellDepTy
     refreshPunishPoints: bigint,
     refreshPunishReleasePoints: bigint,
     refreshPunishThreshold: bigint,
-    refreshSidechainHeightInterval: string,
+    refreshSidechainHeightInterval: bigint,
     checkDataSizeLimit: bigint,
     checkFeeRate: bigint,
     minimalBond: bigint,
     parallelJobUpperBond: bigint,
-    parallelJobMaximalHeightRange: string,
+    parallelJobMaximalHeightRange: bigint,
     adminLockArg: string,
     collatorLockArg: string,
     bondSudtTypescriptCodehash: string,
-    bondSudtTypescriptHashtype: string,
-    chainId: string,
+    bondSudtTypescriptHashtype: HASH_TYPE,
+    chainId: bigint,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
@@ -249,17 +250,17 @@ export class SidechainConfig implements CellInputType, CellOutputType, CellDepTy
       0n,
       0n,
       0n,
-      ``,
       0n,
       0n,
       0n,
       0n,
+      0n,
+      0n,
       ``,
       ``,
       ``,
-      ``,
-      ``,
-      ``,
+      `type`,
+      0n,
       defaultOutPoint(),
     );
   }
