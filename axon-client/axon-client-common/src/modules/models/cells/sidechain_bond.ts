@@ -41,18 +41,18 @@ export class SidechainBond implements CellInputType, CellOutputType {
   capacity: bigint;
   sudtAmount: bigint;
 
-  participatedChain: Array<string>;
+  participatedChain: Array<bigint>;
   collatorLockArg: string;
-  unlockSidechainHeight: string;
+  unlockSidechainHeight: bigint;
 
   outPoint: OutPoint;
 
   constructor(
     capacity: bigint,
     sudtAmount: bigint,
-    participatedChain: Array<string>,
+    participatedChain: Array<bigint>,
     collatorLockArg: string,
-    unlockSidechainHeight: string,
+    unlockSidechainHeight: bigint,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
@@ -93,7 +93,7 @@ export class SidechainBond implements CellInputType, CellOutputType {
   }
 
   static default(): SidechainBond {
-    return new SidechainBond(0n, 0n, [], ``, "", defaultOutPoint());
+    return new SidechainBond(0n, 0n, [], ``, 0n, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {

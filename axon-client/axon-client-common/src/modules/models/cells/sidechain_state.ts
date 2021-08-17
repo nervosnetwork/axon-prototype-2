@@ -59,36 +59,36 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
   capacity: bigint;
 
   version: bigint;
-  submitSidechainBlockHeight: string;
-  waitingJobs: Array<{ from: string; to: string }>;
-  confirmedJobs: Array<{ from: string; to: string }>;
+  submitSidechainBlockHeight: bigint;
+  waitingJobs: Array<{ from: bigint; to: bigint }>;
+  confirmedJobs: Array<{ from: bigint; to: bigint }>;
   randomSeed: string;
   randomOffset: bigint;
   randomCommit: { checker_lock_arg: string; committed_hash: string };
   punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }>;
   recentBlockHeaders: Array<string>;
   ancientBlockHeardMerkleRoot: string;
-  checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: string }>;
+  checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: bigint }>;
 
   //args
-  chainId: string;
+  chainId: bigint;
 
   outPoint: OutPoint;
 
   constructor(
     capacity: bigint,
     version: bigint,
-    submitSidechainBlockHeight: string,
-    waitingJobs: Array<{ from: string; to: string }>,
-    confirmedJobs: Array<{ from: string; to: string }>,
+    submitSidechainBlockHeight: bigint,
+    waitingJobs: Array<{ from: bigint; to: bigint }>,
+    confirmedJobs: Array<{ from: bigint; to: bigint }>,
     randomSeed: string,
     randomOffset: bigint,
     randomCommit: { checker_lock_arg: string; committed_hash: string },
     punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }>,
     recentBlockHeaders: Array<string>,
     ancientBlockHeardMerkleRoot: string,
-    checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: string }>,
-    chainId: string,
+    checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: bigint }>,
+    chainId: bigint,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
@@ -125,7 +125,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
 
     const version = arrayBufferToUint8(cellData.getVersion().raw());
     const submitSidechainBlockHeight = arrayBufferToBlockHeight(cellData.getSubmitSidechainBlockHeight().raw());
-    const waitingJobs: Array<{ from: string; to: string }> = [];
+    const waitingJobs: Array<{ from: bigint; to: bigint }> = [];
 
     for (let i = 0; i < cellData.getWaitingJobs().length(); i++) {
       const item = cellData.getWaitingJobs().indexAt(i);
@@ -135,7 +135,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       });
     }
 
-    const confirmedJobs: Array<{ from: string; to: string }> = [];
+    const confirmedJobs: Array<{ from: bigint; to: bigint }> = [];
     for (let i = 0; i < cellData.getConfirmedJobs().length(); i++) {
       const item = cellData.getConfirmedJobs().indexAt(i);
       confirmedJobs.push({
@@ -169,7 +169,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
     const ancientBlockHeardMerkleRoot: string = arrayBufferToMerkleHash(
       cellData.getAncientBlockHeardMerkleRoot().raw(),
     );
-    const checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: string }> = [];
+    const checkerLastTaskSidechainHeights: Array<{ checker_lock_arg: string; height: bigint }> = [];
     for (let i = 0; i < cellData.getCheckerLastTaskSidechainHeights().length(); i++) {
       const item = cellData.getCheckerLastTaskSidechainHeights().indexAt(i);
       checkerLastTaskSidechainHeights.push({
@@ -214,7 +214,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
     return new SidechainState(
       0n,
       0n,
-      ``,
+      0n,
       [],
       [],
       ``,
@@ -224,7 +224,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       [],
       "",
       [],
-      "",
+      0n,
       defaultOutPoint(),
     );
   }

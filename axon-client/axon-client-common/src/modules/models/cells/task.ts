@@ -56,9 +56,9 @@ export class Task implements CellInputType, CellOutputType {
   capacity: bigint;
 
   version: bigint;
-  sidechainBlockHeightFrom: string;
-  sidechainBlockHeightTo: string;
-  refreshSidechainHeight: string;
+  sidechainBlockHeightFrom: bigint;
+  sidechainBlockHeightTo: bigint;
+  refreshSidechainHeight: bigint;
   checkDataSize: bigint;
   mode: string;
   status: string;
@@ -66,7 +66,7 @@ export class Task implements CellInputType, CellOutputType {
   commit: string;
   sidechainBlockHeader: Array<string>;
 
-  chainId: string;
+  chainId: bigint;
   checkerLockArg: string;
 
   outPoint: OutPoint;
@@ -74,16 +74,16 @@ export class Task implements CellInputType, CellOutputType {
   constructor(
     capacity: bigint,
     version: bigint,
-    sidechainBlockHeightFrom: string,
-    sidechainBlockHeightTo: string,
-    refreshSidechainHeight: string,
+    sidechainBlockHeightFrom: bigint,
+    sidechainBlockHeightTo: bigint,
+    refreshSidechainHeight: bigint,
     checkDataSize: bigint,
     mode: string,
     status: string,
     reveal: string,
     commit: string,
     sidechainBlockHeader: Array<string>,
-    chainId: string,
+    chainId: bigint,
     checkerLockArg: string,
     outPoint: OutPoint,
   ) {
@@ -166,7 +166,7 @@ export class Task implements CellInputType, CellOutputType {
   }
 
   static default(): Task {
-    return new Task(0n, 0n, ``, ``, ``, 0n, ``, ``, ``, ``, [], ``, ``, defaultOutPoint());
+    return new Task(0n, 0n, 0n, 0n, 0n, 0n, ``, ``, ``, ``, [], 0n, ``, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {

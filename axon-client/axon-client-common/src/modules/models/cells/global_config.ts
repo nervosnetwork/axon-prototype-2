@@ -10,6 +10,7 @@ import {
   arrayBufferToHashType,
   arrayBufferToPublicKeyHash,
   codeHashToArrayBuffer,
+  HASH_TYPE,
   hashTypeToArrayBuffer,
   publicKeyHashToArrayBuffer,
 } from "../../../utils/mol";
@@ -33,23 +34,23 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
 
   adminPublicKey: string;
   codeCellTypeCodehash: string;
-  codeCellTypeHashtype: string;
+  codeCellTypeHashtype: HASH_TYPE;
   sidechainConfigCellTypeCodehash: string;
-  sidechainConfigCellTypeHashtype: string;
+  sidechainConfigCellTypeHashtype: HASH_TYPE;
   sidechainStateCellTypeCodehash: string;
-  sidechainStateCellTypeHashtype: string;
+  sidechainStateCellTypeHashtype: HASH_TYPE;
   checkerInfoCellTypeCodehash: string;
-  checkerInfoCellTypeHashtype: string;
+  checkerInfoCellTypeHashtype: HASH_TYPE;
   checkerBondCellLockCodehash: string;
-  checkerBondCellLockHashtype: string;
+  checkerBondCellLockHashtype: HASH_TYPE;
   taskCellTypeCodehash: string;
-  taskCellTypeHashtype: string;
+  taskCellTypeHashtype: HASH_TYPE;
   sidechainRegistryCellTypeCodehash: string;
-  sidechainRegistryCellTypeHashtype: string;
+  sidechainRegistryCellTypeHashtype: HASH_TYPE;
   sidechainFeeCellLockCodehash: string;
-  sidechainFeeCellLockHashtype: string;
+  sidechainFeeCellLockHashtype: HASH_TYPE;
   sidechainBondCellLockCodehash: string;
-  sidechainBondCellLockHashtype: string;
+  sidechainBondCellLockHashtype: HASH_TYPE;
 
   outPoint: OutPoint;
 
@@ -57,23 +58,23 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
     capacity: bigint,
     adminPublicKey: string,
     codeCellTypeCodehash: string,
-    codeCellTypeHashtype: string,
+    codeCellTypeHashtype: HASH_TYPE,
     sidechainConfigCellTypeCodehash: string,
-    sidechainConfigCellTypeHashtype: string,
+    sidechainConfigCellTypeHashtype: HASH_TYPE,
     sidechain_stateCellTypeCodehash: string,
-    sidechain_stateCellTypeHashtype: string,
+    sidechain_stateCellTypeHashtype: HASH_TYPE,
     checkerInfoCellTypeCodehash: string,
-    checkerInfoCellTypeHashtype: string,
+    checkerInfoCellTypeHashtype: HASH_TYPE,
     checkerBondCellLockCodehash: string,
-    checkerBondCellLockHashtype: string,
+    checkerBondCellLockHashtype: HASH_TYPE,
     taskCellTypeCodehash: string,
-    taskCellTypeHashtype: string,
+    taskCellTypeHashtype: HASH_TYPE,
     sidechainRegistryCellTypeCodehash: string,
-    sidechainRegistryCellTypeHashtype: string,
+    sidechainRegistryCellTypeHashtype: HASH_TYPE,
     sidechainFeeCellLockCodehash: string,
-    sidechainFeeCellLockHashtype: string,
+    sidechainFeeCellLockHashtype: HASH_TYPE,
     sidechainBondCellLockCodehash: string,
-    sidechainBondCellLockHashtype: string,
+    sidechainBondCellLockHashtype: HASH_TYPE,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
@@ -171,23 +172,23 @@ export class GlobalConfig implements CellInputType, CellOutputType, CellDepType 
       0n,
       ``,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
+      `type`,
       ``,
-      ``,
-      ``,
-      ``,
-      ``,
-      ``,
-      ``,
-      ``,
-      ``,
-      ``,
+      `type`,
       defaultOutPoint(),
     );
   }

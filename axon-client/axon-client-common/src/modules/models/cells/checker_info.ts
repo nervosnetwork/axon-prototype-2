@@ -60,7 +60,7 @@ export class CheckerInfo implements CellInputType, CellOutputType {
   status: "Relaying" | "Quit";
 
   //type args
-  chainId: string;
+  chainId: bigint;
   checkerLockArg: string;
 
   //type args for lumos
@@ -74,7 +74,7 @@ export class CheckerInfo implements CellInputType, CellOutputType {
     rpcUrl: string,
     status: "Relaying" | "Quit",
 
-    chainId: string,
+    chainId: bigint,
     checkerLockArg: string,
 
     outPoint: OutPoint,
@@ -129,7 +129,7 @@ export class CheckerInfo implements CellInputType, CellOutputType {
   }
 
   static default(): CheckerInfo {
-    return new CheckerInfo(0n, 0n, ``, "Relaying", "", ``, defaultOutPoint());
+    return new CheckerInfo(0n, 0n, ``, "Relaying", 0n, ``, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {

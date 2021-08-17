@@ -44,13 +44,13 @@ export class CheckerBond implements CellInputType, CellOutputType {
 
   //lock args
   checkerLockArg: string;
-  participatedChainId: Array<string>;
+  participatedChainId: Array<bigint>;
 
   constructor(
     capacity: bigint,
     museAmount: bigint,
     checkerLockArg: string,
-    participatedChainId: Array<string>,
+    participatedChainId: Array<bigint>,
     outPoint: OutPoint,
   ) {
     this.capacity = capacity;
