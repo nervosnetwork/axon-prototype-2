@@ -4,6 +4,7 @@ use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 
+use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs, SidechainStatus};
 use common_raw::{
     cell::{
         sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs},
@@ -34,6 +35,13 @@ fn test_success() {
     ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
 
     // prepare scripts
+    let config_type_args = SidechainConfigCellTypeArgs::default();
+
+    let config_type_script = builder
+        .context
+        .build_script(&always_success_code, config_type_args.serialize())
+        .expect("script");
+
     let mut sidechain_bond_lock_args = SidechainBondCellLockArgs::default();
     sidechain_bond_lock_args.collator_lock_arg.copy_from_slice(&pubkey_hash);
 
@@ -49,6 +57,16 @@ fn test_success() {
         .expect("script");
 
     // prepare cell deps
+    let mut config_dep_data = SidechainConfigCell::default();
+    config_dep_data.sidechain_status = SidechainStatus::Shutdown;
+    let config_dep_out_point = builder.context.create_cell(
+        new_type_cell_output(1000, &always_success, &config_type_script),
+        config_dep_data.serialize(),
+    );
+    let config_dep = CellDep::new_builder().out_point(config_dep_out_point).build();
+
+    let mut builder = builder.cell_dep(config_dep);
+
     let state_dep_data = SidechainStateCell::default();
     let state_dep_out_point = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &state_dep_script),
@@ -59,7 +77,8 @@ fn test_success() {
     let mut builder = builder.cell_dep(state_dep);
 
     // prepare inputs
-    let sidechain_bond_input_data = SidechainBondCell::default();
+    let mut sidechain_bond_input_data = SidechainBondCell::default();
+    sidechain_bond_input_data.amount = 100;
     let sidechain_bond_input = builder.create_input(
         new_type_cell_output(1000, &sidechain_bond_lock_input_script, &always_success),
         sidechain_bond_input_data.serialize(),
@@ -68,7 +87,8 @@ fn test_success() {
     let builder = builder.input(sidechain_bond_input);
 
     // prepare outputs
-    let sudt_output = SudtTokenCell::default();
+    let mut sudt_output = SudtTokenCell::default();
+    sudt_output.amount = 100;
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
         new_type_cell_output(1000, &always_success, &always_success),

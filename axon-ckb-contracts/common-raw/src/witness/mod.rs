@@ -8,6 +8,7 @@ pub mod checker_quit_sidechain;
 pub mod checker_take_beneficiary;
 pub mod checker_vote;
 pub mod collator_publish_task;
+pub mod collator_shutdown_sidechain;
 pub mod collator_submit_tasks;
 pub mod collator_unlock_bond;
 

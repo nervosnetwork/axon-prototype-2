@@ -65,13 +65,7 @@ fn test_success() {
         sidechain_fee_input_data.serialize(),
     );
 
-    let muse_input_data = MuseTokenCell::default();
-    let muse_input = builder.create_input(
-        new_type_cell_output(1000, &always_success, &always_success),
-        muse_input_data.serialize(),
-    );
-
-    let builder = builder.input(checker_info_input).input(sidechain_fee_input).input(muse_input);
+    let builder = builder.input(checker_info_input).input(sidechain_fee_input);
 
     // prepare outputs
     let mut checker_info_output = checker_info_input_data.clone();
@@ -80,7 +74,7 @@ fn test_success() {
     let mut sidechain_fee_output = sidechain_fee_input_data.clone();
     sidechain_fee_output.amount = 0;
 
-    let mut muse_output = muse_input_data.clone();
+    let mut muse_output = MuseTokenCell::default();
     muse_output.amount = 100;
 
     let outputs = vec![
