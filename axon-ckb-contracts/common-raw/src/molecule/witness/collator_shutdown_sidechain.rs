@@ -28,21 +28,21 @@ impl ::core::fmt::Display for CollatorShutDownSidechainWitness {
 }
 impl ::core::default::Default for CollatorShutDownSidechainWitness {
     fn default() -> Self {
-        let v: Vec<u8> = vec![0, 0];
+        let v: Vec<u8> = vec![0, 0, 0, 0, 0];
         CollatorShutDownSidechainWitness::new_unchecked(v.into())
     }
 }
 impl CollatorShutDownSidechainWitness {
     pub const FIELD_COUNT: usize = 2;
-    pub const FIELD_SIZES: [usize; 2] = [1, 1];
-    pub const TOTAL_SIZE: usize = 2;
+    pub const FIELD_SIZES: [usize; 2] = [1, 4];
+    pub const TOTAL_SIZE: usize = 5;
 
     pub fn pattern(&self) -> Uint8 {
         Uint8::new_unchecked(self.0.slice(0..1))
     }
 
-    pub fn chain_id(&self) -> Uint8 {
-        Uint8::new_unchecked(self.0.slice(1..2))
+    pub fn chain_id(&self) -> ChainId {
+        ChainId::new_unchecked(self.0.slice(1..5))
     }
 
     pub fn as_reader<'r>(&'r self) -> CollatorShutDownSidechainWitnessReader<'r> {
@@ -108,15 +108,15 @@ impl<'r> ::core::fmt::Display for CollatorShutDownSidechainWitnessReader<'r> {
 }
 impl<'r> CollatorShutDownSidechainWitnessReader<'r> {
     pub const FIELD_COUNT: usize = 2;
-    pub const FIELD_SIZES: [usize; 2] = [1, 1];
-    pub const TOTAL_SIZE: usize = 2;
+    pub const FIELD_SIZES: [usize; 2] = [1, 4];
+    pub const TOTAL_SIZE: usize = 5;
 
     pub fn pattern(&self) -> Uint8Reader<'r> {
         Uint8Reader::new_unchecked(&self.as_slice()[0..1])
     }
 
-    pub fn chain_id(&self) -> Uint8Reader<'r> {
-        Uint8Reader::new_unchecked(&self.as_slice()[1..2])
+    pub fn chain_id(&self) -> ChainIdReader<'r> {
+        ChainIdReader::new_unchecked(&self.as_slice()[1..5])
     }
 }
 impl<'r> molecule::prelude::Reader<'r> for CollatorShutDownSidechainWitnessReader<'r> {
@@ -148,19 +148,19 @@ impl<'r> molecule::prelude::Reader<'r> for CollatorShutDownSidechainWitnessReade
 #[derive(Debug, Default)]
 pub struct CollatorShutDownSidechainWitnessBuilder {
     pub(crate) pattern:  Uint8,
-    pub(crate) chain_id: Uint8,
+    pub(crate) chain_id: ChainId,
 }
 impl CollatorShutDownSidechainWitnessBuilder {
     pub const FIELD_COUNT: usize = 2;
-    pub const FIELD_SIZES: [usize; 2] = [1, 1];
-    pub const TOTAL_SIZE: usize = 2;
+    pub const FIELD_SIZES: [usize; 2] = [1, 4];
+    pub const TOTAL_SIZE: usize = 5;
 
     pub fn pattern(mut self, v: Uint8) -> Self {
         self.pattern = v;
         self
     }
 
-    pub fn chain_id(mut self, v: Uint8) -> Self {
+    pub fn chain_id(mut self, v: ChainId) -> Self {
         self.chain_id = v;
         self
     }

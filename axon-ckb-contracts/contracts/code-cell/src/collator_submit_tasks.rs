@@ -104,7 +104,7 @@ pub fn collator_submit_tasks(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         &sidechain_state_output,
         &sidechain_state_output_type_args,
         &witness,
-        u32::from(chain_id), // TODO: change chain_id to u32
+        chain_id,
     )?;
 
     check_sidechain_fee(
@@ -189,7 +189,7 @@ fn check_sidechain_state(
     sidechain_state_output: &SidechainStateCell,
     sidechain_state_output_type_args: &SidechainStateCellTypeArgs,
     witness: &CollatorSubmitTasksWitness,
-    chain_id: u32,
+    chain_id: ChainId,
 ) -> Result<(), Error> {
     if sidechain_state_input.random_seed != witness.origin_random_seed {
         return Err(Error::SidechainStateMismatch);
@@ -274,7 +274,7 @@ fn check_sidechain_fee(
     sidechain_fee_output: &SidechainFeeCell,
     sidechain_fee_output_lock_args: &SidechainFeeCellLockArgs,
     fee: u128,
-    chain_id: u8,
+    chain_id: ChainId,
 ) -> Result<(), Error> {
     let mut sidechain_fee_res_lock_args = sidechain_fee_input_lock_args.clone();
     if sidechain_fee_res_lock_args.surplus < fee {
@@ -297,7 +297,7 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
     witness: &CollatorSubmitTasksWitness,
     mut task_count: usize,
     mut challenge_count: usize,
-    chain_id: u8,
+    chain_id: ChainId,
 ) -> Result<(), Error> {
     let mut settle_count = 0;
     let mut shutdown_count = 0;

@@ -30,7 +30,7 @@ PureSudtTokenCell!(SidechainFeeCell);
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainFeeCellLockArgs {
-    pub chain_id: u8, // TODO: Change to ChainId
+    pub chain_id: ChainId,
     pub surplus:  u128,
 }
 
@@ -38,7 +38,7 @@ impl FromRaw for SidechainFeeCellLockArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<Self> {
         let reader = SidechainFeeCellLockArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())?;
         let surplus = u128::from_raw(reader.surplus().raw_data())?;
 
         Some(Self { chain_id, surplus })
@@ -49,7 +49,7 @@ impl Serialize for SidechainFeeCellLockArgs {
     type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as ChainId).serialize()).to_entity();
+        let chain_id = ChainIdReader::new_unchecked(&self.chain_id.serialize()).to_entity();
         let surplus = Uint128Reader::new_unchecked(&self.surplus.serialize()).to_entity();
 
         let builder = SidechainFeeCellLockArgsBuilder::default().chain_id(chain_id).surplus(surplus);

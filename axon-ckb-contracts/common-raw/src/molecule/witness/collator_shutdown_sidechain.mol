@@ -2,5 +2,5 @@ import ../common;
 
 struct CollatorShutDownSidechainWitness {
     pattern: Uint8,
-    chain_id: Uint8,
+    chain_id: ChainId,
 }

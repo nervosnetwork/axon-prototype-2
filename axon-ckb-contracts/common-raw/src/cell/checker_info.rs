@@ -1,3 +1,4 @@
+use crate::common::{ChainId, PubKeyHash};
 use crate::molecule::cell::checker_info::CheckerInfoCellTypeArgsBuilder;
 use crate::molecule::cell::checker_info::{
     CheckerInfoCellBuilder, CheckerInfoCellReader, CheckerInfoCellTypeArgsReader, CheckerInfoStatusReader,
@@ -94,17 +95,17 @@ impl Serialize for CheckerInfoCell {
 
 #[derive(Debug, Copy, Clone, Default, PartialOrd, PartialEq, Ord, Eq)]
 pub struct CheckerInfoCellTypeArgs {
-    pub chain_id:         u8,
-    pub checker_lock_arg: [u8; 20],
+    pub chain_id:         ChainId,
+    pub checker_lock_arg: PubKeyHash,
 }
 
 impl FromRaw for CheckerInfoCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<CheckerInfoCellTypeArgs> {
         let reader = CheckerInfoCellTypeArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = u32::from_raw(reader.chain_id().raw_data())? as u8;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())?;
 
-        let mut checker_lock_arg = [0u8; 20];
+        let mut checker_lock_arg = PubKeyHash::default();
         checker_lock_arg.copy_from_slice(reader.checker_lock_arg().raw_data());
 
         Some(CheckerInfoCellTypeArgs {
@@ -118,7 +119,7 @@ impl Serialize for CheckerInfoCellTypeArgs {
     type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as u32).serialize()).to_entity();
+        let chain_id = ChainIdReader::new_unchecked(&self.chain_id.serialize()).to_entity();
         let checker_lock_arg = PubKeyHashReader::new_unchecked(&self.checker_lock_arg).to_entity();
 
         let builder = CheckerInfoCellTypeArgsBuilder::default()

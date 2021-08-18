@@ -1,11 +1,11 @@
-use crate::{pattern::Pattern, FromRaw, Serialize};
+use crate::{common::ChainId, pattern::Pattern, FromRaw, Serialize};
 
-const COLLATOR_UNLOCK_BOND_WITNESS_LEN: usize = 4;
+const COLLATOR_UNLOCK_BOND_WITNESS_LEN: usize = 7;
 
 #[derive(Debug)]
 pub struct CollatorUnlockBondWitness {
     pattern: Pattern,
-    pub chain_id: u8,
+    pub chain_id: ChainId,
     pub sidechain_state_dep_index: usize,
 }
 
@@ -13,7 +13,7 @@ impl Default for CollatorUnlockBondWitness {
     fn default() -> Self {
         Self {
             pattern:                   Pattern::CollatorUnlockBond,
-            chain_id:                  0,
+            chain_id:                  ChainId::default(),
             sidechain_state_dep_index: 0,
         }
     }
@@ -21,13 +21,13 @@ impl Default for CollatorUnlockBondWitness {
 
 impl FromRaw for CollatorUnlockBondWitness {
     fn from_raw(witness_raw_data: &[u8]) -> Option<CollatorUnlockBondWitness> {
-        if witness_raw_data.len() < COLLATOR_UNLOCK_BOND_WITNESS_LEN {
+        if witness_raw_data.len() != COLLATOR_UNLOCK_BOND_WITNESS_LEN {
             return None;
         }
 
         let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
-        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
-        let sidechain_state_dep_index = usize::from_raw(&witness_raw_data[2..4])?;
+        let chain_id = ChainId::from_raw(&witness_raw_data[1..5])?;
+        let sidechain_state_dep_index = usize::from_raw(&witness_raw_data[5..7])?;
 
         Some(CollatorUnlockBondWitness {
             pattern,
@@ -44,9 +44,9 @@ impl Serialize for CollatorUnlockBondWitness {
         let mut buf = [0u8; COLLATOR_UNLOCK_BOND_WITNESS_LEN];
 
         buf[0..1].copy_from_slice(&self.pattern.serialize());
-        buf[1..2].copy_from_slice(&self.chain_id.serialize());
+        buf[1..5].copy_from_slice(&self.chain_id.serialize());
 
-        buf[2..4].copy_from_slice(&self.sidechain_state_dep_index.serialize());
+        buf[5..7].copy_from_slice(&self.sidechain_state_dep_index.serialize());
 
         buf
     }

@@ -256,14 +256,14 @@ impl Serialize for SidechainConfigCell {
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct SidechainConfigCellTypeArgs {
-    pub chain_id: u8, // TODO: Change to ChainId.
+    pub chain_id: ChainId,
 }
 
 impl FromRaw for SidechainConfigCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<SidechainConfigCellTypeArgs> {
         let reader = SidechainConfigCellTypeArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())?;
 
         Some(SidechainConfigCellTypeArgs { chain_id })
     }
@@ -273,7 +273,7 @@ impl Serialize for SidechainConfigCellTypeArgs {
     type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as ChainId).serialize()).to_entity();
+        let chain_id = ChainIdReader::new_unchecked(&self.chain_id.serialize()).to_entity();
 
         let builder = SidechainConfigCellTypeArgsBuilder::default().chain_id(chain_id);
 

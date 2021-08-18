@@ -1,8 +1,9 @@
 use molecule::prelude::*;
 
 use crate::{
+    common::ChainId,
     molecule::{
-        common::Uint8Reader,
+        common::{ChainIdReader, Uint8Reader},
         witness::collator_shutdown_sidechain::{CollatorShutDownSidechainWitnessBuilder, CollatorShutDownSidechainWitnessReader},
     },
     pattern::Pattern,
@@ -12,14 +13,14 @@ use crate::{
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct CollatorShutdownSidechainWitness {
     pattern:      Pattern,
-    pub chain_id: u8,
+    pub chain_id: ChainId,
 }
 
 impl Default for CollatorShutdownSidechainWitness {
     fn default() -> Self {
         CollatorShutdownSidechainWitness {
             pattern:  Pattern::CollatorShutdownSidechain,
-            chain_id: 0u8,
+            chain_id: ChainId::default(),
         }
     }
 }
@@ -28,7 +29,7 @@ impl FromRaw for CollatorShutdownSidechainWitness {
     fn from_raw(witness_raw_data: &[u8]) -> Option<Self> {
         let reader = CollatorShutDownSidechainWitnessReader::from_slice(witness_raw_data).ok()?;
         let pattern = Pattern::from_raw(reader.pattern().raw_data())?;
-        let chain_id = u8::from_raw(reader.chain_id().raw_data())?;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())?;
 
         Some(CollatorShutdownSidechainWitness { pattern, chain_id })
     }
@@ -40,7 +41,7 @@ impl Serialize for CollatorShutdownSidechainWitness {
     fn serialize(&self) -> Self::RawType {
         let builder = CollatorShutDownSidechainWitnessBuilder::default();
         let pattern = Uint8Reader::new_unchecked(&self.pattern.serialize()).to_entity();
-        let chain_id = Uint8Reader::new_unchecked(&self.chain_id.serialize()).to_entity();
+        let chain_id = ChainIdReader::new_unchecked(&self.chain_id.serialize()).to_entity();
 
         let builder = builder.pattern(pattern).chain_id(chain_id);
 
