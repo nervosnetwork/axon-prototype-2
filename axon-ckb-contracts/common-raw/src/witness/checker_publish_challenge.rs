@@ -1,11 +1,11 @@
-use crate::{pattern::Pattern, FromRaw, Serialize};
+use crate::{common::ChainId, pattern::Pattern, FromRaw, Serialize};
 
-const CHECKER_PUBLISH_CHALLENGE_WITNESS_LEN: usize = 9;
+const CHECKER_PUBLISH_CHALLENGE_WITNESS_LEN: usize = 12;
 
 #[derive(Debug)]
 pub struct CheckerPublishChallengeWitness {
     pattern: Pattern,
-    pub chain_id: u8,
+    pub chain_id: ChainId,
     pub checker_id: u8,
     pub challenge_count: u32,
     pub sidechain_config_dep_index: usize,
@@ -15,7 +15,7 @@ impl Default for CheckerPublishChallengeWitness {
     fn default() -> Self {
         Self {
             pattern:                    Pattern::CheckerPublishChallenge,
-            chain_id:                   0,
+            chain_id:                   ChainId::default(),
             checker_id:                 0,
             challenge_count:            0,
             sidechain_config_dep_index: 0,
@@ -30,10 +30,10 @@ impl FromRaw for CheckerPublishChallengeWitness {
         }
 
         let pattern = Pattern::from_raw(&witness_raw_data[0..1])?;
-        let chain_id = u8::from_raw(&witness_raw_data[1..2])?;
-        let checker_id = u8::from_raw(&witness_raw_data[2..3])?;
-        let challenge_count = u32::from_raw(&witness_raw_data[3..7])?;
-        let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[7..9])?;
+        let chain_id = ChainId::from_raw(&witness_raw_data[1..5])?;
+        let checker_id = u8::from_raw(&witness_raw_data[5..6])?;
+        let challenge_count = u32::from_raw(&witness_raw_data[6..10])?;
+        let sidechain_config_dep_index = usize::from_raw(&witness_raw_data[10..12])?;
 
         Some(CheckerPublishChallengeWitness {
             pattern,
@@ -52,10 +52,10 @@ impl Serialize for CheckerPublishChallengeWitness {
         let mut buf = [0u8; CHECKER_PUBLISH_CHALLENGE_WITNESS_LEN];
 
         buf[0..1].copy_from_slice(&self.pattern.serialize());
-        buf[1..2].copy_from_slice(&self.chain_id.serialize());
-        buf[2..3].copy_from_slice(&self.checker_id.serialize());
-        buf[3..7].copy_from_slice(&self.challenge_count.serialize());
-        buf[7..9].copy_from_slice(&self.sidechain_config_dep_index.serialize());
+        buf[1..5].copy_from_slice(&self.chain_id.serialize());
+        buf[5..6].copy_from_slice(&self.checker_id.serialize());
+        buf[6..10].copy_from_slice(&self.challenge_count.serialize());
+        buf[10..12].copy_from_slice(&self.sidechain_config_dep_index.serialize());
 
         buf
     }

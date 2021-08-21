@@ -208,7 +208,7 @@ impl Serialize for TaskCell {
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct TaskCellTypeArgs {
-    pub chain_id:         u8, // TODO: Change to ChainId after everything is done.
+    pub chain_id:         ChainId,
     pub checker_lock_arg: PubKeyHash,
 }
 
@@ -216,9 +216,9 @@ impl FromRaw for TaskCellTypeArgs {
     fn from_raw(arg_raw_data: &[u8]) -> Option<TaskCellTypeArgs> {
         let reader = TaskCellTypeArgsReader::from_slice(arg_raw_data).ok()?;
 
-        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())? as u8;
+        let chain_id = ChainId::from_raw(reader.chain_id().raw_data())?;
 
-        let mut checker_lock_arg: PubKeyHash = [0u8; 20];
+        let mut checker_lock_arg: PubKeyHash = PubKeyHash::default();
         checker_lock_arg.copy_from_slice(reader.checker_lock_arg().raw_data());
 
         Some(TaskCellTypeArgs {
@@ -232,7 +232,7 @@ impl Serialize for TaskCellTypeArgs {
     type RawType = Vec<u8>;
 
     fn serialize(&self) -> Self::RawType {
-        let chain_id = ChainIdReader::new_unchecked(&(self.chain_id as ChainId).serialize()).to_entity();
+        let chain_id = ChainIdReader::new_unchecked(&self.chain_id.serialize()).to_entity();
         let checker_lock_arg = PubKeyHashReader::new_unchecked(&self.checker_lock_arg).to_entity();
 
         let builder = TaskCellTypeArgsBuilder::default()
