@@ -2,10 +2,8 @@
 
 use super::super::common::*;
 use molecule::prelude::*;
-
 #[derive(Clone)]
 pub struct TaskMode(molecule::bytes::Bytes);
-
 impl ::core::fmt::LowerHex for TaskMode {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -15,13 +13,11 @@ impl ::core::fmt::LowerHex for TaskMode {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl ::core::fmt::Debug for TaskMode {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl ::core::fmt::Display for TaskMode {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -29,14 +25,12 @@ impl ::core::fmt::Display for TaskMode {
         write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-
 impl ::core::default::Default for TaskMode {
     fn default() -> Self {
         let v: Vec<u8> = vec![0];
         TaskMode::new_unchecked(v.into())
     }
 }
-
 impl TaskMode {
     pub const ITEM_COUNT: usize = 1;
     pub const ITEM_SIZE: usize = 1;
@@ -54,7 +48,6 @@ impl TaskMode {
         TaskModeReader::new_unchecked(self.as_slice())
     }
 }
-
 impl molecule::prelude::Entity for TaskMode {
     type Builder = TaskModeBuilder;
 
@@ -88,10 +81,8 @@ impl molecule::prelude::Entity for TaskMode {
         Self::new_builder().set([self.nth0()])
     }
 }
-
 #[derive(Clone, Copy)]
 pub struct TaskModeReader<'r>(&'r [u8]);
-
 impl<'r> ::core::fmt::LowerHex for TaskModeReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -101,13 +92,11 @@ impl<'r> ::core::fmt::LowerHex for TaskModeReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl<'r> ::core::fmt::Debug for TaskModeReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl<'r> ::core::fmt::Display for TaskModeReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -115,7 +104,6 @@ impl<'r> ::core::fmt::Display for TaskModeReader<'r> {
         write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-
 impl<'r> TaskModeReader<'r> {
     pub const ITEM_COUNT: usize = 1;
     pub const ITEM_SIZE: usize = 1;
@@ -129,7 +117,6 @@ impl<'r> TaskModeReader<'r> {
         self.as_slice()
     }
 }
-
 impl<'r> molecule::prelude::Reader<'r> for TaskModeReader<'r> {
     type Entity = TaskMode;
 
@@ -156,21 +143,17 @@ impl<'r> molecule::prelude::Reader<'r> for TaskModeReader<'r> {
         Ok(())
     }
 }
-
 pub struct TaskModeBuilder(pub(crate) [Byte; 1]);
-
 impl ::core::fmt::Debug for TaskModeBuilder {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:?})", Self::NAME, &self.0[..])
     }
 }
-
 impl ::core::default::Default for TaskModeBuilder {
     fn default() -> Self {
         TaskModeBuilder([Byte::default()])
     }
 }
-
 impl TaskModeBuilder {
     pub const ITEM_COUNT: usize = 1;
     pub const ITEM_SIZE: usize = 1;
@@ -186,7 +169,6 @@ impl TaskModeBuilder {
         self
     }
 }
-
 impl molecule::prelude::Builder for TaskModeBuilder {
     type Entity = TaskMode;
 
@@ -208,10 +190,8 @@ impl molecule::prelude::Builder for TaskModeBuilder {
         TaskMode::new_unchecked(inner.into())
     }
 }
-
 #[derive(Clone)]
 pub struct TaskStatus(molecule::bytes::Bytes);
-
 impl ::core::fmt::LowerHex for TaskStatus {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -221,13 +201,11 @@ impl ::core::fmt::LowerHex for TaskStatus {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl ::core::fmt::Debug for TaskStatus {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl ::core::fmt::Display for TaskStatus {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -235,14 +213,12 @@ impl ::core::fmt::Display for TaskStatus {
         write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-
 impl ::core::default::Default for TaskStatus {
     fn default() -> Self {
         let v: Vec<u8> = vec![0];
         TaskStatus::new_unchecked(v.into())
     }
 }
-
 impl TaskStatus {
     pub const ITEM_COUNT: usize = 1;
     pub const ITEM_SIZE: usize = 1;
@@ -260,7 +236,6 @@ impl TaskStatus {
         TaskStatusReader::new_unchecked(self.as_slice())
     }
 }
-
 impl molecule::prelude::Entity for TaskStatus {
     type Builder = TaskStatusBuilder;
 
@@ -294,10 +269,8 @@ impl molecule::prelude::Entity for TaskStatus {
         Self::new_builder().set([self.nth0()])
     }
 }
-
 #[derive(Clone, Copy)]
 pub struct TaskStatusReader<'r>(&'r [u8]);
-
 impl<'r> ::core::fmt::LowerHex for TaskStatusReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -307,13 +280,11 @@ impl<'r> ::core::fmt::LowerHex for TaskStatusReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl<'r> ::core::fmt::Debug for TaskStatusReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl<'r> ::core::fmt::Display for TaskStatusReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -321,7 +292,6 @@ impl<'r> ::core::fmt::Display for TaskStatusReader<'r> {
         write!(f, "{}(0x{})", Self::NAME, raw_data)
     }
 }
-
 impl<'r> TaskStatusReader<'r> {
     pub const ITEM_COUNT: usize = 1;
     pub const ITEM_SIZE: usize = 1;
@@ -335,7 +305,6 @@ impl<'r> TaskStatusReader<'r> {
         self.as_slice()
     }
 }
-
 impl<'r> molecule::prelude::Reader<'r> for TaskStatusReader<'r> {
     type Entity = TaskStatus;
 
@@ -362,21 +331,17 @@ impl<'r> molecule::prelude::Reader<'r> for TaskStatusReader<'r> {
         Ok(())
     }
 }
-
 pub struct TaskStatusBuilder(pub(crate) [Byte; 1]);
-
 impl ::core::fmt::Debug for TaskStatusBuilder {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:?})", Self::NAME, &self.0[..])
     }
 }
-
 impl ::core::default::Default for TaskStatusBuilder {
     fn default() -> Self {
         TaskStatusBuilder([Byte::default()])
     }
 }
-
 impl TaskStatusBuilder {
     pub const ITEM_COUNT: usize = 1;
     pub const ITEM_SIZE: usize = 1;
@@ -392,7 +357,6 @@ impl TaskStatusBuilder {
         self
     }
 }
-
 impl molecule::prelude::Builder for TaskStatusBuilder {
     type Entity = TaskStatus;
 
@@ -414,10 +378,8 @@ impl molecule::prelude::Builder for TaskStatusBuilder {
         TaskStatus::new_unchecked(inner.into())
     }
 }
-
 #[derive(Clone)]
 pub struct SidechainBlockHeaders(molecule::bytes::Bytes);
-
 impl ::core::fmt::LowerHex for SidechainBlockHeaders {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -427,13 +389,11 @@ impl ::core::fmt::LowerHex for SidechainBlockHeaders {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl ::core::fmt::Debug for SidechainBlockHeaders {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl ::core::fmt::Display for SidechainBlockHeaders {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} [", Self::NAME)?;
@@ -447,14 +407,12 @@ impl ::core::fmt::Display for SidechainBlockHeaders {
         write!(f, "]")
     }
 }
-
 impl ::core::default::Default for SidechainBlockHeaders {
     fn default() -> Self {
         let v: Vec<u8> = vec![0, 0, 0, 0];
         SidechainBlockHeaders::new_unchecked(v.into())
     }
 }
-
 impl SidechainBlockHeaders {
     pub const ITEM_SIZE: usize = 32;
 
@@ -492,7 +450,6 @@ impl SidechainBlockHeaders {
         SidechainBlockHeadersReader::new_unchecked(self.as_slice())
     }
 }
-
 impl molecule::prelude::Entity for SidechainBlockHeaders {
     type Builder = SidechainBlockHeadersBuilder;
 
@@ -526,10 +483,8 @@ impl molecule::prelude::Entity for SidechainBlockHeaders {
         Self::new_builder().extend(self.into_iter())
     }
 }
-
 #[derive(Clone, Copy)]
 pub struct SidechainBlockHeadersReader<'r>(&'r [u8]);
-
 impl<'r> ::core::fmt::LowerHex for SidechainBlockHeadersReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -539,13 +494,11 @@ impl<'r> ::core::fmt::LowerHex for SidechainBlockHeadersReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl<'r> ::core::fmt::Debug for SidechainBlockHeadersReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl<'r> ::core::fmt::Display for SidechainBlockHeadersReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} [", Self::NAME)?;
@@ -559,7 +512,6 @@ impl<'r> ::core::fmt::Display for SidechainBlockHeadersReader<'r> {
         write!(f, "]")
     }
 }
-
 impl<'r> SidechainBlockHeadersReader<'r> {
     pub const ITEM_SIZE: usize = 32;
 
@@ -593,7 +545,6 @@ impl<'r> SidechainBlockHeadersReader<'r> {
         BlockHeaderReader::new_unchecked(&self.as_slice()[start..end])
     }
 }
-
 impl<'r> molecule::prelude::Reader<'r> for SidechainBlockHeadersReader<'r> {
     type Entity = SidechainBlockHeaders;
 
@@ -631,10 +582,8 @@ impl<'r> molecule::prelude::Reader<'r> for SidechainBlockHeadersReader<'r> {
         Ok(())
     }
 }
-
 #[derive(Debug, Default)]
 pub struct SidechainBlockHeadersBuilder(pub(crate) Vec<BlockHeader>);
-
 impl SidechainBlockHeadersBuilder {
     pub const ITEM_SIZE: usize = 32;
 
@@ -655,7 +604,6 @@ impl SidechainBlockHeadersBuilder {
         self
     }
 }
-
 impl molecule::prelude::Builder for SidechainBlockHeadersBuilder {
     type Entity = SidechainBlockHeaders;
 
@@ -680,9 +628,7 @@ impl molecule::prelude::Builder for SidechainBlockHeadersBuilder {
         SidechainBlockHeaders::new_unchecked(inner.into())
     }
 }
-
 pub struct SidechainBlockHeadersIterator(SidechainBlockHeaders, usize, usize);
-
 impl ::core::iter::Iterator for SidechainBlockHeadersIterator {
     type Item = BlockHeader;
 
@@ -696,13 +642,11 @@ impl ::core::iter::Iterator for SidechainBlockHeadersIterator {
         }
     }
 }
-
 impl ::core::iter::ExactSizeIterator for SidechainBlockHeadersIterator {
     fn len(&self) -> usize {
         self.2 - self.1
     }
 }
-
 impl ::core::iter::IntoIterator for SidechainBlockHeaders {
     type IntoIter = SidechainBlockHeadersIterator;
     type Item = BlockHeader;
@@ -712,15 +656,12 @@ impl ::core::iter::IntoIterator for SidechainBlockHeaders {
         SidechainBlockHeadersIterator(self, 0, len)
     }
 }
-
 impl<'r> SidechainBlockHeadersReader<'r> {
     pub fn iter<'t>(&'t self) -> SidechainBlockHeadersReaderIterator<'t, 'r> {
         SidechainBlockHeadersReaderIterator(&self, 0, self.len())
     }
 }
-
 pub struct SidechainBlockHeadersReaderIterator<'t, 'r>(&'t SidechainBlockHeadersReader<'r>, usize, usize);
-
 impl<'t: 'r, 'r> ::core::iter::Iterator for SidechainBlockHeadersReaderIterator<'t, 'r> {
     type Item = BlockHeaderReader<'t>;
 
@@ -734,16 +675,13 @@ impl<'t: 'r, 'r> ::core::iter::Iterator for SidechainBlockHeadersReaderIterator<
         }
     }
 }
-
 impl<'t: 'r, 'r> ::core::iter::ExactSizeIterator for SidechainBlockHeadersReaderIterator<'t, 'r> {
     fn len(&self) -> usize {
         self.2 - self.1
     }
 }
-
 #[derive(Clone)]
 pub struct TaskCell(molecule::bytes::Bytes);
-
 impl ::core::fmt::LowerHex for TaskCell {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -753,13 +691,11 @@ impl ::core::fmt::LowerHex for TaskCell {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl ::core::fmt::Debug for TaskCell {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl ::core::fmt::Display for TaskCell {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
@@ -780,7 +716,6 @@ impl ::core::fmt::Display for TaskCell {
         write!(f, " }}")
     }
 }
-
 impl ::core::default::Default for TaskCell {
     fn default() -> Self {
         let v: Vec<u8> = vec![
@@ -793,7 +728,6 @@ impl ::core::default::Default for TaskCell {
         TaskCell::new_unchecked(v.into())
     }
 }
-
 impl TaskCell {
     pub const FIELD_COUNT: usize = 10;
 
@@ -895,7 +829,6 @@ impl TaskCell {
         TaskCellReader::new_unchecked(self.as_slice())
     }
 }
-
 impl molecule::prelude::Entity for TaskCell {
     type Builder = TaskCellBuilder;
 
@@ -939,10 +872,8 @@ impl molecule::prelude::Entity for TaskCell {
             .sidechain_block_header(self.sidechain_block_header())
     }
 }
-
 #[derive(Clone, Copy)]
 pub struct TaskCellReader<'r>(&'r [u8]);
-
 impl<'r> ::core::fmt::LowerHex for TaskCellReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -952,13 +883,11 @@ impl<'r> ::core::fmt::LowerHex for TaskCellReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl<'r> ::core::fmt::Debug for TaskCellReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl<'r> ::core::fmt::Display for TaskCellReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
@@ -979,7 +908,6 @@ impl<'r> ::core::fmt::Display for TaskCellReader<'r> {
         write!(f, " }}")
     }
 }
-
 impl<'r> TaskCellReader<'r> {
     pub const FIELD_COUNT: usize = 10;
 
@@ -1077,7 +1005,6 @@ impl<'r> TaskCellReader<'r> {
         }
     }
 }
-
 impl<'r> molecule::prelude::Reader<'r> for TaskCellReader<'r> {
     type Entity = TaskCell;
 
@@ -1145,7 +1072,6 @@ impl<'r> molecule::prelude::Reader<'r> for TaskCellReader<'r> {
         Ok(())
     }
 }
-
 #[derive(Debug, Default)]
 pub struct TaskCellBuilder {
     pub(crate) version: Uint8,
@@ -1159,7 +1085,6 @@ pub struct TaskCellBuilder {
     pub(crate) commit: CommittedHash,
     pub(crate) sidechain_block_header: SidechainBlockHeaders,
 }
-
 impl TaskCellBuilder {
     pub const FIELD_COUNT: usize = 10;
 
@@ -1213,7 +1138,6 @@ impl TaskCellBuilder {
         self
     }
 }
-
 impl molecule::prelude::Builder for TaskCellBuilder {
     type Entity = TaskCell;
 
@@ -1280,10 +1204,8 @@ impl molecule::prelude::Builder for TaskCellBuilder {
         TaskCell::new_unchecked(inner.into())
     }
 }
-
 #[derive(Clone)]
 pub struct TaskCellTypeArgs(molecule::bytes::Bytes);
-
 impl ::core::fmt::LowerHex for TaskCellTypeArgs {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -1293,13 +1215,11 @@ impl ::core::fmt::LowerHex for TaskCellTypeArgs {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl ::core::fmt::Debug for TaskCellTypeArgs {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl ::core::fmt::Display for TaskCellTypeArgs {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
@@ -1308,14 +1228,12 @@ impl ::core::fmt::Display for TaskCellTypeArgs {
         write!(f, " }}")
     }
 }
-
 impl ::core::default::Default for TaskCellTypeArgs {
     fn default() -> Self {
         let v: Vec<u8> = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         TaskCellTypeArgs::new_unchecked(v.into())
     }
 }
-
 impl TaskCellTypeArgs {
     pub const FIELD_COUNT: usize = 2;
     pub const FIELD_SIZES: [usize; 2] = [4, 20];
@@ -1333,7 +1251,6 @@ impl TaskCellTypeArgs {
         TaskCellTypeArgsReader::new_unchecked(self.as_slice())
     }
 }
-
 impl molecule::prelude::Entity for TaskCellTypeArgs {
     type Builder = TaskCellTypeArgsBuilder;
 
@@ -1369,10 +1286,8 @@ impl molecule::prelude::Entity for TaskCellTypeArgs {
             .checker_lock_arg(self.checker_lock_arg())
     }
 }
-
 #[derive(Clone, Copy)]
 pub struct TaskCellTypeArgsReader<'r>(&'r [u8]);
-
 impl<'r> ::core::fmt::LowerHex for TaskCellTypeArgsReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         use molecule::hex_string;
@@ -1382,13 +1297,11 @@ impl<'r> ::core::fmt::LowerHex for TaskCellTypeArgsReader<'r> {
         write!(f, "{}", hex_string(self.as_slice()))
     }
 }
-
 impl<'r> ::core::fmt::Debug for TaskCellTypeArgsReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{}({:#x})", Self::NAME, self)
     }
 }
-
 impl<'r> ::core::fmt::Display for TaskCellTypeArgsReader<'r> {
     fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         write!(f, "{} {{ ", Self::NAME)?;
@@ -1397,7 +1310,6 @@ impl<'r> ::core::fmt::Display for TaskCellTypeArgsReader<'r> {
         write!(f, " }}")
     }
 }
-
 impl<'r> TaskCellTypeArgsReader<'r> {
     pub const FIELD_COUNT: usize = 2;
     pub const FIELD_SIZES: [usize; 2] = [4, 20];
@@ -1411,7 +1323,6 @@ impl<'r> TaskCellTypeArgsReader<'r> {
         PubKeyHashReader::new_unchecked(&self.as_slice()[4..24])
     }
 }
-
 impl<'r> molecule::prelude::Reader<'r> for TaskCellTypeArgsReader<'r> {
     type Entity = TaskCellTypeArgs;
 
@@ -1438,13 +1349,11 @@ impl<'r> molecule::prelude::Reader<'r> for TaskCellTypeArgsReader<'r> {
         Ok(())
     }
 }
-
 #[derive(Debug, Default)]
 pub struct TaskCellTypeArgsBuilder {
     pub(crate) chain_id:         ChainId,
     pub(crate) checker_lock_arg: PubKeyHash,
 }
-
 impl TaskCellTypeArgsBuilder {
     pub const FIELD_COUNT: usize = 2;
     pub const FIELD_SIZES: [usize; 2] = [4, 20];
@@ -1460,7 +1369,6 @@ impl TaskCellTypeArgsBuilder {
         self
     }
 }
-
 impl molecule::prelude::Builder for TaskCellTypeArgsBuilder {
     type Entity = TaskCellTypeArgs;
 
