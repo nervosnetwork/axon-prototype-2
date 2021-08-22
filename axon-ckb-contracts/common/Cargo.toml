@@ -9,11 +9,11 @@ build = "build.rs"
 [build-dependencies]
 
 [dependencies]
-ckb-std = {version = "0.7.4",default-features = false }
+ckb-std = { version = "0.7.4", default-features = false }
 common-raw = { path = "../common-raw" }
 
 [features]
-default = ["ckb-std/ckb-types","ckb-std/allocator"]
+default = ["ckb-std/ckb-types", "ckb-std/allocator"]
 
 # the following *_gcc feature are exclusive
 test_gcc = []

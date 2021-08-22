@@ -1,15 +1,15 @@
-use crate::common::*;
-use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
-use crate::secp256k1::*;
 use ckb_tool::bytes::Bytes;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::packed::CellDep;
 use ckb_tool::ckb_types::prelude::*;
 
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs, SidechainStatus};
-
 use common_raw::cell::sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::witness::collator_shutdown_sidechain::CollatorShutdownSidechainWitness;
+
+use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
+use crate::secp256k1::*;
 
 const MAX_CYCLES: u64 = 10_000_000;
 

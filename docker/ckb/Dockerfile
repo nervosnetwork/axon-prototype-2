@@ -1,4 +1,4 @@
-FROM nervos/ckb:v0.42.0
+FROM nervos/ckb:v0.100.0-rc2
 
 ENV CKB_CHAIN=dev
 ENV BA_ARG=0x22c06bdc1eb37dd22a6e55af075f6285aaa45fe6

@@ -11,16 +11,21 @@ table SidechainConfigCell {
   checker_normal_count: Uint32,
   checker_threshold : Uint32,
   checker_total_count : Uint32,
+
   activated_checkers: PubKeyHashList,
   jailed_checkers: PubKeyHashList,
+
   refresh_punish_points: Uint32,
   refresh_punish_release_points: Uint32,
   refresh_punish_threshold: Uint32,
-  refresh_sidechain_height_interval: BlockHeight,
+  refresh_interval: Uint64,
+
+  shutdown_timeout: Uint64,
 
   check_data_size_limit: Uint128,
   check_fee_rate: Uint32,
   minimal_bond: Uint128,
+
   parallel_job_upper_bond: Uint8,
   parallel_job_maximal_height_range: BlockHeight,
 

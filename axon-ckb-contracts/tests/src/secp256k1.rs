@@ -1,9 +1,10 @@
-use crate::common::*;
-use crate::environment_builder::EnvironmentBuilder;
 use ckb_system_scripts::BUNDLED_CELL;
 use ckb_tool::ckb_crypto::secp::Privkey;
 use ckb_tool::ckb_hash::{blake2b_256, new_blake2b};
 use ckb_tool::ckb_types::{bytes::Bytes, core::TransactionView, packed, packed::*, prelude::*, H256};
+
+use crate::common::*;
+use crate::environment_builder::EnvironmentBuilder;
 
 const SIGNATURE_SIZE: usize = 65;
 

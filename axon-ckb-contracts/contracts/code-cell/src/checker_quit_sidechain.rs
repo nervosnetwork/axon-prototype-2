@@ -1,6 +1,7 @@
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
 
-use crate::{cell::*, common::*, error::Error};
 use common_raw::{
     cell::{
         checker_bond::{CheckerBondCell, CheckerBondCellLockArgs},
@@ -12,7 +13,9 @@ use common_raw::{
     witness::checker_quit_sidechain::CheckerQuitSidechainWitness,
     FromRaw,
 };
-use core::convert::TryFrom;
+
+use crate::{cell::*, common::*, error::Error};
+
 const STATE_DEP: CellOrigin = CellOrigin(5, Source::CellDep);
 
 const CONFIG_INPUT: CellOrigin = CellOrigin(1, Source::Input);

@@ -1,3 +1,5 @@
+use molecule::prelude::*;
+
 use crate::{
     common::*,
     molecule::{
@@ -7,7 +9,6 @@ use crate::{
     pattern::Pattern,
     FromRaw, Serialize,
 };
-use molecule::prelude::*;
 
 #[derive(Debug, Clone, PartialOrd, PartialEq)]
 pub struct AnyoneShutdownSidechainWitness {

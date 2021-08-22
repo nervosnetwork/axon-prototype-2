@@ -28,7 +28,7 @@ vector ChainIdList <ChainId>;
 array RandomSeed [byte; 32];
 array CommittedHash [byte; 32];
 
-vector String <byte>;
+vector MolString <byte>;
 
 option Uint8Opt (Uint8);
 option Uint16Opt (Uint16);

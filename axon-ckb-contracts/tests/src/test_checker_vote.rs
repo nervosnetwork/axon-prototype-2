@@ -1,6 +1,3 @@
-use crate::common::*;
-use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
-use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, packed::CellDep, prelude::*};
 
@@ -12,6 +9,10 @@ use common_raw::{
     },
     witness::checker_vote::CheckerVoteWitness,
 };
+
+use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
+use crate::secp256k1::*;
 
 const MAX_CYCLES: u64 = 10_000_000;
 

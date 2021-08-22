@@ -1,5 +1,6 @@
 use molecule::prelude::*;
 
+use crate::molecule::common::Uint64Reader;
 use crate::{
     common::*,
     molecule::{
@@ -79,10 +80,11 @@ pub struct SidechainConfigCell {
     pub activated_checkers:   Vec<PubKeyHash>,
     pub jailed_checkers:      Vec<PubKeyHash>,
 
-    pub refresh_punish_points:             u32,
-    pub refresh_punish_release_points:     u32,
-    pub refresh_punish_threshold:          u32,
-    pub refresh_sidechain_height_interval: BlockHeight,
+    pub refresh_punish_points:         u32,
+    pub refresh_punish_release_points: u32,
+    pub refresh_punish_threshold:      u32,
+    pub refresh_interval:              u64,
+    pub shutdown_timeout:              u64,
 
     pub check_data_size_limit: u128,
     pub check_fee_rate: u32,
@@ -131,7 +133,8 @@ impl FromRaw for SidechainConfigCell {
         let refresh_punish_points = u32::from_raw(reader.refresh_punish_points().raw_data())?;
         let refresh_punish_release_points = u32::from_raw(reader.refresh_punish_release_points().raw_data())?;
         let refresh_punish_threshold = u32::from_raw(reader.refresh_punish_threshold().raw_data())?;
-        let refresh_sidechain_height_interval = BlockHeight::from_raw(reader.refresh_sidechain_height_interval().raw_data())?;
+        let refresh_interval = u64::from_raw(reader.refresh_interval().raw_data())?;
+        let shutdown_timeout = u64::from_raw(reader.shutdown_timeout().raw_data())?;
 
         let check_data_size_limit = u128::from_raw(reader.check_data_size_limit().raw_data())?;
         let check_fee_rate = u32::from_raw(reader.check_fee_rate().raw_data())?;
@@ -164,7 +167,8 @@ impl FromRaw for SidechainConfigCell {
             refresh_punish_points,
             refresh_punish_release_points,
             refresh_punish_threshold,
-            refresh_sidechain_height_interval,
+            refresh_interval,
+            shutdown_timeout,
 
             check_data_size_limit,
             check_fee_rate,
@@ -207,8 +211,8 @@ impl Serialize for SidechainConfigCell {
         let refresh_punish_points = Uint32Reader::new_unchecked(&self.refresh_punish_points.serialize()).to_entity();
         let refresh_punish_release_points = Uint32Reader::new_unchecked(&self.refresh_punish_release_points.serialize()).to_entity();
         let refresh_punish_threshold = Uint32Reader::new_unchecked(&self.refresh_punish_threshold.serialize()).to_entity();
-        let refresh_sidechain_height_interval =
-            BlockHeightReader::new_unchecked(&self.refresh_sidechain_height_interval.serialize()).to_entity();
+        let refresh_interval = Uint64Reader::new_unchecked(&self.refresh_interval.serialize()).to_entity();
+        let shutdown_timeout = Uint64Reader::new_unchecked(&self.shutdown_timeout.serialize()).to_entity();
 
         let check_data_size_limit = Uint128Reader::new_unchecked(&self.check_data_size_limit.serialize()).to_entity();
         let check_fee_rate = Uint32Reader::new_unchecked(&self.check_fee_rate.serialize()).to_entity();
@@ -235,7 +239,8 @@ impl Serialize for SidechainConfigCell {
             .refresh_punish_points(refresh_punish_points)
             .refresh_punish_release_points(refresh_punish_release_points)
             .refresh_punish_threshold(refresh_punish_threshold)
-            .refresh_sidechain_height_interval(refresh_sidechain_height_interval)
+            .refresh_interval(refresh_interval)
+            .shutdown_timeout(shutdown_timeout)
             .check_data_size_limit(check_data_size_limit)
             .check_fee_rate(check_fee_rate)
             .minimal_bond(minimal_bond)

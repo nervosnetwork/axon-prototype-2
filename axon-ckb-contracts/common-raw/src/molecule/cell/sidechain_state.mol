@@ -28,7 +28,6 @@ table SidechainStateCell {
     version: Uint8,
     submit_sidechain_block_height: BlockHeight,
     waiting_jobs: Jobs,
-    confirmed_jobs: Jobs,
     random_seed: RandomSeed,
     random_offset: Uint8,
     random_commit: CommittedCheckerInfos,

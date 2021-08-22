@@ -1,8 +1,6 @@
-use crate::common::*;
-use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
-use crate::secp256k1::*;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::{bytes::Bytes, packed::*, prelude::*};
+
 use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, PunishedChecker, SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::common::PubKeyHash;
 use common_raw::{
@@ -12,6 +10,10 @@ use common_raw::{
     },
     witness::anyone_refresh_task::AnyoneRefreshTaskWitness,
 };
+
+use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
+use crate::secp256k1::*;
 
 const MAX_CYCLES: u64 = 10_000_000;
 const PUNISH_THREAD: u32 = 1000;

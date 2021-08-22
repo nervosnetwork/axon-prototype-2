@@ -1,5 +1,7 @@
-use crate::{cell::*, common::*, error::Error};
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
+
 use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, PunishedChecker};
 use common_raw::cell::task::TaskStatus;
 use common_raw::{
@@ -12,7 +14,8 @@ use common_raw::{
     witness::anyone_refresh_task::AnyoneRefreshTaskWitness,
     FromRaw,
 };
-use core::convert::TryFrom;
+
+use crate::{cell::*, common::*, error::Error};
 
 const CONFIG_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const CONFIG_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
@@ -32,6 +35,7 @@ pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
 
     */
     is_anyone_refresh_task()?;
+    let timestamp = require_header_dep()?;
 
     let witness = AnyoneRefreshTaskWitness::from_raw(raw_witness).ok_or(Error::Encoding)?;
 
@@ -84,7 +88,14 @@ pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
         let mut task_res = task_input.clone();
         let mut task_res_type_args = task_input_type_args.clone();
 
-        check_confirm_interval_and_update(&mut task_res, &mut task_res_type_args, &config_input, &state_res, &mut seed)?;
+        check_confirm_interval_and_update(
+            &mut task_res,
+            &mut task_res_type_args,
+            &config_input,
+            &state_res,
+            &mut seed,
+            timestamp,
+        )?;
 
         if u32::try_from(task_input_type_args.chain_id).or(Err(Error::Encoding))? != witness.chain_id
             || task_res != task_output
@@ -157,7 +168,6 @@ pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
 
 fn is_anyone_refresh_task() -> Result<(), Error> {
     let global = check_global_cell()?;
-
     if is_cell_count_smaller(3, Source::Input) || is_cell_count_smaller(3, Source::Output) {
         return Err(Error::CellNumberMismatch);
     }
@@ -181,8 +191,9 @@ pub fn check_confirm_interval_and_update(
     task: &mut TaskCell,
     task_type_args: &mut TaskCellTypeArgs,
     config: &SidechainConfigCell,
-    state: &SidechainStateCell,
+    _state: &SidechainStateCell,
     seed: &mut [u8; 32],
+    timestamp: u64,
 ) -> Result<(), Error> {
     //compute index of chosen checker and update seed for next task in this tx;
     *seed = Blake2b::calculate(seed);
@@ -194,28 +205,12 @@ pub fn check_confirm_interval_and_update(
     let next_checker_lock_arg = config.activated_checkers.get(index).ok_or(Error::Encoding)?;
 
     // refresh limit reached, then anyone can check this task.
-    if task.refresh_sidechain_height + config.refresh_sidechain_height_interval
-        > u128::try_from(config.parallel_job_upper_bond).or(Err(Error::Encoding))?
-    {
-        return Err(Error::Wrong);
-    }
-
-    // count the number of confirmed jobs which height greater than this task.
-    let confirm_count_before_task = u128::try_from(
-        state
-            .confirmed_jobs
-            .iter()
-            .filter(|&job| job.to > task.sidechain_block_height_to)
-            .count(),
-    )
-    .or(Err(Error::Encoding))?;
-
-    if confirm_count_before_task < task.refresh_sidechain_height {
+    if task.refresh_timestamp < timestamp {
         return Err(Error::Wrong);
     }
 
     task_type_args.checker_lock_arg = *next_checker_lock_arg;
-    task.refresh_sidechain_height += config.refresh_sidechain_height_interval;
+    task.refresh_timestamp = timestamp + config.refresh_interval;
 
     Ok(())
 }

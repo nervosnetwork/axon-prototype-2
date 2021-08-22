@@ -1,5 +1,7 @@
-use crate::{cell::*, common::*, error::Error};
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
+
 use common_raw::cell::muse_token::MuseTokenCell;
 use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
@@ -12,7 +14,9 @@ use common_raw::{
     witness::collator_publish_task::CollatorPublishTaskWitness,
     FromRaw,
 };
-use core::convert::TryFrom;
+
+use crate::{cell::*, common::*, error::Error};
+
 const SIDECHAIN_CONFIG_DEP: CellOrigin = CellOrigin(5, Source::CellDep);
 const SIDECHAIN_BOND_DEP: CellOrigin = CellOrigin(6, Source::CellDep);
 
@@ -22,6 +26,7 @@ const TOKEN_INPUT: CellOrigin = CellOrigin(3, Source::Input);
 
 const SIDECHAIN_STATE_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const SIDECHAIN_FEE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
+
 pub fn is_collator_publish_task(sidechain_config_data: &SidechainConfigCell) -> Result<(), Error> {
     /*
     CollatorPublishTask,
@@ -117,8 +122,7 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
     });
     sidechain_state_res.random_offset += 1;
 
-    let mut unsubmitted_jobs = sidechain_state_input.waiting_jobs.clone();
-    unsubmitted_jobs.extend(sidechain_state_input.confirmed_jobs.clone());
+    let unsubmitted_jobs = sidechain_state_input.waiting_jobs.clone();
     match unsubmitted_jobs.iter().max_by(|x, y| x.from.cmp(&y.from)) {
         Some(job) => {
             if job.to > witness.from_height {

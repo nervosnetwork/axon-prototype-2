@@ -1,13 +1,15 @@
 use crate::common::{ChainId, PubKeyHash};
+use core::convert::TryFrom;
+use core::result::Result;
+
+use molecule::prelude::*;
+
 use crate::molecule::cell::checker_info::CheckerInfoCellTypeArgsBuilder;
 use crate::molecule::cell::checker_info::{
     CheckerInfoCellBuilder, CheckerInfoCellReader, CheckerInfoCellTypeArgsReader, CheckerInfoStatusReader,
 };
 use crate::molecule::common::{ChainIdReader, MolStringBuilder, PubKeyHashReader, Uint128Reader};
 use crate::{FromRaw, Serialize};
-use core::convert::TryFrom;
-use core::result::Result;
-use molecule::prelude::*;
 
 /**
     Checker Info Cell

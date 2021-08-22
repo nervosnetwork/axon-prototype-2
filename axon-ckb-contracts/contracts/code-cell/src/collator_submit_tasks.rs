@@ -1,4 +1,7 @@
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
+
 use common_raw::{
     cell::{
         code::CodeCell,
@@ -11,7 +14,6 @@ use common_raw::{
     witness::collator_submit_tasks::CollatorSubmitTasksWitness,
     FromRaw,
 };
-use core::convert::TryFrom;
 
 use crate::{cell::*, common::*, error::Error};
 
@@ -393,7 +395,7 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
         task_res.status = task_first.status;
         task_res.commit = task_first.commit;
         task_res.reveal = task_first.reveal;
-        task_res.refresh_sidechain_height = task_first.refresh_sidechain_height;
+        task_res.refresh_timestamp = task_first.refresh_timestamp;
 
         task_res_type_args.checker_lock_arg = task_first_type_args.checker_lock_arg;
 

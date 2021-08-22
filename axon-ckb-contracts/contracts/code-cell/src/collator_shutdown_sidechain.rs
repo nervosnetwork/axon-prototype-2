@@ -1,5 +1,7 @@
-use crate::{cell::*, common::*, error::Error};
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
+
 use common_raw::{
     cell::{
         code::CodeCell,
@@ -9,7 +11,8 @@ use common_raw::{
     witness::collator_shutdown_sidechain::CollatorShutdownSidechainWitness,
     FromRaw,
 };
-use core::convert::TryFrom;
+
+use crate::{cell::*, common::*, error::Error};
 
 const SIDECHAIN_STATE_DEP: CellOrigin = CellOrigin(5, Source::CellDep);
 
@@ -40,10 +43,7 @@ pub fn collator_shutdown_sidechain(raw_witness: &[u8], signer: [u8; 20]) -> Resu
         SidechainConfigCellTypeArgs: SIDECHAIN_CONFIG_OUTPUT,
         SidechainConfigCell: SIDECHAIN_CONFIG_OUTPUT,
     );
-    if !state_dep.confirmed_jobs.is_empty()
-        || !state_dep.waiting_jobs.is_empty()
-        || state_dep_type_args.chain_id != u32::try_from(witness.chain_id).or(Err(Error::Encoding))?
-    {
+    if !state_dep.waiting_jobs.is_empty() || state_dep_type_args.chain_id != u32::try_from(witness.chain_id).or(Err(Error::Encoding))? {
         return Err(Error::SidechainStateMismatch);
     }
 

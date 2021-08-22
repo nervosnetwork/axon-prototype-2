@@ -1,7 +1,9 @@
-use super::Loader;
-use crate::common::*;
 use ckb_testtool::context::Context;
 use ckb_tool::ckb_types::{bytes::Bytes, core::TransactionBuilder, packed::*, prelude::*};
+
+use crate::common::*;
+
+use super::Loader;
 
 const MAX_CYCLES: u64 = 10_000_000;
 

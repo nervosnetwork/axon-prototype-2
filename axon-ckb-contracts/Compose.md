@@ -1,6 +1,7 @@
 # prcedure of composing and populating cells
 
 ## 1 Global Config Cell
+
 build merely empty global config cell and deploy it by type id.
 
 leave all data field to blank except admin_public_key

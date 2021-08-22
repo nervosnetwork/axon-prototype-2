@@ -1,9 +1,12 @@
-use super::Loader;
-use crate::common::*;
-use crate::secp256k1::*;
 use ckb_testtool::context::Context;
 use ckb_tool::ckb_types::{bytes::Bytes, core, packed, packed::*, prelude::*};
+
 use common_raw::cell::global_config::GlobalConfigCellData;
+
+use crate::common::*;
+use crate::secp256k1::*;
+
+use super::Loader;
 
 pub struct EnvironmentBuilder {
     pub context: Context,

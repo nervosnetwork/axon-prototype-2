@@ -77,8 +77,7 @@ public class Tools {
                         new SearchKey(
                                 new Script(secp256k1CodeHash, lockArgs, Script.TYPE),
                                 "lock",
-                                new SearchKey.Filter(null, null, outputDataLenRange, null, null)
-                        ),
+                                new SearchKey.Filter(null, null, outputDataLenRange, null, null)),
                         "asc",
                         BigInteger.valueOf(100),
                         "0x");
