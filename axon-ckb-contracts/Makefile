@@ -21,6 +21,10 @@ build-aggron:
 	cargo fmt
 	capsule build --env gcc_typehash=aggron_gcc
 
+build-custom:
+	cargo fmt
+	capsule build --env gcc_typehash=custom_gcc
+
 clean:
 	cargo clean
 	capsule clean

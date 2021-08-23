@@ -12,7 +12,7 @@ fn main() {
 
     let p = env::var_os("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR error?");
 
-    let read_file_path = Path::new(&p).join("..")/*.join("target")*/.join("global_config_type_hash.example");
+    let read_file_path = Path::new(&p).join(".")/*.join("target")*/.join("global_config_type_hash.example");
 
     //let a = read_file_path.as_path().to_str().unwrap().to_string();
 
