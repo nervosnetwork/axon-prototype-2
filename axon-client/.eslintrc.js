@@ -15,6 +15,7 @@ module.exports = {
       './axon-client-checker/tsconfig.json',
       './axon-client-collator/tsconfig.json',
       './axon-client-common/tsconfig.json',
+      './axon-client-deploy/tsconfig.json',
     ],
   },
   plugins: ['@typescript-eslint', 'import', 'prettier', 'deprecation'],
