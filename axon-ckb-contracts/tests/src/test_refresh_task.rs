@@ -1,5 +1,5 @@
 use ckb_tool::ckb_crypto::secp::Generator;
-use ckb_tool::ckb_types::{bytes::Bytes, packed::*, prelude::*};
+use ckb_tool::ckb_types::{bytes::Bytes, core, packed::*, prelude::*};
 
 use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, PunishedChecker, SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::common::PubKeyHash;
@@ -18,6 +18,13 @@ use crate::secp256k1::*;
 const MAX_CYCLES: u64 = 10_000_000;
 const PUNISH_THREAD: u32 = 1000;
 
+fn with_time_header(mut builder: EnvironmentBuilder, timestamp: u64) -> EnvironmentBuilder {
+    let header = core::HeaderBuilder::default().timestamp(timestamp.pack()).build();
+    builder.context.insert_header(header.clone());
+    let builder = builder.header_dep(header.hash());
+    builder
+}
+
 #[test]
 fn test_success() {
     // generate key pair
@@ -27,7 +34,7 @@ fn test_success() {
 
     // deploy contract
     let (
-        mut builder,
+        builder,
         AxonScripts {
             always_success_code,
             always_success_script: always_success,
@@ -35,6 +42,8 @@ fn test_success() {
             ..
         },
     ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
+    //prepare headers
+    let mut builder = with_time_header(builder, 1100);
 
     // prepare scripts
     let config_type_args = SidechainConfigCellTypeArgs::default();
@@ -65,6 +74,7 @@ fn test_success() {
     let mut config_cell_data = SidechainConfigCell::default();
     config_cell_data.activated_checkers.push(PubKeyHash::default());
     config_cell_data.refresh_punish_threshold = PUNISH_THREAD;
+    config_cell_data.refresh_interval = 90;
     let config_cell_outpoint = builder.context.create_cell(
         new_type_cell_output(1000, &always_success, &config_script),
         config_cell_data.serialize(),
@@ -89,11 +99,12 @@ fn test_success() {
     let builder = builder.input(task_cell_input);
 
     // prepare outputs
-    let task_cell_data = TaskCell::default();
-
+    let mut task_cell_data = TaskCell::default();
+    task_cell_data.refresh_timestamp = 1190;
     let mut config_cell_data = SidechainConfigCell::default();
     config_cell_data.activated_checkers.push(PubKeyHash::default());
     config_cell_data.refresh_punish_threshold = PUNISH_THREAD;
+    config_cell_data.refresh_interval = 90;
 
     let mut state_cell_output_data = SidechainStateCell::default();
     state_cell_output_data.punish_checkers.push(PunishedChecker::default());
