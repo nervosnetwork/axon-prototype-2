@@ -216,7 +216,7 @@ export async function waitTx(txHash: CKBComponents.Hash, rpc: Rpc) {
   }
 }
 
-export function sleep(time: number): Promise<NodeJS.Timeout> {
+export function sleep(time: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
 

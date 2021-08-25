@@ -19,7 +19,8 @@
     "packages": [
       "axon-client-checker",
       "axon-client-collator",
-      "axon-client-common"
+      "axon-client-common",
+      "axon-client-deploy"
     ]
   },
   "devDependencies": {
