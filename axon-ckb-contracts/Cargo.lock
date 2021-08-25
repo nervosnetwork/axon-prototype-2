@@ -851,7 +851,6 @@ version = "0.1.0"
 dependencies = [
  "bit-vec 0.6.3",
  "blake2b-ref 0.3.0",
- "ckb-standalone-types",
  "ckb-std",
  "common",
  "common-raw",
