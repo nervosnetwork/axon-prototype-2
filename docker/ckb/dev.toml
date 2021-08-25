@@ -138,5 +138,14 @@ permanent_difficulty_in_dummy = true
 # 1GB is quite enough
 max_block_bytes = 1_000_000_000
 
+[params.hardfork]
+rfc_0221 = 0
+rfc_0222 = 0
+rfc_0223 = 0
+rfc_0224 = 0
+rfc_0232 = 0
+rfc_0240 = 0
+
+
 [pow]
 func = "Dummy"

@@ -1,8 +1,6 @@
-use crate::common::*;
-use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
-use crate::secp256k1::*;
 use ckb_tool::ckb_types::prelude::*;
 use ckb_tool::{bytes::Bytes, ckb_crypto::secp::Generator, ckb_types::packed::CellInput};
+
 use common_raw::{
     cell::{
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
@@ -13,6 +11,11 @@ use common_raw::{
     common::*,
     witness::collator_submit_tasks::{CollatorSubmitTasksWitness, ExistedCommittedCheckerInfo},
 };
+
+use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
+use crate::secp256k1::*;
+
 const MAX_CYCLES: u64 = 10_000_000;
 
 const COMMIT_THRESHOLD: u32 = 4;

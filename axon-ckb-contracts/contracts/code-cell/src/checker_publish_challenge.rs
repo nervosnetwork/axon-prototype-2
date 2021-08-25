@@ -1,6 +1,6 @@
-use crate::{cell::*, common::*, error::Error};
-use ckb_std::ckb_constants::Source;
 use core::convert::TryFrom;
+
+use ckb_std::ckb_constants::Source;
 
 use common_raw::{
     cell::{
@@ -12,6 +12,8 @@ use common_raw::{
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
     FromRaw,
 };
+
+use crate::{cell::*, common::*, error::Error};
 
 const CHECKER_INFO_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const TASK_INPUT: CellOrigin = CellOrigin(2, Source::Input);

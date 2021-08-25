@@ -1,5 +1,3 @@
-use crate::error::Error;
-
 use ckb_std::ckb_constants::Source;
 use ckb_std::high_level::{load_cell_data, load_cell_lock, load_cell_type};
 
@@ -19,6 +17,8 @@ use common_raw::{
     },
     FromRaw,
 };
+
+use crate::error::Error;
 
 pub const SUDT_CODEHASH: [u8; 32] = [
     102, 2, 235, 138, 43, 3, 201, 143, 225, 190, 198, 89, 72, 26, 48, 200, 129, 239, 212, 37, 141, 23, 251, 183, 128, 147, 118, 98, 227,
@@ -42,14 +42,23 @@ pub trait LoadableCell {
 }
 
 impl LoadableCell for CheckerBondCell {}
+
 impl LoadableCell for CheckerInfoCell {}
+
 impl LoadableCell for GlobalConfigCellData {}
+
 impl LoadableCell for MuseTokenCell {}
+
 impl LoadableCell for SidechainBondCell {}
+
 impl LoadableCell for SidechainConfigCell {}
+
 impl LoadableCell for SidechainFeeCell {}
+
 impl LoadableCell for SidechainStateCell {}
+
 impl LoadableCell for SudtTokenCell {}
+
 impl LoadableCell for TaskCell {}
 
 pub trait LoadableLockArgs {
@@ -64,8 +73,11 @@ pub trait LoadableLockArgs {
 }
 
 impl LoadableLockArgs for CheckerBondCellLockArgs {}
+
 impl LoadableLockArgs for CodeCellLockArgs {}
+
 impl LoadableLockArgs for SidechainBondCellLockArgs {}
+
 impl LoadableLockArgs for SidechainFeeCellLockArgs {}
 
 pub trait LoadableTypeArgs {
@@ -80,8 +92,11 @@ pub trait LoadableTypeArgs {
 }
 
 impl LoadableTypeArgs for CheckerInfoCellTypeArgs {}
+
 impl LoadableTypeArgs for SidechainConfigCellTypeArgs {}
+
 impl LoadableTypeArgs for SidechainStateCellTypeArgs {}
+
 impl LoadableTypeArgs for TaskCellTypeArgs {}
 
 #[macro_export]
@@ -218,6 +233,7 @@ pub trait TypedSudtCell {
 }
 
 impl TypedSudtCell for MuseTokenCell {}
+
 impl TypedSudtCell for SudtTokenCell {}
 
 pub trait LockedTypedSudtCell {

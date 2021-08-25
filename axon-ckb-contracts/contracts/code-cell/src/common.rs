@@ -1,9 +1,10 @@
-use crate::{cell::CellOrigin, error::Error};
-
 use ckb_std::ckb_constants::Source;
-use ckb_std::high_level::load_cell_capacity;
+use ckb_std::high_level::{load_cell_capacity, load_header};
 
 use common_raw::cell::global_config::GlobalConfigCellData;
+use common_raw::FromRaw;
+
+use crate::{cell::CellOrigin, error::Error};
 
 pub const CODE_INPUT: CellOrigin = CellOrigin(0, Source::Input);
 pub const CODE_OUTPUT: CellOrigin = CellOrigin(0, Source::Output);
@@ -31,6 +32,13 @@ macro_rules! check_cells {
 
 pub fn check_global_cell() -> Result<GlobalConfigCellData, Error> {
     common::check_global_cell().ok_or(Error::GlobalConfigMissed)
+}
+
+pub fn require_header_dep() -> Result<u64, Error> {
+    let header = load_header(0, Source::HeaderDep).map_err(|_| Error::MissingHeader)?;
+    let raw_header = header.raw();
+
+    u64::from_raw(raw_header.timestamp().as_reader().raw_data()).ok_or(Error::MissingHeader)
 }
 
 pub struct Blake2b {

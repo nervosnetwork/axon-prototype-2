@@ -1,11 +1,9 @@
-use crate::common::*;
-use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
-use crate::secp256k1::*;
 use ckb_tool::{
     bytes::Bytes,
     ckb_crypto::secp::Generator,
     ckb_types::{packed::CellDep, prelude::*},
 };
+
 use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
@@ -14,6 +12,10 @@ use common_raw::{
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
 };
+
+use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
+use crate::secp256k1::*;
 
 const MAX_CYCLES: u64 = 10_000_000;
 

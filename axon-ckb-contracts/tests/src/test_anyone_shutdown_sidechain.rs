@@ -1,14 +1,10 @@
-use crate::{
-    common::*,
-    environment_builder::{AxonScripts, EnvironmentBuilder},
-    secp256k1::*,
-};
 use ckb_tool::{
     bytes::Bytes,
     ckb_crypto::secp::Generator,
     ckb_types::packed::{CellInput, OutPoint, Script},
     ckb_types::prelude::*,
 };
+
 use common_raw::{
     cell::{
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs, SidechainStatus},
@@ -17,6 +13,12 @@ use common_raw::{
     },
     common::*,
     witness::anyone_shutdown_sidechain::AnyoneShutdownSidechainWitness,
+};
+
+use crate::{
+    common::*,
+    environment_builder::{AxonScripts, EnvironmentBuilder},
+    secp256k1::*,
 };
 
 const MAX_CYCLES: u64 = 10_000_000;

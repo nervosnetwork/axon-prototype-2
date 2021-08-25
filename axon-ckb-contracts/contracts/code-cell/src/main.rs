@@ -10,6 +10,8 @@
 #![feature(alloc_error_handler)]
 #![feature(panic_info_message)]
 
+use ckb_std::{debug, default_alloc};
+
 // define modules
 #[macro_use]
 mod cell;
@@ -31,8 +33,6 @@ mod collator_publish_task;
 mod collator_shutdown_sidechain;
 mod collator_submit_tasks;
 mod collator_unlock_bond;
-
-use ckb_std::{debug, default_alloc};
 
 ckb_std::entry!(program_entry);
 default_alloc!();

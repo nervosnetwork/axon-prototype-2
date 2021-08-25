@@ -1,3 +1,5 @@
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
 
 use common_raw::{
@@ -12,7 +14,6 @@ use common_raw::{
     witness::collator_unlock_bond::CollatorUnlockBondWitness,
     FromRaw,
 };
-use core::convert::TryFrom;
 
 use crate::{cell::*, common::*, error::Error};
 

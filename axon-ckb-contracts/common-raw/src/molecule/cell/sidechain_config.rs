@@ -220,12 +220,8 @@ impl ::core::fmt::Display for SidechainConfigCell {
         write!(f, ", {}: {}", "refresh_punish_points", self.refresh_punish_points())?;
         write!(f, ", {}: {}", "refresh_punish_release_points", self.refresh_punish_release_points())?;
         write!(f, ", {}: {}", "refresh_punish_threshold", self.refresh_punish_threshold())?;
-        write!(
-            f,
-            ", {}: {}",
-            "refresh_sidechain_height_interval",
-            self.refresh_sidechain_height_interval()
-        )?;
+        write!(f, ", {}: {}", "refresh_interval", self.refresh_interval())?;
+        write!(f, ", {}: {}", "shutdown_timeout", self.shutdown_timeout())?;
         write!(f, ", {}: {}", "check_data_size_limit", self.check_data_size_limit())?;
         write!(f, ", {}: {}", "check_fee_rate", self.check_fee_rate())?;
         write!(f, ", {}: {}", "minimal_bond", self.minimal_bond())?;
@@ -250,19 +246,19 @@ impl ::core::fmt::Display for SidechainConfigCell {
 impl ::core::default::Default for SidechainConfigCell {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            15, 1, 0, 0, 88, 0, 0, 0, 89, 0, 0, 0, 93, 0, 0, 0, 97, 0, 0, 0, 101, 0, 0, 0, 105, 0, 0, 0, 109, 0, 0, 0, 113, 0, 0, 0, 117,
-            0, 0, 0, 121, 0, 0, 0, 125, 0, 0, 0, 129, 0, 0, 0, 145, 0, 0, 0, 161, 0, 0, 0, 165, 0, 0, 0, 181, 0, 0, 0, 182, 0, 0, 0, 198,
-            0, 0, 0, 218, 0, 0, 0, 238, 0, 0, 0, 14, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            19, 1, 0, 0, 92, 0, 0, 0, 93, 0, 0, 0, 97, 0, 0, 0, 101, 0, 0, 0, 105, 0, 0, 0, 109, 0, 0, 0, 113, 0, 0, 0, 117, 0, 0, 0, 121,
+            0, 0, 0, 125, 0, 0, 0, 129, 0, 0, 0, 133, 0, 0, 0, 141, 0, 0, 0, 149, 0, 0, 0, 165, 0, 0, 0, 169, 0, 0, 0, 185, 0, 0, 0, 186,
+            0, 0, 0, 202, 0, 0, 0, 222, 0, 0, 0, 242, 0, 0, 0, 18, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         SidechainConfigCell::new_unchecked(v.into())
     }
 }
 impl SidechainConfigCell {
-    pub const FIELD_COUNT: usize = 21;
+    pub const FIELD_COUNT: usize = 22;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -361,74 +357,81 @@ impl SidechainConfigCell {
         Uint32::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn refresh_sidechain_height_interval(&self) -> BlockHeight {
+    pub fn refresh_interval(&self) -> Uint64 {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[48..]) as usize;
         let end = molecule::unpack_number(&slice[52..]) as usize;
-        BlockHeight::new_unchecked(self.0.slice(start..end))
+        Uint64::new_unchecked(self.0.slice(start..end))
+    }
+
+    pub fn shutdown_timeout(&self) -> Uint64 {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[52..]) as usize;
+        let end = molecule::unpack_number(&slice[56..]) as usize;
+        Uint64::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn check_data_size_limit(&self) -> Uint128 {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[52..]) as usize;
-        let end = molecule::unpack_number(&slice[56..]) as usize;
+        let start = molecule::unpack_number(&slice[56..]) as usize;
+        let end = molecule::unpack_number(&slice[60..]) as usize;
         Uint128::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn check_fee_rate(&self) -> Uint32 {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[56..]) as usize;
-        let end = molecule::unpack_number(&slice[60..]) as usize;
+        let start = molecule::unpack_number(&slice[60..]) as usize;
+        let end = molecule::unpack_number(&slice[64..]) as usize;
         Uint32::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn minimal_bond(&self) -> Uint128 {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[60..]) as usize;
-        let end = molecule::unpack_number(&slice[64..]) as usize;
+        let start = molecule::unpack_number(&slice[64..]) as usize;
+        let end = molecule::unpack_number(&slice[68..]) as usize;
         Uint128::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn parallel_job_upper_bond(&self) -> Uint8 {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[64..]) as usize;
-        let end = molecule::unpack_number(&slice[68..]) as usize;
+        let start = molecule::unpack_number(&slice[68..]) as usize;
+        let end = molecule::unpack_number(&slice[72..]) as usize;
         Uint8::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn parallel_job_maximal_height_range(&self) -> BlockHeight {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[68..]) as usize;
-        let end = molecule::unpack_number(&slice[72..]) as usize;
+        let start = molecule::unpack_number(&slice[72..]) as usize;
+        let end = molecule::unpack_number(&slice[76..]) as usize;
         BlockHeight::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn admin_lock_arg(&self) -> PubKeyHash {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[72..]) as usize;
-        let end = molecule::unpack_number(&slice[76..]) as usize;
-        PubKeyHash::new_unchecked(self.0.slice(start..end))
-    }
-
-    pub fn collator_lock_arg(&self) -> PubKeyHash {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[76..]) as usize;
         let end = molecule::unpack_number(&slice[80..]) as usize;
         PubKeyHash::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn bond_sudt_typescript_codehash(&self) -> CodeHash {
+    pub fn collator_lock_arg(&self) -> PubKeyHash {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[80..]) as usize;
         let end = molecule::unpack_number(&slice[84..]) as usize;
+        PubKeyHash::new_unchecked(self.0.slice(start..end))
+    }
+
+    pub fn bond_sudt_typescript_codehash(&self) -> CodeHash {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[84..]) as usize;
+        let end = molecule::unpack_number(&slice[88..]) as usize;
         CodeHash::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn bond_sudt_typescript_hashtype(&self) -> HashType {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[84..]) as usize;
+        let start = molecule::unpack_number(&slice[88..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[88..]) as usize;
+            let end = molecule::unpack_number(&slice[92..]) as usize;
             HashType::new_unchecked(self.0.slice(start..end))
         } else {
             HashType::new_unchecked(self.0.slice(start..))
@@ -481,7 +484,8 @@ impl molecule::prelude::Entity for SidechainConfigCell {
             .refresh_punish_points(self.refresh_punish_points())
             .refresh_punish_release_points(self.refresh_punish_release_points())
             .refresh_punish_threshold(self.refresh_punish_threshold())
-            .refresh_sidechain_height_interval(self.refresh_sidechain_height_interval())
+            .refresh_interval(self.refresh_interval())
+            .shutdown_timeout(self.shutdown_timeout())
             .check_data_size_limit(self.check_data_size_limit())
             .check_fee_rate(self.check_fee_rate())
             .minimal_bond(self.minimal_bond())
@@ -523,12 +527,8 @@ impl<'r> ::core::fmt::Display for SidechainConfigCellReader<'r> {
         write!(f, ", {}: {}", "refresh_punish_points", self.refresh_punish_points())?;
         write!(f, ", {}: {}", "refresh_punish_release_points", self.refresh_punish_release_points())?;
         write!(f, ", {}: {}", "refresh_punish_threshold", self.refresh_punish_threshold())?;
-        write!(
-            f,
-            ", {}: {}",
-            "refresh_sidechain_height_interval",
-            self.refresh_sidechain_height_interval()
-        )?;
+        write!(f, ", {}: {}", "refresh_interval", self.refresh_interval())?;
+        write!(f, ", {}: {}", "shutdown_timeout", self.shutdown_timeout())?;
         write!(f, ", {}: {}", "check_data_size_limit", self.check_data_size_limit())?;
         write!(f, ", {}: {}", "check_fee_rate", self.check_fee_rate())?;
         write!(f, ", {}: {}", "minimal_bond", self.minimal_bond())?;
@@ -551,7 +551,7 @@ impl<'r> ::core::fmt::Display for SidechainConfigCellReader<'r> {
     }
 }
 impl<'r> SidechainConfigCellReader<'r> {
-    pub const FIELD_COUNT: usize = 21;
+    pub const FIELD_COUNT: usize = 22;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -650,74 +650,81 @@ impl<'r> SidechainConfigCellReader<'r> {
         Uint32Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn refresh_sidechain_height_interval(&self) -> BlockHeightReader<'r> {
+    pub fn refresh_interval(&self) -> Uint64Reader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[48..]) as usize;
         let end = molecule::unpack_number(&slice[52..]) as usize;
-        BlockHeightReader::new_unchecked(&self.as_slice()[start..end])
+        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
+    }
+
+    pub fn shutdown_timeout(&self) -> Uint64Reader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[52..]) as usize;
+        let end = molecule::unpack_number(&slice[56..]) as usize;
+        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn check_data_size_limit(&self) -> Uint128Reader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[52..]) as usize;
-        let end = molecule::unpack_number(&slice[56..]) as usize;
+        let start = molecule::unpack_number(&slice[56..]) as usize;
+        let end = molecule::unpack_number(&slice[60..]) as usize;
         Uint128Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn check_fee_rate(&self) -> Uint32Reader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[56..]) as usize;
-        let end = molecule::unpack_number(&slice[60..]) as usize;
+        let start = molecule::unpack_number(&slice[60..]) as usize;
+        let end = molecule::unpack_number(&slice[64..]) as usize;
         Uint32Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn minimal_bond(&self) -> Uint128Reader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[60..]) as usize;
-        let end = molecule::unpack_number(&slice[64..]) as usize;
+        let start = molecule::unpack_number(&slice[64..]) as usize;
+        let end = molecule::unpack_number(&slice[68..]) as usize;
         Uint128Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn parallel_job_upper_bond(&self) -> Uint8Reader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[64..]) as usize;
-        let end = molecule::unpack_number(&slice[68..]) as usize;
+        let start = molecule::unpack_number(&slice[68..]) as usize;
+        let end = molecule::unpack_number(&slice[72..]) as usize;
         Uint8Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn parallel_job_maximal_height_range(&self) -> BlockHeightReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[68..]) as usize;
-        let end = molecule::unpack_number(&slice[72..]) as usize;
+        let start = molecule::unpack_number(&slice[72..]) as usize;
+        let end = molecule::unpack_number(&slice[76..]) as usize;
         BlockHeightReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn admin_lock_arg(&self) -> PubKeyHashReader<'r> {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[72..]) as usize;
-        let end = molecule::unpack_number(&slice[76..]) as usize;
-        PubKeyHashReader::new_unchecked(&self.as_slice()[start..end])
-    }
-
-    pub fn collator_lock_arg(&self) -> PubKeyHashReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[76..]) as usize;
         let end = molecule::unpack_number(&slice[80..]) as usize;
         PubKeyHashReader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn bond_sudt_typescript_codehash(&self) -> CodeHashReader<'r> {
+    pub fn collator_lock_arg(&self) -> PubKeyHashReader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[80..]) as usize;
         let end = molecule::unpack_number(&slice[84..]) as usize;
+        PubKeyHashReader::new_unchecked(&self.as_slice()[start..end])
+    }
+
+    pub fn bond_sudt_typescript_codehash(&self) -> CodeHashReader<'r> {
+        let slice = self.as_slice();
+        let start = molecule::unpack_number(&slice[84..]) as usize;
+        let end = molecule::unpack_number(&slice[88..]) as usize;
         CodeHashReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn bond_sudt_typescript_hashtype(&self) -> HashTypeReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[84..]) as usize;
+        let start = molecule::unpack_number(&slice[88..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[88..]) as usize;
+            let end = molecule::unpack_number(&slice[92..]) as usize;
             HashTypeReader::new_unchecked(&self.as_slice()[start..end])
         } else {
             HashTypeReader::new_unchecked(&self.as_slice()[start..])
@@ -789,16 +796,17 @@ impl<'r> molecule::prelude::Reader<'r> for SidechainConfigCellReader<'r> {
         Uint32Reader::verify(&slice[offsets[8]..offsets[9]], compatible)?;
         Uint32Reader::verify(&slice[offsets[9]..offsets[10]], compatible)?;
         Uint32Reader::verify(&slice[offsets[10]..offsets[11]], compatible)?;
-        BlockHeightReader::verify(&slice[offsets[11]..offsets[12]], compatible)?;
-        Uint128Reader::verify(&slice[offsets[12]..offsets[13]], compatible)?;
-        Uint32Reader::verify(&slice[offsets[13]..offsets[14]], compatible)?;
-        Uint128Reader::verify(&slice[offsets[14]..offsets[15]], compatible)?;
-        Uint8Reader::verify(&slice[offsets[15]..offsets[16]], compatible)?;
-        BlockHeightReader::verify(&slice[offsets[16]..offsets[17]], compatible)?;
-        PubKeyHashReader::verify(&slice[offsets[17]..offsets[18]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[11]..offsets[12]], compatible)?;
+        Uint64Reader::verify(&slice[offsets[12]..offsets[13]], compatible)?;
+        Uint128Reader::verify(&slice[offsets[13]..offsets[14]], compatible)?;
+        Uint32Reader::verify(&slice[offsets[14]..offsets[15]], compatible)?;
+        Uint128Reader::verify(&slice[offsets[15]..offsets[16]], compatible)?;
+        Uint8Reader::verify(&slice[offsets[16]..offsets[17]], compatible)?;
+        BlockHeightReader::verify(&slice[offsets[17]..offsets[18]], compatible)?;
         PubKeyHashReader::verify(&slice[offsets[18]..offsets[19]], compatible)?;
-        CodeHashReader::verify(&slice[offsets[19]..offsets[20]], compatible)?;
-        HashTypeReader::verify(&slice[offsets[20]..offsets[21]], compatible)?;
+        PubKeyHashReader::verify(&slice[offsets[19]..offsets[20]], compatible)?;
+        CodeHashReader::verify(&slice[offsets[20]..offsets[21]], compatible)?;
+        HashTypeReader::verify(&slice[offsets[21]..offsets[22]], compatible)?;
         Ok(())
     }
 }
@@ -815,7 +823,8 @@ pub struct SidechainConfigCellBuilder {
     pub(crate) refresh_punish_points: Uint32,
     pub(crate) refresh_punish_release_points: Uint32,
     pub(crate) refresh_punish_threshold: Uint32,
-    pub(crate) refresh_sidechain_height_interval: BlockHeight,
+    pub(crate) refresh_interval: Uint64,
+    pub(crate) shutdown_timeout: Uint64,
     pub(crate) check_data_size_limit: Uint128,
     pub(crate) check_fee_rate: Uint32,
     pub(crate) minimal_bond: Uint128,
@@ -827,7 +836,7 @@ pub struct SidechainConfigCellBuilder {
     pub(crate) bond_sudt_typescript_hashtype: HashType,
 }
 impl SidechainConfigCellBuilder {
-    pub const FIELD_COUNT: usize = 21;
+    pub const FIELD_COUNT: usize = 22;
 
     pub fn sidechain_status(mut self, v: SidechainStatus) -> Self {
         self.sidechain_status = v;
@@ -884,8 +893,13 @@ impl SidechainConfigCellBuilder {
         self
     }
 
-    pub fn refresh_sidechain_height_interval(mut self, v: BlockHeight) -> Self {
-        self.refresh_sidechain_height_interval = v;
+    pub fn refresh_interval(mut self, v: Uint64) -> Self {
+        self.refresh_interval = v;
+        self
+    }
+
+    pub fn shutdown_timeout(mut self, v: Uint64) -> Self {
+        self.shutdown_timeout = v;
         self
     }
 
@@ -952,7 +966,8 @@ impl molecule::prelude::Builder for SidechainConfigCellBuilder {
             + self.refresh_punish_points.as_slice().len()
             + self.refresh_punish_release_points.as_slice().len()
             + self.refresh_punish_threshold.as_slice().len()
-            + self.refresh_sidechain_height_interval.as_slice().len()
+            + self.refresh_interval.as_slice().len()
+            + self.shutdown_timeout.as_slice().len()
             + self.check_data_size_limit.as_slice().len()
             + self.check_fee_rate.as_slice().len()
             + self.minimal_bond.as_slice().len()
@@ -990,7 +1005,9 @@ impl molecule::prelude::Builder for SidechainConfigCellBuilder {
         offsets.push(total_size);
         total_size += self.refresh_punish_threshold.as_slice().len();
         offsets.push(total_size);
-        total_size += self.refresh_sidechain_height_interval.as_slice().len();
+        total_size += self.refresh_interval.as_slice().len();
+        offsets.push(total_size);
+        total_size += self.shutdown_timeout.as_slice().len();
         offsets.push(total_size);
         total_size += self.check_data_size_limit.as_slice().len();
         offsets.push(total_size);
@@ -1024,7 +1041,8 @@ impl molecule::prelude::Builder for SidechainConfigCellBuilder {
         writer.write_all(self.refresh_punish_points.as_slice())?;
         writer.write_all(self.refresh_punish_release_points.as_slice())?;
         writer.write_all(self.refresh_punish_threshold.as_slice())?;
-        writer.write_all(self.refresh_sidechain_height_interval.as_slice())?;
+        writer.write_all(self.refresh_interval.as_slice())?;
+        writer.write_all(self.shutdown_timeout.as_slice())?;
         writer.write_all(self.check_data_size_limit.as_slice())?;
         writer.write_all(self.check_fee_rate.as_slice())?;
         writer.write_all(self.minimal_bond.as_slice())?;

@@ -1,3 +1,5 @@
+use core::convert::TryFrom;
+
 use ckb_std::ckb_constants::Source;
 
 use common_raw::{
@@ -12,7 +14,6 @@ use common_raw::{
 };
 
 use crate::{cell::*, common::*, error::Error};
-use core::convert::TryFrom;
 
 const CONFIG_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const CHECKER_BOND_INPUT: CellOrigin = CellOrigin(2, Source::Input);

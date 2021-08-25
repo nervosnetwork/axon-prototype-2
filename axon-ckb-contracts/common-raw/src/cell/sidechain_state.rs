@@ -1,3 +1,5 @@
+use molecule::prelude::*;
+
 use crate::{
     common::{BlockHeader, BlockHeight, BlockSlice, ChainId, CommittedHash, MerkleHash, PubKeyHash, RandomSeed},
     molecule::{
@@ -14,7 +16,7 @@ use crate::{
     },
     FromRaw, Serialize,
 };
-use molecule::prelude::*;
+
 /**
     Sidechain State Cell
     Data:
@@ -27,7 +29,6 @@ use molecule::prelude::*;
         hashtype: type
         args: null
 */
-
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq, Ord, Eq, Default)]
 pub struct CommittedCheckerInfo {
     pub checker_lock_arg: PubKeyHash,
@@ -176,7 +177,6 @@ pub struct SidechainStateCell {
     pub version: u8,
     pub submit_sidechain_block_height: BlockHeight,
     pub waiting_jobs: Vec<BlockSlice>,
-    pub confirmed_jobs: Vec<BlockSlice>,
     pub random_seed: RandomSeed,
     pub random_offset: u8,
     pub random_commit: Vec<CommittedCheckerInfo>,
@@ -194,13 +194,6 @@ impl FromRaw for SidechainStateCell {
         let submit_sidechain_block_height = BlockHeight::from_raw(reader.submit_sidechain_block_height().raw_data())?;
         let waiting_jobs: Vec<BlockSlice> = reader
             .waiting_jobs()
-            .iter()
-            .map(|reader| BlockSlice::from_raw(reader.as_slice()).ok_or(()))
-            .collect::<Result<Vec<BlockSlice>, ()>>()
-            .ok()?;
-
-        let confirmed_jobs: Vec<BlockSlice> = reader
-            .confirmed_jobs()
             .iter()
             .map(|reader| BlockSlice::from_raw(reader.as_slice()).ok_or(()))
             .collect::<Result<Vec<BlockSlice>, ()>>()
@@ -251,7 +244,6 @@ impl FromRaw for SidechainStateCell {
             version,
             submit_sidechain_block_height,
             waiting_jobs,
-            confirmed_jobs,
             random_seed,
             random_offset,
             random_commit,
@@ -276,12 +268,6 @@ impl Serialize for SidechainStateCell {
             waiting_jobs_builder = waiting_jobs_builder.push(BlockSliceReader::new_unchecked(&job.serialize()).to_entity())
         }
         let waiting_jobs = waiting_jobs_builder.build();
-
-        let mut confirmed_jobs_builder = JobsBuilder::default();
-        for job in self.confirmed_jobs.iter() {
-            confirmed_jobs_builder = confirmed_jobs_builder.push(BlockSliceReader::new_unchecked(&job.serialize()).to_entity())
-        }
-        let confirmed_jobs = confirmed_jobs_builder.build();
 
         let random_seed = RandomSeedReader::new_unchecked(&self.random_seed).to_entity();
 
@@ -322,7 +308,6 @@ impl Serialize for SidechainStateCell {
             .version(version)
             .submit_sidechain_block_height(submit_sidechain_block_height)
             .waiting_jobs(waiting_jobs)
-            .confirmed_jobs(confirmed_jobs)
             .random_seed(random_seed)
             .random_offset(random_offset)
             .random_commit(random_commit)

@@ -1,6 +1,3 @@
-use crate::common::*;
-use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
-use crate::secp256k1::*;
 use ckb_tool::bytes::Bytes;
 use ckb_tool::ckb_crypto::secp::Generator;
 use ckb_tool::ckb_types::packed::{CellDep, CellInput};
@@ -17,8 +14,13 @@ use common_raw::cell::{
 use common_raw::common::BlockSlice;
 use common_raw::witness::collator_publish_task::CollatorPublishTaskWitness;
 
+use crate::common::*;
+use crate::environment_builder::{AxonScripts, EnvironmentBuilder};
+use crate::secp256k1::*;
+
 const MAX_CYCLES: u64 = 10_000_000;
 const SIDECHAIN_BOND_UNLOCK_HEIGHT: u128 = 1000;
+
 #[test]
 fn test_success() {
     // generate key pair

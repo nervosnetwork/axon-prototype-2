@@ -2,7 +2,7 @@ FROM nervos/ckb-docker-builder:bionic-rust-1.45.2 as build-container
 
 WORKDIR /
 
-RUN git clone --branch v0.2.0 --depth 1 https://github.com/nervosnetwork/ckb-indexer.git
+RUN git clone --branch v0.3.0-rc1 --depth 1 https://github.com/nervosnetwork/ckb-indexer.git
 
 WORKDIR /ckb-indexer
 
