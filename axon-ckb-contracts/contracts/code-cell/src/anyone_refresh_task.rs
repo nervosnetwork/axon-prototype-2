@@ -2,6 +2,7 @@ use core::convert::TryFrom;
 
 use ckb_std::ckb_constants::Source;
 
+use ckb_std::high_level::load_header;
 use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, PunishedChecker};
 use common_raw::cell::task::TaskStatus;
 use common_raw::{
@@ -21,6 +22,13 @@ const CONFIG_INPUT: CellOrigin = CellOrigin(1, Source::Input);
 const CONFIG_OUTPUT: CellOrigin = CellOrigin(1, Source::Output);
 const STATE_INPUT: CellOrigin = CellOrigin(2, Source::Input);
 const STATE_OUTPUT: CellOrigin = CellOrigin(2, Source::Output);
+
+pub fn load_task_header_timestamp(origin: CellOrigin) -> Result<u64, Error> {
+    let CellOrigin(index, source) = origin;
+    let raw_header = load_header(index, source).or(Err(Error::MissingHeader))?.raw();
+    let time_stamp = u64::from_raw(raw_header.timestamp().as_reader().raw_data()).ok_or(Error::MissingHeader)?;
+    Ok(time_stamp)
+}
 
 pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
     /*
@@ -85,21 +93,19 @@ pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
             Err(err) => return Err(err),
         };
 
-        let mut task_res = task_input.clone();
         let mut task_res_type_args = task_input_type_args.clone();
 
         check_confirm_interval_and_update(
-            &mut task_res,
             &mut task_res_type_args,
             &config_input,
-            &state_res,
+            CellOrigin(i, Source::Input),
             &mut seed,
             timestamp,
         )?;
 
         if u32::try_from(task_input_type_args.chain_id).or(Err(Error::Encoding))? != witness.chain_id
-            || task_res != task_output
-            || task_res.status != TaskStatus::Idle
+            || task_input != task_output
+            || task_input.status != TaskStatus::Idle
             || task_res_type_args != task_output_type_args
         {
             return Err(Error::TaskMismatch);
@@ -111,14 +117,14 @@ pub fn anyone_refresh_task(raw_witness: &[u8]) -> Result<(), Error> {
             .find(|checker_last_height| checker_last_height.checker_lock_arg == task_res_type_args.checker_lock_arg)
         {
             Some(checker_last_height) => {
-                if checker_last_height.height < task_res.sidechain_block_height_to {
-                    checker_last_height.height = task_res.sidechain_block_height_to;
+                if checker_last_height.height < task_input.sidechain_block_height_to {
+                    checker_last_height.height = task_input.sidechain_block_height_to;
                 }
             }
 
             None => state_res.checker_last_task_sidechain_heights.push(CheckerLastAcceptTaskHeight {
                 checker_lock_arg: task_res_type_args.checker_lock_arg,
-                height:           task_res.sidechain_block_height_to,
+                height:           task_input.sidechain_block_height_to,
             }),
         }
 
@@ -188,16 +194,15 @@ fn is_anyone_refresh_task() -> Result<(), Error> {
 }
 
 pub fn check_confirm_interval_and_update(
-    task: &mut TaskCell,
     task_type_args: &mut TaskCellTypeArgs,
     config: &SidechainConfigCell,
-    _state: &SidechainStateCell,
+    task_origin: CellOrigin,
     seed: &mut [u8; 32],
-    timestamp: u64,
+    ref_timestamp: u64,
 ) -> Result<(), Error> {
     //compute index of chosen checker and update seed for next task in this tx;
     *seed = Blake2b::calculate(seed);
-
+    let task_timestamp = load_task_header_timestamp(task_origin)?;
     let seed_number = u128::from_raw(&seed[0..16]).ok_or(Error::Encoding)?;
     let checkers_count = u128::try_from(config.activated_checkers.len()).or(Err(Error::Encoding))?;
     let index = usize::try_from(seed_number % checkers_count).or(Err(Error::Encoding))?;
@@ -205,12 +210,11 @@ pub fn check_confirm_interval_and_update(
     let next_checker_lock_arg = config.activated_checkers.get(index).ok_or(Error::Encoding)?;
 
     // refresh limit reached, then anyone can check this task.
-    if task.refresh_timestamp > timestamp {
+    if task_timestamp + config.refresh_interval > ref_timestamp {
         return Err(Error::Wrong);
     }
 
     task_type_args.checker_lock_arg = *next_checker_lock_arg;
-    task.refresh_timestamp = timestamp + config.refresh_interval;
 
     Ok(())
 }

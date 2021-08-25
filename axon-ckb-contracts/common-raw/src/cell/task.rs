@@ -1,6 +1,5 @@
 use molecule::prelude::*;
 
-use crate::molecule::common::Uint64Reader;
 use crate::{
     common::*,
     molecule::{
@@ -115,7 +114,6 @@ pub struct TaskCell {
     pub version: u8,
     pub sidechain_block_height_from: BlockHeight,
     pub sidechain_block_height_to: BlockHeight,
-    pub refresh_timestamp: u64,
     pub check_data_size: u128,
     pub mode: TaskMode,
     pub status: TaskStatus,
@@ -131,7 +129,6 @@ impl FromRaw for TaskCell {
         let version = u8::from_raw(reader.version().raw_data())?;
         let sidechain_block_height_from = u128::from_raw(reader.sidechain_block_height_from().raw_data())?;
         let sidechain_block_height_to = u128::from_raw(reader.sidechain_block_height_to().raw_data())?;
-        let refresh_timestamp = u64::from_raw(reader.refresh_timestamp().raw_data())?;
         let check_data_size = u128::from_raw(reader.check_data_size().raw_data())?;
         let mode = TaskMode::from_reader(reader.mode())?;
         let status = TaskStatus::from_reader(reader.status())?;
@@ -159,7 +156,6 @@ impl FromRaw for TaskCell {
             version,
             sidechain_block_height_from,
             sidechain_block_height_to,
-            refresh_timestamp,
             check_data_size,
             mode,
             status,
@@ -177,7 +173,6 @@ impl Serialize for TaskCell {
         let version = Uint8Reader::new_unchecked(&self.version.serialize()).to_entity();
         let sidechain_block_height_from = BlockHeightReader::new_unchecked(&self.sidechain_block_height_from.serialize()).to_entity();
         let sidechain_block_height_to = BlockHeightReader::new_unchecked(&self.sidechain_block_height_to.serialize()).to_entity();
-        let refresh_timestamp = Uint64Reader::new_unchecked(&self.refresh_timestamp.serialize()).to_entity();
         let check_data_size = Uint128Reader::new_unchecked(&self.check_data_size.serialize()).to_entity();
         let mode = TaskModeReader::new_unchecked(&self.mode.serialize()).to_entity();
         let status = TaskStatusReader::new_unchecked(&self.status.serialize()).to_entity();
@@ -193,7 +188,6 @@ impl Serialize for TaskCell {
             .version(version)
             .sidechain_block_height_from(sidechain_block_height_from)
             .sidechain_block_height_to(sidechain_block_height_to)
-            .refresh_timestamp(refresh_timestamp)
             .check_data_size(check_data_size)
             .mode(mode)
             .status(status)

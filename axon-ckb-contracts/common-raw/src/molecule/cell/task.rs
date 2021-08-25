@@ -702,7 +702,6 @@ impl ::core::fmt::Display for TaskCell {
         write!(f, "{}: {}", "version", self.version())?;
         write!(f, ", {}: {}", "sidechain_block_height_from", self.sidechain_block_height_from())?;
         write!(f, ", {}: {}", "sidechain_block_height_to", self.sidechain_block_height_to())?;
-        write!(f, ", {}: {}", "refresh_timestamp", self.refresh_timestamp())?;
         write!(f, ", {}: {}", "check_data_size", self.check_data_size())?;
         write!(f, ", {}: {}", "mode", self.mode())?;
         write!(f, ", {}: {}", "status", self.status())?;
@@ -719,17 +718,16 @@ impl ::core::fmt::Display for TaskCell {
 impl ::core::default::Default for TaskCell {
     fn default() -> Self {
         let v: Vec<u8> = vec![
-            171, 0, 0, 0, 44, 0, 0, 0, 45, 0, 0, 0, 61, 0, 0, 0, 77, 0, 0, 0, 85, 0, 0, 0, 101, 0, 0, 0, 102, 0, 0, 0, 103, 0, 0, 0, 135,
-            0, 0, 0, 167, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            159, 0, 0, 0, 40, 0, 0, 0, 41, 0, 0, 0, 57, 0, 0, 0, 73, 0, 0, 0, 89, 0, 0, 0, 90, 0, 0, 0, 91, 0, 0, 0, 123, 0, 0, 0, 155, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         ];
         TaskCell::new_unchecked(v.into())
     }
 }
 impl TaskCell {
-    pub const FIELD_COUNT: usize = 10;
+    pub const FIELD_COUNT: usize = 9;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -772,53 +770,46 @@ impl TaskCell {
         BlockHeight::new_unchecked(self.0.slice(start..end))
     }
 
-    pub fn refresh_timestamp(&self) -> Uint64 {
+    pub fn check_data_size(&self) -> Uint128 {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[16..]) as usize;
         let end = molecule::unpack_number(&slice[20..]) as usize;
-        Uint64::new_unchecked(self.0.slice(start..end))
-    }
-
-    pub fn check_data_size(&self) -> Uint128 {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[20..]) as usize;
-        let end = molecule::unpack_number(&slice[24..]) as usize;
         Uint128::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn mode(&self) -> TaskMode {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[24..]) as usize;
-        let end = molecule::unpack_number(&slice[28..]) as usize;
+        let start = molecule::unpack_number(&slice[20..]) as usize;
+        let end = molecule::unpack_number(&slice[24..]) as usize;
         TaskMode::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn status(&self) -> TaskStatus {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[28..]) as usize;
-        let end = molecule::unpack_number(&slice[32..]) as usize;
+        let start = molecule::unpack_number(&slice[24..]) as usize;
+        let end = molecule::unpack_number(&slice[28..]) as usize;
         TaskStatus::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn reveal(&self) -> RandomSeed {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[32..]) as usize;
-        let end = molecule::unpack_number(&slice[36..]) as usize;
+        let start = molecule::unpack_number(&slice[28..]) as usize;
+        let end = molecule::unpack_number(&slice[32..]) as usize;
         RandomSeed::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn commit(&self) -> CommittedHash {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[36..]) as usize;
-        let end = molecule::unpack_number(&slice[40..]) as usize;
+        let start = molecule::unpack_number(&slice[32..]) as usize;
+        let end = molecule::unpack_number(&slice[36..]) as usize;
         CommittedHash::new_unchecked(self.0.slice(start..end))
     }
 
     pub fn sidechain_block_header(&self) -> SidechainBlockHeaders {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[40..]) as usize;
+        let start = molecule::unpack_number(&slice[36..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[44..]) as usize;
+            let end = molecule::unpack_number(&slice[40..]) as usize;
             SidechainBlockHeaders::new_unchecked(self.0.slice(start..end))
         } else {
             SidechainBlockHeaders::new_unchecked(self.0.slice(start..))
@@ -863,7 +854,6 @@ impl molecule::prelude::Entity for TaskCell {
             .version(self.version())
             .sidechain_block_height_from(self.sidechain_block_height_from())
             .sidechain_block_height_to(self.sidechain_block_height_to())
-            .refresh_timestamp(self.refresh_timestamp())
             .check_data_size(self.check_data_size())
             .mode(self.mode())
             .status(self.status())
@@ -894,7 +884,6 @@ impl<'r> ::core::fmt::Display for TaskCellReader<'r> {
         write!(f, "{}: {}", "version", self.version())?;
         write!(f, ", {}: {}", "sidechain_block_height_from", self.sidechain_block_height_from())?;
         write!(f, ", {}: {}", "sidechain_block_height_to", self.sidechain_block_height_to())?;
-        write!(f, ", {}: {}", "refresh_timestamp", self.refresh_timestamp())?;
         write!(f, ", {}: {}", "check_data_size", self.check_data_size())?;
         write!(f, ", {}: {}", "mode", self.mode())?;
         write!(f, ", {}: {}", "status", self.status())?;
@@ -909,7 +898,7 @@ impl<'r> ::core::fmt::Display for TaskCellReader<'r> {
     }
 }
 impl<'r> TaskCellReader<'r> {
-    pub const FIELD_COUNT: usize = 10;
+    pub const FIELD_COUNT: usize = 9;
 
     pub fn total_size(&self) -> usize {
         molecule::unpack_number(self.as_slice()) as usize
@@ -952,53 +941,46 @@ impl<'r> TaskCellReader<'r> {
         BlockHeightReader::new_unchecked(&self.as_slice()[start..end])
     }
 
-    pub fn refresh_timestamp(&self) -> Uint64Reader<'r> {
+    pub fn check_data_size(&self) -> Uint128Reader<'r> {
         let slice = self.as_slice();
         let start = molecule::unpack_number(&slice[16..]) as usize;
         let end = molecule::unpack_number(&slice[20..]) as usize;
-        Uint64Reader::new_unchecked(&self.as_slice()[start..end])
-    }
-
-    pub fn check_data_size(&self) -> Uint128Reader<'r> {
-        let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[20..]) as usize;
-        let end = molecule::unpack_number(&slice[24..]) as usize;
         Uint128Reader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn mode(&self) -> TaskModeReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[24..]) as usize;
-        let end = molecule::unpack_number(&slice[28..]) as usize;
+        let start = molecule::unpack_number(&slice[20..]) as usize;
+        let end = molecule::unpack_number(&slice[24..]) as usize;
         TaskModeReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn status(&self) -> TaskStatusReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[28..]) as usize;
-        let end = molecule::unpack_number(&slice[32..]) as usize;
+        let start = molecule::unpack_number(&slice[24..]) as usize;
+        let end = molecule::unpack_number(&slice[28..]) as usize;
         TaskStatusReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn reveal(&self) -> RandomSeedReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[32..]) as usize;
-        let end = molecule::unpack_number(&slice[36..]) as usize;
+        let start = molecule::unpack_number(&slice[28..]) as usize;
+        let end = molecule::unpack_number(&slice[32..]) as usize;
         RandomSeedReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn commit(&self) -> CommittedHashReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[36..]) as usize;
-        let end = molecule::unpack_number(&slice[40..]) as usize;
+        let start = molecule::unpack_number(&slice[32..]) as usize;
+        let end = molecule::unpack_number(&slice[36..]) as usize;
         CommittedHashReader::new_unchecked(&self.as_slice()[start..end])
     }
 
     pub fn sidechain_block_header(&self) -> SidechainBlockHeadersReader<'r> {
         let slice = self.as_slice();
-        let start = molecule::unpack_number(&slice[40..]) as usize;
+        let start = molecule::unpack_number(&slice[36..]) as usize;
         if self.has_extra_fields() {
-            let end = molecule::unpack_number(&slice[44..]) as usize;
+            let end = molecule::unpack_number(&slice[40..]) as usize;
             SidechainBlockHeadersReader::new_unchecked(&self.as_slice()[start..end])
         } else {
             SidechainBlockHeadersReader::new_unchecked(&self.as_slice()[start..])
@@ -1062,13 +1044,12 @@ impl<'r> molecule::prelude::Reader<'r> for TaskCellReader<'r> {
         Uint8Reader::verify(&slice[offsets[0]..offsets[1]], compatible)?;
         BlockHeightReader::verify(&slice[offsets[1]..offsets[2]], compatible)?;
         BlockHeightReader::verify(&slice[offsets[2]..offsets[3]], compatible)?;
-        Uint64Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
-        Uint128Reader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
-        TaskModeReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
-        TaskStatusReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
-        RandomSeedReader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
-        CommittedHashReader::verify(&slice[offsets[8]..offsets[9]], compatible)?;
-        SidechainBlockHeadersReader::verify(&slice[offsets[9]..offsets[10]], compatible)?;
+        Uint128Reader::verify(&slice[offsets[3]..offsets[4]], compatible)?;
+        TaskModeReader::verify(&slice[offsets[4]..offsets[5]], compatible)?;
+        TaskStatusReader::verify(&slice[offsets[5]..offsets[6]], compatible)?;
+        RandomSeedReader::verify(&slice[offsets[6]..offsets[7]], compatible)?;
+        CommittedHashReader::verify(&slice[offsets[7]..offsets[8]], compatible)?;
+        SidechainBlockHeadersReader::verify(&slice[offsets[8]..offsets[9]], compatible)?;
         Ok(())
     }
 }
@@ -1077,7 +1058,6 @@ pub struct TaskCellBuilder {
     pub(crate) version: Uint8,
     pub(crate) sidechain_block_height_from: BlockHeight,
     pub(crate) sidechain_block_height_to: BlockHeight,
-    pub(crate) refresh_timestamp: Uint64,
     pub(crate) check_data_size: Uint128,
     pub(crate) mode: TaskMode,
     pub(crate) status: TaskStatus,
@@ -1086,7 +1066,7 @@ pub struct TaskCellBuilder {
     pub(crate) sidechain_block_header: SidechainBlockHeaders,
 }
 impl TaskCellBuilder {
-    pub const FIELD_COUNT: usize = 10;
+    pub const FIELD_COUNT: usize = 9;
 
     pub fn version(mut self, v: Uint8) -> Self {
         self.version = v;
@@ -1100,11 +1080,6 @@ impl TaskCellBuilder {
 
     pub fn sidechain_block_height_to(mut self, v: BlockHeight) -> Self {
         self.sidechain_block_height_to = v;
-        self
-    }
-
-    pub fn refresh_timestamp(mut self, v: Uint64) -> Self {
-        self.refresh_timestamp = v;
         self
     }
 
@@ -1148,7 +1123,6 @@ impl molecule::prelude::Builder for TaskCellBuilder {
             + self.version.as_slice().len()
             + self.sidechain_block_height_from.as_slice().len()
             + self.sidechain_block_height_to.as_slice().len()
-            + self.refresh_timestamp.as_slice().len()
             + self.check_data_size.as_slice().len()
             + self.mode.as_slice().len()
             + self.status.as_slice().len()
@@ -1166,8 +1140,6 @@ impl molecule::prelude::Builder for TaskCellBuilder {
         total_size += self.sidechain_block_height_from.as_slice().len();
         offsets.push(total_size);
         total_size += self.sidechain_block_height_to.as_slice().len();
-        offsets.push(total_size);
-        total_size += self.refresh_timestamp.as_slice().len();
         offsets.push(total_size);
         total_size += self.check_data_size.as_slice().len();
         offsets.push(total_size);
@@ -1187,7 +1159,6 @@ impl molecule::prelude::Builder for TaskCellBuilder {
         writer.write_all(self.version.as_slice())?;
         writer.write_all(self.sidechain_block_height_from.as_slice())?;
         writer.write_all(self.sidechain_block_height_to.as_slice())?;
-        writer.write_all(self.refresh_timestamp.as_slice())?;
         writer.write_all(self.check_data_size.as_slice())?;
         writer.write_all(self.mode.as_slice())?;
         writer.write_all(self.status.as_slice())?;
