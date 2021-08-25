@@ -205,7 +205,7 @@ pub fn check_confirm_interval_and_update(
     let next_checker_lock_arg = config.activated_checkers.get(index).ok_or(Error::Encoding)?;
 
     // refresh limit reached, then anyone can check this task.
-    if task.refresh_timestamp < timestamp {
+    if task.refresh_timestamp > timestamp {
         return Err(Error::Wrong);
     }
 
