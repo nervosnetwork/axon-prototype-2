@@ -18,11 +18,11 @@ use crate::secp256k1::*;
 const MAX_CYCLES: u64 = 10_000_000;
 const PUNISH_THREAD: u32 = 1000;
 
-fn with_time_header(mut builder: EnvironmentBuilder, timestamp: u64) -> EnvironmentBuilder {
+fn with_time_header(mut builder: EnvironmentBuilder, timestamp: u64) -> (EnvironmentBuilder, core::HeaderView) {
     let header = core::HeaderBuilder::default().timestamp(timestamp.pack()).build();
     builder.context.insert_header(header.clone());
     let builder = builder.header_dep(header.hash());
-    builder
+    (builder, header)
 }
 
 #[test]
@@ -43,7 +43,8 @@ fn test_success() {
         },
     ) = EnvironmentBuilder::default().bootstrap(pubkey_hash.to_vec());
     //prepare headers
-    let mut builder = with_time_header(builder, 1100);
+    let (builder, _) = with_time_header(builder, 1100);
+    let (mut builder, task_header) = with_time_header(builder, 1000);
 
     // prepare scripts
     let config_type_args = SidechainConfigCellTypeArgs::default();
@@ -95,12 +96,13 @@ fn test_success() {
         new_type_cell_output(1000, &always_success, &task_input_script),
         task_cell_data.serialize(),
     );
-    let task_cell_input = CellInput::new_builder().previous_output(task_cell_outpoint).build();
+    let task_cell_input = CellInput::new_builder().previous_output(task_cell_outpoint.clone()).build();
+    builder.context.link_cell_with_block(task_cell_outpoint, task_header.hash(), 0);
     let builder = builder.input(task_cell_input);
 
     // prepare outputs
-    let mut task_cell_data = TaskCell::default();
-    task_cell_data.refresh_timestamp = 1190;
+    let task_cell_data = TaskCell::default();
+
     let mut config_cell_data = SidechainConfigCell::default();
     config_cell_data.activated_checkers.push(PubKeyHash::default());
     config_cell_data.refresh_punish_threshold = PUNISH_THREAD;

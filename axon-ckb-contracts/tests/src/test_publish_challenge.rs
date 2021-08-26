@@ -6,9 +6,9 @@ use ckb_tool::{
 
 use common_raw::{
     cell::{
-        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        task::{TaskCell, TaskCellTypeArgs, TaskMode},
+        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
+        task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
 };
@@ -44,23 +44,22 @@ fn test_success() {
         .build_script(&always_success_code, config_type_args.serialize())
         .expect("script");
 
-    let task_type_args = TaskCellTypeArgs::default();
+    let state_type_args = SidechainStateCellTypeArgs::default();
+    let state_script = builder
+        .context
+        .build_script(&always_success_code, state_type_args.serialize())
+        .expect("script");
+
+    let mut task_type_args = TaskCellTypeArgs::default();
+    task_type_args.checker_lock_arg = pubkey_hash;
     let task_script = builder
         .context
         .build_script(&always_success_code, task_type_args.serialize())
         .expect("script");
 
-    let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
-    checker_info_type_args.checker_lock_arg.copy_from_slice(&pubkey_hash);
-
-    let checker_info_script = builder
-        .context
-        .build_script(&always_success_code, checker_info_type_args.serialize())
-        .expect("script");
-
     //prepare dep
     let mut config_dep_data = SidechainConfigCell::default();
-    config_dep_data.challenge_threshold = 2;
+    config_dep_data.challenge_threshold = 1;
     config_dep_data.collator_lock_arg.copy_from_slice(&pubkey_hash);
 
     let config_dep_out_point = builder.context.create_cell(
@@ -71,10 +70,10 @@ fn test_success() {
     let mut builder = builder.cell_dep(config_dep);
 
     // prepare inputs
-    let checker_info_input_data = CheckerInfoCell::default();
-    let checker_info_input = builder.create_input(
-        new_type_cell_output(1000, &always_success, &checker_info_script),
-        checker_info_input_data.serialize(),
+    let state_input_date = SidechainStateCell::default();
+    let state_input = builder.create_input(
+        new_type_cell_output(1000, &always_success, &state_script),
+        state_input_date.serialize(),
     );
 
     let task_input_data = TaskCell::default();
@@ -83,23 +82,25 @@ fn test_success() {
         task_input_data.serialize(),
     );
 
-    let builder = builder.input(checker_info_input).input(task_input);
+    let builder = builder.input(state_input).input(task_input);
 
     //prepare output
-    let checker_info_output = checker_info_input_data.clone();
+    let mut state_output = state_input_date.clone();
+    state_output.random_offset += 1;
 
     let mut task_output_data = TaskCell::default();
     task_output_data.mode = TaskMode::Challenge;
+    task_output_data.status = TaskStatus::ChallengePassed;
 
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
-        new_type_cell_output(1000, &always_success, &checker_info_script),
+        new_type_cell_output(1000, &always_success, &state_script),
         new_type_cell_output(1000, &always_success, &task_script),
     ];
-    let outputs_data = vec![Bytes::new(), checker_info_output.serialize(), task_output_data.serialize()];
+    let outputs_data = vec![Bytes::new(), state_output.serialize(), task_output_data.serialize()];
 
     let mut witness = CheckerPublishChallengeWitness::default();
-    witness.challenge_count = 2;
+    witness.challenge_count = 1;
     witness.sidechain_config_dep_index = EnvironmentBuilder::BOOTSTRAP_CELL_DEPS_LENGTH;
 
     let witnesses = [get_dummy_witness_builder().input_type(witness.serialize().pack_some()).as_bytes()];

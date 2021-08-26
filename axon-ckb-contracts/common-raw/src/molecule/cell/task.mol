@@ -8,7 +8,6 @@ table TaskCell {
     version: Uint8,
     sidechain_block_height_from: BlockHeight,
     sidechain_block_height_to: BlockHeight,
-    refresh_timestamp: Uint64,
     check_data_size: Uint128,
     mode: TaskMode,
     status: TaskStatus,

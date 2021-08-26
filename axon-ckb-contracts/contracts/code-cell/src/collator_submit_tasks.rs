@@ -395,7 +395,6 @@ fn check_tasks<T: FnMut() -> Result<Option<(TaskCell, TaskCellTypeArgs)>, Error>
         task_res.status = task_first.status;
         task_res.commit = task_first.commit;
         task_res.reveal = task_first.reveal;
-        task_res.refresh_timestamp = task_first.refresh_timestamp;
 
         task_res_type_args.checker_lock_arg = task_first_type_args.checker_lock_arg;
 
