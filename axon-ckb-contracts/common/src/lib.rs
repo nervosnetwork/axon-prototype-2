@@ -42,7 +42,7 @@ pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = [
 pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = include!("../global_config_type_hash");
 
 #[cfg(sudt_typehash = "test_sudt")]
-pub const SUDT_CODEHASH: [u8; 32] = [
+pub const SUDT_TYPE_HASH: [u8; 32] = [
     102, 2, 235, 138, 43, 3, 201, 143, 225, 190, 198, 89, 72, 26, 48, 200, 129, 239, 212, 37, 141, 23, 251, 183, 128, 147, 118, 98, 227,
     43, 134, 11,
 ];
