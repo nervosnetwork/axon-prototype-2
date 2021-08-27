@@ -1,5 +1,5 @@
 function dataLengthError(actual, required) {
-  throw new Error(`Invalid data length! Required: ${required}, actual: ${actual}`);
+    throw new Error(`Invalid data length! Required: ${required}, actual: ${actual}`);
 }
 
 function assertDataLength(actual, required) {
@@ -37,7 +37,7 @@ function verifyAndExtractOffsets(view, expectedFieldCount, compatible) {
   const itemCount = firstOffset / 4 - 1;
   if (itemCount < expectedFieldCount) {
     throw new Error(`Item count not enough! Required: ${expectedFieldCount}, actual: ${itemCount}`);
-  } else if (!compatible && itemCount > expectedFieldCount) {
+  } else if ((!compatible) && itemCount > expectedFieldCount) {
     throw new Error(`Item count is more than required! Required: ${expectedFieldCount}, actual: ${itemCount}`);
   }
   if (requiredByteLength < firstOffset) {
@@ -79,110 +79,7 @@ function serializeTable(buffers) {
   return buffer;
 }
 
-export class TaskMode {
-  constructor(reader, { validate = true } = {}) {
-    this.view = new DataView(assertArrayBuffer(reader));
-    if (validate) {
-      this.validate();
-    }
-  }
-
-  validate(compatible = false) {
-    assertDataLength(this.view.byteLength, 1);
-  }
-
-  indexAt(i) {
-    return this.view.getUint8(i);
-  }
-
-  raw() {
-    return this.view.buffer;
-  }
-
-  static size() {
-    return 1;
-  }
-}
-
-export function SerializeTaskMode(value) {
-  const buffer = assertArrayBuffer(value);
-  assertDataLength(buffer.byteLength, 1);
-  return buffer;
-}
-
-export class TaskStatus {
-  constructor(reader, { validate = true } = {}) {
-    this.view = new DataView(assertArrayBuffer(reader));
-    if (validate) {
-      this.validate();
-    }
-  }
-
-  validate(compatible = false) {
-    assertDataLength(this.view.byteLength, 1);
-  }
-
-  indexAt(i) {
-    return this.view.getUint8(i);
-  }
-
-  raw() {
-    return this.view.buffer;
-  }
-
-  static size() {
-    return 1;
-  }
-}
-
-export function SerializeTaskStatus(value) {
-  const buffer = assertArrayBuffer(value);
-  assertDataLength(buffer.byteLength, 1);
-  return buffer;
-}
-
-export class SidechainBlockHeaders {
-  constructor(reader, { validate = true } = {}) {
-    this.view = new DataView(assertArrayBuffer(reader));
-    if (validate) {
-      this.validate();
-    }
-  }
-
-  validate(compatible = false) {
-    if (this.view.byteLength < 4) {
-      dataLengthError(this.view.byteLength, ">4");
-    }
-    const requiredByteLength = this.length() * BlockHeader.size() + 4;
-    assertDataLength(this.view.byteLength, requiredByteLength);
-    for (let i = 0; i < 0; i++) {
-      const item = this.indexAt(i);
-      item.validate(compatible);
-    }
-  }
-
-  indexAt(i) {
-    return new BlockHeader(this.view.buffer.slice(4 + i * BlockHeader.size(), 4 + (i + 1) * BlockHeader.size()), {
-      validate: false,
-    });
-  }
-
-  length() {
-    return this.view.getUint32(0, true);
-  }
-}
-
-export function SerializeSidechainBlockHeaders(value) {
-  const array = new Uint8Array(4 + BlockHeader.size() * value.length);
-  new DataView(array.buffer).setUint32(0, value.length, true);
-  for (let i = 0; i < value.length; i++) {
-    const itemBuffer = SerializeBlockHeader(value[i]);
-    array.set(new Uint8Array(itemBuffer), 4 + i * BlockHeader.size());
-  }
-  return array.buffer;
-}
-
-export class TaskCell {
+export class SidechainBondCellLockArgs {
   constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
     if (validate) {
@@ -192,138 +89,39 @@ export class TaskCell {
 
   validate(compatible = false) {
     const offsets = verifyAndExtractOffsets(this.view, 0, true);
-    new Uint8(this.view.buffer.slice(offsets[0], offsets[1]), { validate: false }).validate();
-    new BlockHeight(this.view.buffer.slice(offsets[1], offsets[2]), { validate: false }).validate();
+    new PubKeyHash(this.view.buffer.slice(offsets[0], offsets[1]), { validate: false }).validate();
+    new ChainIdList(this.view.buffer.slice(offsets[1], offsets[2]), { validate: false }).validate();
     new BlockHeight(this.view.buffer.slice(offsets[2], offsets[3]), { validate: false }).validate();
-    new BlockHeight(this.view.buffer.slice(offsets[3], offsets[4]), { validate: false }).validate();
-    new Uint128(this.view.buffer.slice(offsets[4], offsets[5]), { validate: false }).validate();
-    new TaskMode(this.view.buffer.slice(offsets[5], offsets[6]), { validate: false }).validate();
-    new TaskStatus(this.view.buffer.slice(offsets[6], offsets[7]), { validate: false }).validate();
-    new RandomSeed(this.view.buffer.slice(offsets[7], offsets[8]), { validate: false }).validate();
-    new CommittedHash(this.view.buffer.slice(offsets[8], offsets[9]), { validate: false }).validate();
-    new SidechainBlockHeaders(this.view.buffer.slice(offsets[9], offsets[10]), { validate: false }).validate();
   }
 
-  getVersion() {
+  getCollatorLockArg() {
     const start = 4;
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
-    return new Uint8(this.view.buffer.slice(offset, offset_end), { validate: false });
+    return new PubKeyHash(this.view.buffer.slice(offset, offset_end), { validate: false });
   }
 
-  getSidechainBlockHeightFrom() {
+  getParticipatedChain() {
     const start = 8;
     const offset = this.view.getUint32(start, true);
     const offset_end = this.view.getUint32(start + 4, true);
-    return new BlockHeight(this.view.buffer.slice(offset, offset_end), { validate: false });
+    return new ChainIdList(this.view.buffer.slice(offset, offset_end), { validate: false });
   }
 
-  getSidechainBlockHeightTo() {
+  getUnlockSidechainHeight() {
     const start = 12;
     const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new BlockHeight(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getRefreshSidechainHeight() {
-    const start = 16;
-    const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new BlockHeight(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getCheckDataSize() {
-    const start = 20;
-    const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new Uint128(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getMode() {
-    const start = 24;
-    const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new TaskMode(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getStatus() {
-    const start = 28;
-    const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new TaskStatus(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getReveal() {
-    const start = 32;
-    const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new RandomSeed(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getCommit() {
-    const start = 36;
-    const offset = this.view.getUint32(start, true);
-    const offset_end = this.view.getUint32(start + 4, true);
-    return new CommittedHash(this.view.buffer.slice(offset, offset_end), { validate: false });
-  }
-
-  getSidechainBlockHeader() {
-    const start = 40;
-    const offset = this.view.getUint32(start, true);
     const offset_end = this.view.byteLength;
-    return new SidechainBlockHeaders(this.view.buffer.slice(offset, offset_end), { validate: false });
+    return new BlockHeight(this.view.buffer.slice(offset, offset_end), { validate: false });
   }
 }
 
-export function SerializeTaskCell(value) {
+export function SerializeSidechainBondCellLockArgs(value) {
   const buffers = [];
-  buffers.push(SerializeUint8(value.version));
-  buffers.push(SerializeBlockHeight(value.sidechain_block_height_from));
-  buffers.push(SerializeBlockHeight(value.sidechain_block_height_to));
-  buffers.push(SerializeBlockHeight(value.refresh_sidechain_height));
-  buffers.push(SerializeUint128(value.check_data_size));
-  buffers.push(SerializeTaskMode(value.mode));
-  buffers.push(SerializeTaskStatus(value.status));
-  buffers.push(SerializeRandomSeed(value.reveal));
-  buffers.push(SerializeCommittedHash(value.commit));
-  buffers.push(SerializeSidechainBlockHeaders(value.sidechain_block_header));
+  buffers.push(SerializePubKeyHash(value.collator_lock_arg));
+  buffers.push(SerializeChainIdList(value.participated_chain));
+  buffers.push(SerializeBlockHeight(value.unlock_sidechain_height));
   return serializeTable(buffers);
-}
-
-export class TaskCellTypeArgs {
-  constructor(reader, { validate = true } = {}) {
-    this.view = new DataView(assertArrayBuffer(reader));
-    if (validate) {
-      this.validate();
-    }
-  }
-
-  getChainId() {
-    return new ChainId(this.view.buffer.slice(0, 0 + ChainId.size()), { validate: false });
-  }
-
-  getCheckerLockArg() {
-    return new PubKeyHash(this.view.buffer.slice(0 + ChainId.size(), 0 + ChainId.size() + PubKeyHash.size()), {
-      validate: false,
-    });
-  }
-
-  validate(compatible = false) {
-    assertDataLength(this.view.byteLength, TaskCellTypeArgs.size());
-    this.getChainId().validate(compatible);
-    this.getCheckerLockArg().validate(compatible);
-  }
-  static size() {
-    return 0 + ChainId.size() + PubKeyHash.size();
-  }
-}
-
-export function SerializeTaskCellTypeArgs(value) {
-  const array = new Uint8Array(0 + ChainId.size() + PubKeyHash.size());
-  const view = new DataView(array.buffer);
-  array.set(new Uint8Array(SerializeChainId(value.chain_id)), 0);
-  array.set(new Uint8Array(SerializePubKeyHash(value.checker_lock_arg)), 0 + ChainId.size());
-  return array.buffer;
 }
 
 export class Uint8 {
@@ -784,6 +582,45 @@ export function SerializeScriptHash(value) {
   return buffer;
 }
 
+export class PubKeyHashList {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.view.byteLength < 4) {
+      dataLengthError(this.view.byteLength, ">4");
+    }
+    const requiredByteLength = this.length() * PubKeyHash.size() + 4;
+    assertDataLength(this.view.byteLength, requiredByteLength);
+    for (let i = 0; i < 0; i++) {
+      const item = this.indexAt(i);
+      item.validate(compatible);
+    }
+  }
+
+  indexAt(i) {
+    return new PubKeyHash(this.view.buffer.slice(4 + i * PubKeyHash.size(), 4 + (i + 1) * PubKeyHash.size()), { validate: false });
+  }
+
+  length() {
+    return this.view.getUint32(0, true);
+  }
+}
+
+export function SerializePubKeyHashList(value) {
+  const array = new Uint8Array(4 + PubKeyHash.size() * value.length);
+  (new DataView(array.buffer)).setUint32(0, value.length, true);
+  for (let i = 0; i < value.length; i++) {
+    const itemBuffer = SerializePubKeyHash(value[i]);
+    array.set(new Uint8Array(itemBuffer), 4 + i * PubKeyHash.size());
+  }
+  return array.buffer;
+}
+
 export class BlockSlice {
   constructor(reader, { validate = true } = {}) {
     this.view = new DataView(assertArrayBuffer(reader));
@@ -797,10 +634,7 @@ export class BlockSlice {
   }
 
   getTo() {
-    return new BlockHeight(
-      this.view.buffer.slice(0 + BlockHeight.size(), 0 + BlockHeight.size() + BlockHeight.size()),
-      { validate: false },
-    );
+    return new BlockHeight(this.view.buffer.slice(0 + BlockHeight.size(), 0 + BlockHeight.size() + BlockHeight.size()), { validate: false });
   }
 
   validate(compatible = false) {
@@ -881,9 +715,7 @@ export class ChainIdList {
   }
 
   indexAt(i) {
-    return new ChainId(this.view.buffer.slice(4 + i * ChainId.size(), 4 + (i + 1) * ChainId.size()), {
-      validate: false,
-    });
+    return new ChainId(this.view.buffer.slice(4 + i * ChainId.size(), 4 + (i + 1) * ChainId.size()), { validate: false });
   }
 
   length() {
@@ -893,7 +725,7 @@ export class ChainIdList {
 
 export function SerializeChainIdList(value) {
   const array = new Uint8Array(4 + ChainId.size() * value.length);
-  new DataView(array.buffer).setUint32(0, value.length, true);
+  (new DataView(array.buffer)).setUint32(0, value.length, true);
   for (let i = 0; i < value.length; i++) {
     const itemBuffer = SerializeChainId(value[i]);
     array.set(new Uint8Array(itemBuffer), 4 + i * ChainId.size());
@@ -973,7 +805,7 @@ export class MolString {
 
   validate(compatible = false) {
     if (this.view.byteLength < 4) {
-      dataLengthError(this.view.byteLength, ">4");
+      dataLengthError(this.view.byteLength, ">4")
     }
     const requiredByteLength = this.length() + 4;
     assertDataLength(this.view.byteLength, requiredByteLength);
@@ -995,7 +827,194 @@ export class MolString {
 export function SerializeMolString(value) {
   const item = assertArrayBuffer(value);
   const array = new Uint8Array(4 + item.byteLength);
-  new DataView(array.buffer).setUint32(0, item.byteLength, true);
+  (new DataView(array.buffer)).setUint32(0, item.byteLength, true);
   array.set(new Uint8Array(item), 4);
   return array.buffer;
 }
+
+export class Uint8Opt {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.hasValue()) {
+      this.value().validate(compatible);
+    }
+  }
+
+  value() {
+    return new Uint8(this.view.buffer, { validate: false });
+  }
+
+  hasValue() {
+    return this.view.byteLength > 0;
+  }
+}
+
+export function SerializeUint8Opt(value) {
+  if (value) {
+    return SerializeUint8(value);
+  } else {
+    return new ArrayBuffer(0);
+  }
+}
+
+export class Uint16Opt {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.hasValue()) {
+      this.value().validate(compatible);
+    }
+  }
+
+  value() {
+    return new Uint16(this.view.buffer, { validate: false });
+  }
+
+  hasValue() {
+    return this.view.byteLength > 0;
+  }
+}
+
+export function SerializeUint16Opt(value) {
+  if (value) {
+    return SerializeUint16(value);
+  } else {
+    return new ArrayBuffer(0);
+  }
+}
+
+export class Uint32Opt {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.hasValue()) {
+      this.value().validate(compatible);
+    }
+  }
+
+  value() {
+    return new Uint32(this.view.buffer, { validate: false });
+  }
+
+  hasValue() {
+    return this.view.byteLength > 0;
+  }
+}
+
+export function SerializeUint32Opt(value) {
+  if (value) {
+    return SerializeUint32(value);
+  } else {
+    return new ArrayBuffer(0);
+  }
+}
+
+export class Uint64Opt {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.hasValue()) {
+      this.value().validate(compatible);
+    }
+  }
+
+  value() {
+    return new Uint64(this.view.buffer, { validate: false });
+  }
+
+  hasValue() {
+    return this.view.byteLength > 0;
+  }
+}
+
+export function SerializeUint64Opt(value) {
+  if (value) {
+    return SerializeUint64(value);
+  } else {
+    return new ArrayBuffer(0);
+  }
+}
+
+export class Uint128Opt {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.hasValue()) {
+      this.value().validate(compatible);
+    }
+  }
+
+  value() {
+    return new Uint128(this.view.buffer, { validate: false });
+  }
+
+  hasValue() {
+    return this.view.byteLength > 0;
+  }
+}
+
+export function SerializeUint128Opt(value) {
+  if (value) {
+    return SerializeUint128(value);
+  } else {
+    return new ArrayBuffer(0);
+  }
+}
+
+export class CommittedHashOpt {
+  constructor(reader, { validate = true } = {}) {
+    this.view = new DataView(assertArrayBuffer(reader));
+    if (validate) {
+      this.validate();
+    }
+  }
+
+  validate(compatible = false) {
+    if (this.hasValue()) {
+      this.value().validate(compatible);
+    }
+  }
+
+  value() {
+    return new CommittedHash(this.view.buffer, { validate: false });
+  }
+
+  hasValue() {
+    return this.view.byteLength > 0;
+  }
+}
+
+export function SerializeCommittedHashOpt(value) {
+  if (value) {
+    return SerializeCommittedHash(value);
+  } else {
+    return new ArrayBuffer(0);
+  }
+}
+

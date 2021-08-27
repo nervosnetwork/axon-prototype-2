@@ -3,7 +3,7 @@ import { arrayBufferToHex, defaultOutPoint, remove0xPrefix, Uint64BigIntToLeHex 
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { MUSE_LOCK_SCRIPT, MUSE_TYPE_SCRIPT } from "../../../utils/environment";
-import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/cellData/sudt_token";
 import { arrayBufferToUint128, uint128ToArrayBuffer } from "../../../utils/mol";
 
 /*

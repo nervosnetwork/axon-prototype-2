@@ -29,7 +29,7 @@ import {
   uint32ToArrayBuffer,
   uint8ToArrayBuffer,
 } from "../../../utils/mol";
-import { SerializeSidechainStateCell, SidechainStateCell, SidechainStateCellLockArgs } from "../mol/sidechain_state";
+import { SerializeSidechainStateCell, SidechainStateCell, SidechainStateCellTypeArgs } from "../mol/cellData/sidechain_state";
 
 /*
 sidechain status
@@ -61,10 +61,9 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
   version: bigint;
   submitSidechainBlockHeight: bigint;
   waitingJobs: Array<{ from: bigint; to: bigint }>;
-  confirmedJobs: Array<{ from: bigint; to: bigint }>;
   randomSeed: string;
   randomOffset: bigint;
-  randomCommit: { checker_lock_arg: string; committed_hash: string };
+  randomCommit: Array<{ checker_lock_arg: string; committed_hash: string }>;
   punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }>;
   recentBlockHeaders: Array<string>;
   ancientBlockHeardMerkleRoot: string;
@@ -80,10 +79,9 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
     version: bigint,
     submitSidechainBlockHeight: bigint,
     waitingJobs: Array<{ from: bigint; to: bigint }>,
-    confirmedJobs: Array<{ from: bigint; to: bigint }>,
     randomSeed: string,
     randomOffset: bigint,
-    randomCommit: { checker_lock_arg: string; committed_hash: string },
+    randomCommit: Array<{ checker_lock_arg: string; committed_hash: string }>,
     punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }>,
     recentBlockHeaders: Array<string>,
     ancientBlockHeardMerkleRoot: string,
@@ -95,7 +93,6 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
     this.version = version;
     this.submitSidechainBlockHeight = submitSidechainBlockHeight;
     this.waitingJobs = waitingJobs;
-    this.confirmedJobs = confirmedJobs;
     this.randomSeed = randomSeed;
     this.randomOffset = randomOffset;
     this.randomCommit = randomCommit;
@@ -135,21 +132,17 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       });
     }
 
-    const confirmedJobs: Array<{ from: bigint; to: bigint }> = [];
-    for (let i = 0; i < cellData.getConfirmedJobs().length(); i++) {
-      const item = cellData.getConfirmedJobs().indexAt(i);
-      confirmedJobs.push({
-        from: arrayBufferToBlockHeight(item.getFrom().raw()),
-        to: arrayBufferToBlockHeight(item.getTo().raw()),
-      });
-    }
-
     const randomSeed = arrayBufferToRandomSeed(cellData.getRandomSeed().raw());
     const randomOffset = arrayBufferToUint8(cellData.getRandomOffset().raw());
-    const randomCommit = {
-      checker_lock_arg: arrayBufferToPublicKeyHash(cellData.getRandomCommit().getCheckerLockArg().raw()),
-      committed_hash: arrayBufferToCommittedHash(cellData.getRandomCommit().getCommittedHash().raw()),
-    };
+    const randomCommit: Array<{ checker_lock_arg: string; committed_hash: string }> = [];
+
+    for (let i = 0; i < cellData.getRandomCommit().length(); i++) {
+      const item = cellData.getRandomCommit().indexAt(i);
+      randomCommit.push({
+        checker_lock_arg: arrayBufferToPublicKeyHash(item.getCheckerLockArg().raw()),
+        committed_hash: arrayBufferToCommittedHash(item.getCommittedHash().raw()),
+      });
+    }
 
     const punishCheckers: Array<{ checker_lock_arg: string; punish_points: bigint }> = [];
     for (let i = 0; i < cellData.getPunishCheckers().length(); i++) {
@@ -184,7 +177,7 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       return null;
     }
 
-    const typeArgs = new SidechainStateCellLockArgs(scriptArgToArrayBuff(cell.cell_output.type), { validate: true });
+    const typeArgs = new SidechainStateCellTypeArgs(scriptArgToArrayBuff(cell.cell_output.type), { validate: true });
 
     const chainId = arrayBufferToChainId(typeArgs.getChainId().raw());
 
@@ -196,7 +189,6 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       version,
       submitSidechainBlockHeight,
       waitingJobs,
-      confirmedJobs,
       randomSeed,
       randomOffset,
       randomCommit,
@@ -216,10 +208,9 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       0n,
       0n,
       [],
-      [],
       ``,
       0n,
-      { checker_lock_arg: "", committed_hash: "" },
+      [{ checker_lock_arg: "", committed_hash: "" }],
       [],
       [],
       "",
@@ -261,34 +252,30 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
   toCellOutputData(): string {
     const sidechainStateCell = {
       version: uint8ToArrayBuffer(this.version),
-      submitSidechainBlockHeight: blockHeightToArrayBuffer(this.submitSidechainBlockHeight),
-      waitingJobs: this.waitingJobs.map((job) => {
+      submit_sidechain_block_height: blockHeightToArrayBuffer(this.submitSidechainBlockHeight),
+      waiting_jobs: this.waitingJobs.map((job) => {
         return {
           from: blockHeightToArrayBuffer(job.from),
           to: blockHeightToArrayBuffer(job.to),
         };
       }),
-      confirmedJobs: this.confirmedJobs.map((job) => {
+      random_seed: randomSeedToArrayBuffer(this.randomSeed),
+      random_offset: uint8ToArrayBuffer(this.randomOffset),
+      random_commit: this.randomCommit.map((item) => {
         return {
-          from: blockHeightToArrayBuffer(job.from),
-          to: blockHeightToArrayBuffer(job.to),
+          checker_lock_arg: publicKeyHashToArrayBuffer(item.checker_lock_arg),
+          committed_hash: committedHashToArrayBuffer(item.committed_hash),
         };
       }),
-      randomSeed: randomSeedToArrayBuffer(this.randomSeed),
-      randomOffset: uint8ToArrayBuffer(this.randomOffset),
-      randomCommit: {
-        checker_lock_arg: publicKeyHashToArrayBuffer(this.randomCommit.checker_lock_arg),
-        committed_hash: committedHashToArrayBuffer(this.randomCommit.committed_hash),
-      },
-      punishCheckers: this.punishCheckers.map((checker) => {
+      punish_checkers: this.punishCheckers.map((checker) => {
         return {
           checker_lock_arg: publicKeyHashToArrayBuffer(checker.checker_lock_arg),
           punish_points: uint32ToArrayBuffer(checker.punish_points),
         };
       }),
-      recentBlockHeaders: this.recentBlockHeaders.map((header) => blockHeaderToArrayBuffer(header)),
-      ancientBlockHeardMerkleRoot: merkleHashToArrayBuffer(this.ancientBlockHeardMerkleRoot),
-      checkerLastTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map((height) => {
+      recent_block_headers: this.recentBlockHeaders.map((header) => blockHeaderToArrayBuffer(header)),
+      ancient_block_heard_merkle_root: merkleHashToArrayBuffer(this.ancientBlockHeardMerkleRoot),
+      checkerLaschecker_last_task_sidechain_heightstTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map((height) => {
         return {
           checker_lock_arg: publicKeyHashToArrayBuffer(height.checker_lock_arg),
           height: blockHeightToArrayBuffer(height.height),

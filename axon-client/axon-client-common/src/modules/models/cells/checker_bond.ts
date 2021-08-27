@@ -9,8 +9,8 @@ import {
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { CHECKER_BOND_LOCK_SCRIPT, CHECKER_BOND_TYPE_SCRIPT } from "../../../utils/environment";
-import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
-import { CheckerBondCellLockArgs, SerializeCheckerBondCellLockArgs } from "../mol/checker_bond";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/cellData/sudt_token";
+import { CheckerBondCellLockArgs, SerializeCheckerBondCellLockArgs } from "../mol/cellData/checker_bond";
 import {
   arrayBufferToPublicKeyHash,
   arrayBufferToUint128,

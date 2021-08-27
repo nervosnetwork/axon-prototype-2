@@ -3,7 +3,7 @@ import { defaultOutPoint, scriptArgToArrayBuff, Uint64BigIntToLeHex } from "../.
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { CODE_LOCK_SCRIPT, CODE_TYPE_SCRIPT } from "../../../utils/environment";
-import { CodeCellLockArgs } from "../mol/code";
+import { CodeCellLockArgs } from "../mol/cellData/code";
 import { arrayBufferToPublicKeyHash } from "../../../utils/mol";
 
 /*

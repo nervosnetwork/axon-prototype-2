@@ -9,9 +9,9 @@ import {
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { SIDECHAIN_FEE_LOCK_SCRIPT, SIDECHAIN_FEE_TYPE_SCRIPT } from "../../../utils/environment";
-import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/sudt_token";
+import { SerializeSudtTokenCell, SudtTokenCell } from "../mol/cellData/sudt_token";
 import { arrayBufferToPublicKeyHash, arrayBufferToUint128, uint128ToArrayBuffer } from "../../../utils/mol";
-import { SidechainFeeCellLockArgs } from "../mol/sidechain_fee";
+import { SidechainFeeCellLockArgs } from "../mol/cellData/sidechain_fee";
 
 /*
 sidechain fee

@@ -9,7 +9,7 @@ import {
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { TASK_STATE_LOCK_SCRIPT, TASK_TYPE_SCRIPT } from "../../../utils/environment";
-import { SerializeTaskCell, TaskCell, TaskCellTypeArgs } from "../mol/task";
+import { SerializeTaskCell, TaskCell, TaskCellTypeArgs } from "../mol/cellData/task";
 import {
   arrayBufferToBlockHeader,
   arrayBufferToBlockHeight,
@@ -58,7 +58,6 @@ export class Task implements CellInputType, CellOutputType {
   version: bigint;
   sidechainBlockHeightFrom: bigint;
   sidechainBlockHeightTo: bigint;
-  refreshSidechainHeight: bigint;
   checkDataSize: bigint;
   mode: string;
   status: string;
@@ -76,7 +75,6 @@ export class Task implements CellInputType, CellOutputType {
     version: bigint,
     sidechainBlockHeightFrom: bigint,
     sidechainBlockHeightTo: bigint,
-    refreshSidechainHeight: bigint,
     checkDataSize: bigint,
     mode: string,
     status: string,
@@ -91,7 +89,6 @@ export class Task implements CellInputType, CellOutputType {
     this.version = version;
     this.sidechainBlockHeightFrom = sidechainBlockHeightFrom;
     this.sidechainBlockHeightTo = sidechainBlockHeightTo;
-    this.refreshSidechainHeight = refreshSidechainHeight;
     this.checkDataSize = checkDataSize;
     this.mode = mode;
     this.status = status;
@@ -122,7 +119,6 @@ export class Task implements CellInputType, CellOutputType {
     const version = arrayBufferToUint8(cellData.getVersion().raw());
     const sidechainBlockHeightFrom = arrayBufferToBlockHeight(cellData.getSidechainBlockHeightFrom().raw());
     const sidechainBlockHeightTo = arrayBufferToBlockHeight(cellData.getSidechainBlockHeightTo().raw());
-    const refreshSidechainHeight = arrayBufferToBlockHeight(cellData.getRefreshSidechainHeight().raw());
     const checkDataSize = arrayBufferToUint128(cellData.getCheckDataSize().raw());
     const mode = arrayBufferToBytes1(cellData.getMode().raw());
     const status = arrayBufferToBytes1(cellData.getStatus().raw());
@@ -151,7 +147,6 @@ export class Task implements CellInputType, CellOutputType {
       version,
       sidechainBlockHeightFrom,
       sidechainBlockHeightTo,
-      refreshSidechainHeight,
       checkDataSize,
       mode,
       status,
@@ -166,7 +161,7 @@ export class Task implements CellInputType, CellOutputType {
   }
 
   static default(): Task {
-    return new Task(0n, 0n, 0n, 0n, 0n, 0n, ``, ``, ``, ``, [], 0n, ``, defaultOutPoint());
+    return new Task(0n, 0n, 0n, 0n, 0n, ``, ``, ``, ``, [], 0n, ``, defaultOutPoint());
   }
 
   toCellInput(): CKBComponents.CellInput {
@@ -191,15 +186,14 @@ export class Task implements CellInputType, CellOutputType {
   toCellOutputData(): string {
     const taskCell = {
       version: uint8ToArrayBuffer(this.version),
-      sidechainBlockHeightFrom: blockHeightToArrayBuffer(this.sidechainBlockHeightFrom),
-      sidechainBlockHeightTo: blockHeightToArrayBuffer(this.sidechainBlockHeightTo),
-      refreshSidechainHeight: blockHeightToArrayBuffer(this.refreshSidechainHeight),
-      checkDataSize: uint128ToArrayBuffer(this.checkDataSize),
+      sidechain_block_height_from: blockHeightToArrayBuffer(this.sidechainBlockHeightFrom),
+      sidechain_block_height_to: blockHeightToArrayBuffer(this.sidechainBlockHeightTo),
+      check_data_size: uint128ToArrayBuffer(this.checkDataSize),
       mode: bytes1ToArrayBuffer(this.mode),
       status: bytes1ToArrayBuffer(this.status),
       reveal: randomSeedToArrayBuffer(this.reveal),
       commit: committedHashToArrayBuffer(this.commit),
-      sidechainBlockHeader: this.sidechainBlockHeader.map((header) => blockHeaderToArrayBuffer(header)),
+      sidechain_block_header: this.sidechainBlockHeader.map((header) => blockHeaderToArrayBuffer(header)),
     };
 
     return arrayBufferToHex(SerializeTaskCell(taskCell));

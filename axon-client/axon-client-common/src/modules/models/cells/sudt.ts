@@ -1,11 +1,16 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
-import { defaultOutPoint, remove0xPrefix, Uint128BigIntToLeHex, Uint64BigIntToLeHex } from "../../../utils/tools";
+import {
+  arrayBufferToHex,
+  defaultOutPoint,
+  remove0xPrefix,
+  Uint64BigIntToLeHex
+} from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { SUDT_LOCK_SCRIPT, SUDT_TYPE_SCRIPT } from "../../../utils/environment";
 import { Muse } from "./muse";
-import { SudtTokenCell } from "../mol/sudt_token";
-import { arrayBufferToUint128 } from "../../../utils/mol";
+import {SerializeSudtTokenCell, SudtTokenCell} from "../mol/cellData/sudt_token";
+import {arrayBufferToUint128, uint128ToArrayBuffer} from "../../../utils/mol";
 
 /*
 muse
@@ -80,7 +85,11 @@ export class Sudt implements CellInputType, CellOutputType {
   }
 
   toCellOutputData(): string {
-    return `${Uint128BigIntToLeHex(this.sudtAmount)}`;
+
+    const sudtCellData = {
+      amount: uint128ToArrayBuffer(this.sudtAmount),
+    };
+    return arrayBufferToHex(SerializeSudtTokenCell(sudtCellData));
   }
 
   getOutPoint(): string {
