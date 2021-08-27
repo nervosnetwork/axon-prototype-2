@@ -29,7 +29,11 @@ import {
   uint32ToArrayBuffer,
   uint8ToArrayBuffer,
 } from "../../../utils/mol";
-import { SerializeSidechainStateCell, SidechainStateCell, SidechainStateCellTypeArgs } from "../mol/cellData/sidechain_state";
+import {
+  SerializeSidechainStateCell,
+  SidechainStateCell,
+  SidechainStateCellTypeArgs,
+} from "../mol/cellData/sidechain_state";
 
 /*
 sidechain status
@@ -275,12 +279,14 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
       }),
       recent_block_headers: this.recentBlockHeaders.map((header) => blockHeaderToArrayBuffer(header)),
       ancient_block_heard_merkle_root: merkleHashToArrayBuffer(this.ancientBlockHeardMerkleRoot),
-      checkerLaschecker_last_task_sidechain_heightstTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map((height) => {
-        return {
-          checker_lock_arg: publicKeyHashToArrayBuffer(height.checker_lock_arg),
-          height: blockHeightToArrayBuffer(height.height),
-        };
-      }),
+      checkerLaschecker_last_task_sidechain_heightstTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map(
+        (height) => {
+          return {
+            checker_lock_arg: publicKeyHashToArrayBuffer(height.checker_lock_arg),
+            height: blockHeightToArrayBuffer(height.height),
+          };
+        },
+      ),
     };
 
     return arrayBufferToHex(SerializeSidechainStateCell(sidechainStateCell));
