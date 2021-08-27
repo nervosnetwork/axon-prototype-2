@@ -3,6 +3,9 @@ target/*
 .cache/.cargo/*
 contracts/**/target/*
 common/global_config_type_hash
+common/sudt_type_hash
+
+
 # C
 contracts/c/build/*
 

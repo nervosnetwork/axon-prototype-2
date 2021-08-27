@@ -11,19 +11,19 @@ build: force
 
 build-dev:
 	cargo fmt
-	capsule build --env gcc_typehash=dev_gcc
+	capsule build --env gcc_typehash=dev_gcc sudt_typehash=dev_sudt
 
 build-lina:
 	cargo fmt
-	capsule build --env gcc_typehash=lina_gcc
+	capsule build --env gcc_typehash=lina_gcc sudt_typehash=lina_sudt
 
 build-aggron:
 	cargo fmt
-	capsule build --env gcc_typehash=aggron_gcc
+	capsule build --env gcc_typehash=aggron_gcc sudt_typehash=aggron_sudt
 
 build-custom:
 	cargo fmt
-	capsule build --env gcc_typehash=custom_gcc
+	capsule build --env gcc_typehash=custom_gcc sudt_typehash=custom_sudt
 
 clean:
 	cargo clean
