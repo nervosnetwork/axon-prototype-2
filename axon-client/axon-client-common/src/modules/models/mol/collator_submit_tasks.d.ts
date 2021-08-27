@@ -13,12 +13,33 @@ export interface UnionType {
   value: any;
 }
 
-export function SerializeSudtTokenCell(value: object): ArrayBuffer;
-export class SudtTokenCell {
+export function SerializeExistedCommittedCheckerInfo(value: object): ArrayBuffer;
+export class ExistedCommittedCheckerInfo {
   constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
   validate(compatible?: boolean): void;
-  static size(): Number;
-  getAmount(): Uint128;
+  getIndex(): Uint32Opt;
+  getCheckerLockArg(): PubKeyHash;
+  getOriginCommittedHash(): CommittedHashOpt;
+  getNewCommittedHash(): CommittedHashOpt;
+}
+
+export function SerializeExistedCommittedCheckerInfos(value: Array<object>): ArrayBuffer;
+export class ExistedCommittedCheckerInfos {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  indexAt(i: number): ExistedCommittedCheckerInfo;
+  length(): number;
+}
+
+export function SerializeCollatorSubmitTasksWitness(value: object): ArrayBuffer;
+export class CollatorSubmitTasksWitness {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  getChallengeTimes(): Uint32;
+  getCheckDataSize(): Uint128;
+  getCommit(): ExistedCommittedCheckerInfos;
+  getOriginRandomSeed(): RandomSeed;
+  getNewRandomSeed(): RandomSeed;
 }
 
 export function SerializeUint8(value: CanCastToArrayBuffer): ArrayBuffer;

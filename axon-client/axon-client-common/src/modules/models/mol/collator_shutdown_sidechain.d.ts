@@ -13,12 +13,13 @@ export interface UnionType {
   value: any;
 }
 
-export function SerializeSudtTokenCell(value: object): ArrayBuffer;
-export class SudtTokenCell {
+export function SerializeCollatorShutDownSidechainWitness(value: object): ArrayBuffer;
+export class CollatorShutDownSidechainWitness {
   constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
   validate(compatible?: boolean): void;
   static size(): Number;
-  getAmount(): Uint128;
+  getPattern(): Uint8;
+  getChainId(): ChainId;
 }
 
 export function SerializeUint8(value: CanCastToArrayBuffer): ArrayBuffer;

@@ -1,0 +1,214 @@
+{
+  "namespace": "collator_shutdown_sidechain",
+  "imports": [
+    {
+      "name": "common",
+      "paths": [],
+      "path_supers": 1
+    }
+  ],
+  "declarations": [
+    {
+      "type": "struct",
+      "name": "CollatorShutDownSidechainWitness",
+      "fields": [
+        {
+          "name": "pattern",
+          "type": "Uint8"
+        },
+        {
+          "name": "chain_id",
+          "type": "ChainId"
+        }
+      ]
+    },
+    {
+      "type": "array",
+      "name": "Uint8",
+      "item": "byte",
+      "item_count": 1,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "Uint16",
+      "item": "byte",
+      "item_count": 2,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "Uint32",
+      "item": "byte",
+      "item_count": 4,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "Uint64",
+      "item": "byte",
+      "item_count": 8,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "Uint128",
+      "item": "byte",
+      "item_count": 16,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "Bytes16",
+      "item": "byte",
+      "item_count": 16,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "Bytes32",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "BlockHeader",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "BlockHeight",
+      "item": "byte",
+      "item_count": 16,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "CodeHash",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "HashType",
+      "item": "byte",
+      "item_count": 1,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "MerkleHash",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "PubKeyHash",
+      "item": "byte",
+      "item_count": 20,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "ScriptHash",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "fixvec",
+      "name": "PubKeyHashList",
+      "item": "PubKeyHash",
+      "imported_depth": 1
+    },
+    {
+      "type": "struct",
+      "name": "BlockSlice",
+      "fields": [
+        {
+          "name": "from",
+          "type": "BlockHeight"
+        },
+        {
+          "name": "to",
+          "type": "BlockHeight"
+        }
+      ],
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "ChainId",
+      "item": "byte",
+      "item_count": 4,
+      "imported_depth": 1
+    },
+    {
+      "type": "fixvec",
+      "name": "ChainIdList",
+      "item": "ChainId",
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "RandomSeed",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "array",
+      "name": "CommittedHash",
+      "item": "byte",
+      "item_count": 32,
+      "imported_depth": 1
+    },
+    {
+      "type": "fixvec",
+      "name": "MolString",
+      "item": "byte",
+      "imported_depth": 1
+    },
+    {
+      "type": "option",
+      "name": "Uint8Opt",
+      "item": "Uint8",
+      "imported_depth": 1
+    },
+    {
+      "type": "option",
+      "name": "Uint16Opt",
+      "item": "Uint16",
+      "imported_depth": 1
+    },
+    {
+      "type": "option",
+      "name": "Uint32Opt",
+      "item": "Uint32",
+      "imported_depth": 1
+    },
+    {
+      "type": "option",
+      "name": "Uint64Opt",
+      "item": "Uint64",
+      "imported_depth": 1
+    },
+    {
+      "type": "option",
+      "name": "Uint128Opt",
+      "item": "Uint128",
+      "imported_depth": 1
+    },
+    {
+      "type": "option",
+      "name": "CommittedHashOpt",
+      "item": "CommittedHash",
+      "imported_depth": 1
+    }
+  ]
+}

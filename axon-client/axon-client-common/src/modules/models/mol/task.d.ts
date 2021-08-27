@@ -19,7 +19,7 @@ export class TaskMode {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeTaskStatus(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -28,7 +28,7 @@ export class TaskStatus {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeSidechainBlockHeaders(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
@@ -46,7 +46,6 @@ export class TaskCell {
   getVersion(): Uint8;
   getSidechainBlockHeightFrom(): BlockHeight;
   getSidechainBlockHeightTo(): BlockHeight;
-  getRefreshSidechainHeight(): BlockHeight;
   getCheckDataSize(): Uint128;
   getMode(): TaskMode;
   getStatus(): TaskStatus;
@@ -59,7 +58,7 @@ export function SerializeTaskCellTypeArgs(value: object): ArrayBuffer;
 export class TaskCellTypeArgs {
   constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
   validate(compatible?: boolean): void;
-  static size(): number;
+  static size(): Number;
   getChainId(): ChainId;
   getCheckerLockArg(): PubKeyHash;
 }
@@ -70,7 +69,7 @@ export class Uint8 {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeUint16(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -81,7 +80,7 @@ export class Uint16 {
   raw(): ArrayBuffer;
   toBigEndianUint16(): number;
   toLittleEndianUint16(): number;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeUint32(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -92,7 +91,7 @@ export class Uint32 {
   raw(): ArrayBuffer;
   toBigEndianUint32(): number;
   toLittleEndianUint32(): number;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeUint64(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -103,7 +102,7 @@ export class Uint64 {
   raw(): ArrayBuffer;
   toBigEndianBigUint64(): bigint;
   toLittleEndianBigUint64(): bigint;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeUint128(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -112,7 +111,7 @@ export class Uint128 {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeBytes16(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -121,7 +120,7 @@ export class Bytes16 {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeBytes32(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -130,7 +129,7 @@ export class Bytes32 {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeBlockHeader(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -139,7 +138,7 @@ export class BlockHeader {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeBlockHeight(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -148,7 +147,7 @@ export class BlockHeight {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeCodeHash(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -157,7 +156,7 @@ export class CodeHash {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeHashType(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -166,7 +165,7 @@ export class HashType {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeMerkleHash(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -175,7 +174,7 @@ export class MerkleHash {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializePubKeyHash(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -184,7 +183,7 @@ export class PubKeyHash {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeScriptHash(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -193,14 +192,22 @@ export class ScriptHash {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
+}
+
+export function SerializePubKeyHashList(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
+export class PubKeyHashList {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  indexAt(i: number): PubKeyHash;
+  length(): number;
 }
 
 export function SerializeBlockSlice(value: object): ArrayBuffer;
 export class BlockSlice {
   constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
   validate(compatible?: boolean): void;
-  static size(): number;
+  static size(): Number;
   getFrom(): BlockHeight;
   getTo(): BlockHeight;
 }
@@ -213,7 +220,7 @@ export class ChainId {
   raw(): ArrayBuffer;
   toBigEndianUint32(): number;
   toLittleEndianUint32(): number;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeChainIdList(value: Array<CanCastToArrayBuffer>): ArrayBuffer;
@@ -230,7 +237,7 @@ export class RandomSeed {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeCommittedHash(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -239,7 +246,7 @@ export class CommittedHash {
   validate(compatible?: boolean): void;
   indexAt(i: number): number;
   raw(): ArrayBuffer;
-  static size(): number;
+  static size(): Number;
 }
 
 export function SerializeMolString(value: CanCastToArrayBuffer): ArrayBuffer;
@@ -250,3 +257,52 @@ export class MolString {
   raw(): ArrayBuffer;
   length(): number;
 }
+
+export function SerializeUint8Opt(value: CanCastToArrayBuffer | null): ArrayBuffer;
+export class Uint8Opt {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  value(): Uint8;
+  hasValue(): boolean;
+}
+
+export function SerializeUint16Opt(value: CanCastToArrayBuffer | null): ArrayBuffer;
+export class Uint16Opt {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  value(): Uint16;
+  hasValue(): boolean;
+}
+
+export function SerializeUint32Opt(value: CanCastToArrayBuffer | null): ArrayBuffer;
+export class Uint32Opt {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  value(): Uint32;
+  hasValue(): boolean;
+}
+
+export function SerializeUint64Opt(value: CanCastToArrayBuffer | null): ArrayBuffer;
+export class Uint64Opt {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  value(): Uint64;
+  hasValue(): boolean;
+}
+
+export function SerializeUint128Opt(value: CanCastToArrayBuffer | null): ArrayBuffer;
+export class Uint128Opt {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  value(): Uint128;
+  hasValue(): boolean;
+}
+
+export function SerializeCommittedHashOpt(value: CanCastToArrayBuffer | null): ArrayBuffer;
+export class CommittedHashOpt {
+  constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
+  validate(compatible?: boolean): void;
+  value(): CommittedHash;
+  hasValue(): boolean;
+}
+

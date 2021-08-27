@@ -13,12 +13,13 @@ export interface UnionType {
   value: any;
 }
 
-export function SerializeSudtTokenCell(value: object): ArrayBuffer;
-export class SudtTokenCell {
+export function SerializeAnyoneShutdownSidechainWitness(value: object): ArrayBuffer;
+export class AnyoneShutdownSidechainWitness {
   constructor(reader: CanCastToArrayBuffer, options?: CreateOptions);
   validate(compatible?: boolean): void;
-  static size(): Number;
-  getAmount(): Uint128;
+  getChallengeTimes(): Uint32;
+  getCheckDataSize(): Uint128;
+  getJailedCheckers(): PubKeyHashList;
 }
 
 export function SerializeUint8(value: CanCastToArrayBuffer): ArrayBuffer;
