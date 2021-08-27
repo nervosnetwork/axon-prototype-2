@@ -1,5 +1,5 @@
 import { prepare0xPrefix, remove0xPrefix } from "./tools";
-import { BlockSlice, ChainIdList, MolString, SerializeBlockSlice } from "../modules/models/mol/task";
+import { BlockSlice, ChainIdList, MolString, SerializeBlockSlice } from "../modules/models/mol/cellData/task";
 
 export type HASH_TYPE = "type" | "code";
 

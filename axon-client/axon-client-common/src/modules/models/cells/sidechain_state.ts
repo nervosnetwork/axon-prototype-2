@@ -29,7 +29,7 @@ import {
   uint32ToArrayBuffer,
   uint8ToArrayBuffer,
 } from "../../../utils/mol";
-import { SerializeSidechainStateCell, SidechainStateCell, SidechainStateCellTypeArgs } from "../mol/sidechain_state";
+import { SerializeSidechainStateCell, SidechainStateCell, SidechainStateCellTypeArgs } from "../mol/cellData/sidechain_state";
 
 /*
 sidechain status
@@ -252,30 +252,30 @@ export class SidechainState implements CellInputType, CellOutputType, CellDepTyp
   toCellOutputData(): string {
     const sidechainStateCell = {
       version: uint8ToArrayBuffer(this.version),
-      submitSidechainBlockHeight: blockHeightToArrayBuffer(this.submitSidechainBlockHeight),
-      waitingJobs: this.waitingJobs.map((job) => {
+      submit_sidechain_block_height: blockHeightToArrayBuffer(this.submitSidechainBlockHeight),
+      waiting_jobs: this.waitingJobs.map((job) => {
         return {
           from: blockHeightToArrayBuffer(job.from),
           to: blockHeightToArrayBuffer(job.to),
         };
       }),
-      randomSeed: randomSeedToArrayBuffer(this.randomSeed),
-      randomOffset: uint8ToArrayBuffer(this.randomOffset),
-      randomCommit: this.randomCommit.map((item) => {
+      random_seed: randomSeedToArrayBuffer(this.randomSeed),
+      random_offset: uint8ToArrayBuffer(this.randomOffset),
+      random_commit: this.randomCommit.map((item) => {
         return {
           checker_lock_arg: publicKeyHashToArrayBuffer(item.checker_lock_arg),
           committed_hash: committedHashToArrayBuffer(item.committed_hash),
         };
       }),
-      punishCheckers: this.punishCheckers.map((checker) => {
+      punish_checkers: this.punishCheckers.map((checker) => {
         return {
           checker_lock_arg: publicKeyHashToArrayBuffer(checker.checker_lock_arg),
           punish_points: uint32ToArrayBuffer(checker.punish_points),
         };
       }),
-      recentBlockHeaders: this.recentBlockHeaders.map((header) => blockHeaderToArrayBuffer(header)),
-      ancientBlockHeardMerkleRoot: merkleHashToArrayBuffer(this.ancientBlockHeardMerkleRoot),
-      checkerLastTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map((height) => {
+      recent_block_headers: this.recentBlockHeaders.map((header) => blockHeaderToArrayBuffer(header)),
+      ancient_block_heard_merkle_root: merkleHashToArrayBuffer(this.ancientBlockHeardMerkleRoot),
+      checkerLaschecker_last_task_sidechain_heightstTaskSidechainHeights: this.checkerLastTaskSidechainHeights.map((height) => {
         return {
           checker_lock_arg: publicKeyHashToArrayBuffer(height.checker_lock_arg),
           height: blockHeightToArrayBuffer(height.height),

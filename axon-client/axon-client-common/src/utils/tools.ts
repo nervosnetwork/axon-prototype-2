@@ -52,7 +52,7 @@ export const arrayBufferToBigIntUint16 = (ab: ArrayBuffer): bigint => {
 export const arrayBufferToBigIntUint8 = (ab: ArrayBuffer): bigint => {
   const b = Buffer.from(ab);
   return BigInt(b.readUInt8(0));
-};*/
+};
 
 export const leHexToBigIntUint128 = (rawHexString: string): bigint => {
   return utils.readBigUInt128LE(prepare0xPrefix(rawHexString));
@@ -75,7 +75,7 @@ export const leHexToBigIntUint16 = (rawHexString: string): bigint => {
 export const leHexToBigIntUint8 = (rawHexString: string): bigint => {
   const buf = Buffer.from(prepare0xPrefix(rawHexString).slice(2), "hex");
   return BigInt(buf.readUInt8());
-};
+};*/
 
 export const Uint128BigIntToLeHex = (u128: bigint): string => {
   if (u128 < 0) {

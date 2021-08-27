@@ -9,7 +9,7 @@ import {
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { TASK_STATE_LOCK_SCRIPT, TASK_TYPE_SCRIPT } from "../../../utils/environment";
-import { SerializeTaskCell, TaskCell, TaskCellTypeArgs } from "../mol/task";
+import { SerializeTaskCell, TaskCell, TaskCellTypeArgs } from "../mol/cellData/task";
 import {
   arrayBufferToBlockHeader,
   arrayBufferToBlockHeight,
@@ -186,14 +186,14 @@ export class Task implements CellInputType, CellOutputType {
   toCellOutputData(): string {
     const taskCell = {
       version: uint8ToArrayBuffer(this.version),
-      sidechainBlockHeightFrom: blockHeightToArrayBuffer(this.sidechainBlockHeightFrom),
-      sidechainBlockHeightTo: blockHeightToArrayBuffer(this.sidechainBlockHeightTo),
-      checkDataSize: uint128ToArrayBuffer(this.checkDataSize),
+      sidechain_block_height_from: blockHeightToArrayBuffer(this.sidechainBlockHeightFrom),
+      sidechain_block_height_to: blockHeightToArrayBuffer(this.sidechainBlockHeightTo),
+      check_data_size: uint128ToArrayBuffer(this.checkDataSize),
       mode: bytes1ToArrayBuffer(this.mode),
       status: bytes1ToArrayBuffer(this.status),
       reveal: randomSeedToArrayBuffer(this.reveal),
       commit: committedHashToArrayBuffer(this.commit),
-      sidechainBlockHeader: this.sidechainBlockHeader.map((header) => blockHeaderToArrayBuffer(header)),
+      sidechain_block_header: this.sidechainBlockHeader.map((header) => blockHeaderToArrayBuffer(header)),
     };
 
     return arrayBufferToHex(SerializeTaskCell(taskCell));

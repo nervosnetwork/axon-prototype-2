@@ -34,7 +34,7 @@ import {
   SerializeSidechainConfigCell,
   SidechainConfigCell,
   SidechainConfigCellTypeArgs,
-} from "../mol/sidechain_config";
+} from "../mol/cellData/sidechain_config";
 
 /*
 sidechain config
@@ -316,33 +316,33 @@ export class SidechainConfig implements CellInputType, CellOutputType, CellDepTy
     const jailedCheckers = this.jailedCheckers.map((checker) => publicKeyHashToArrayBuffer(checker));
 
     const sidechainConfigCell = {
-      sidechainStatus: bytes1ToArrayBuffer(this.sidechainStatus),
+      sidechain_status: bytes1ToArrayBuffer(this.sidechainStatus),
 
-      commitThreshold: uint32ToArrayBuffer(this.commitThreshold),
-      challengeThreshold: uint32ToArrayBuffer(this.challengeThreshold),
+      commit_threshold: uint32ToArrayBuffer(this.commitThreshold),
+      challenge_threshold: uint32ToArrayBuffer(this.challengeThreshold),
 
-      checkerNormalCount: uint32ToArrayBuffer(this.checkerNormalCount),
-      checkerThreshold: uint32ToArrayBuffer(this.checkerThreshold),
-      checkerTotalCount: uint32ToArrayBuffer(this.checkerTotalCount),
+      checker_normal_count: uint32ToArrayBuffer(this.checkerNormalCount),
+      checker_threshold: uint32ToArrayBuffer(this.checkerThreshold),
+      checker_total_count: uint32ToArrayBuffer(this.checkerTotalCount),
       activated_checkers: activatedCheckers,
       jailed_checkers: jailedCheckers,
-      refreshPunishPoints: uint32ToArrayBuffer(this.refreshPunishPoints),
-      refreshPunishReleasePoints: uint32ToArrayBuffer(this.refreshPunishReleasePoints),
-      refreshPunishThreshold: uint32ToArrayBuffer(this.refreshPunishThreshold),
+      refresh_punish_points: uint32ToArrayBuffer(this.refreshPunishPoints),
+      refresh_punish_release_points: uint32ToArrayBuffer(this.refreshPunishReleasePoints),
+      refresh_punish_threshold: uint32ToArrayBuffer(this.refreshPunishThreshold),
       refresh_interval: blockHeightToArrayBuffer(this.refreshInterval),
       shutdown_timeout: blockHeightToArrayBuffer(this.shutdownTimeout),
 
-      checkDataSizeLimit: uint128ToArrayBuffer(this.checkDataSizeLimit),
-      checkFeeRate: uint32ToArrayBuffer(this.checkFeeRate),
-      minimalBond: uint128ToArrayBuffer(this.minimalBond),
-      parallelJobUpperBond: uint8ToArrayBuffer(this.parallelJobUpperBond),
-      parallelJobMaximalHeightRange: blockHeightToArrayBuffer(this.parallelJobMaximalHeightRange),
+      check_data_size_limit: uint128ToArrayBuffer(this.checkDataSizeLimit),
+      check_fee_rate: uint32ToArrayBuffer(this.checkFeeRate),
+      minimal_bond: uint128ToArrayBuffer(this.minimalBond),
+      parallel_job_upper_bond: uint8ToArrayBuffer(this.parallelJobUpperBond),
+      parallel_job_maximal_height_range: blockHeightToArrayBuffer(this.parallelJobMaximalHeightRange),
 
-      adminLockArg: publicKeyHashToArrayBuffer(this.adminLockArg),
-      collatorLockArg: publicKeyHashToArrayBuffer(this.collatorLockArg),
+      admin_lock_arg: publicKeyHashToArrayBuffer(this.adminLockArg),
+      collator_lock_arg: publicKeyHashToArrayBuffer(this.collatorLockArg),
 
-      bondSudtTypescriptCodehash: codeHashToArrayBuffer(this.bondSudtTypescriptCodehash),
-      bondSudtTypescriptHashtype: hashTypeToArrayBuffer(this.bondSudtTypescriptHashtype),
+      bond_sudt_typescript_codehash: codeHashToArrayBuffer(this.bondSudtTypescriptCodehash),
+      bond_sudt_typescript_hashtype: hashTypeToArrayBuffer(this.bondSudtTypescriptHashtype),
     };
     return arrayBufferToHex(SerializeSidechainConfigCell(sidechainConfigCell));
   }

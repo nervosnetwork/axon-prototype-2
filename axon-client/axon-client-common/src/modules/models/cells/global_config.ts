@@ -4,7 +4,7 @@ import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { GLOBAL_CONFIG_LOCK_SCRIPT, GLOBAL_CONFIG_TYPE_SCRIPT } from "../../../utils/environment";
 import { CellDepType } from "./interfaces/cell_dep_type";
-import { GlobalConfigCell, SerializeGlobalConfigCell } from "../mol/global_config";
+import { GlobalConfigCell, SerializeGlobalConfigCell } from "../mol/cellData/global_config";
 import {
   arrayBufferToCodeHash,
   arrayBufferToHashType,

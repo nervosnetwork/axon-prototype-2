@@ -14,7 +14,7 @@ import {
   CheckerInfoCellTypeArgs,
   SerializeCheckerInfoCell,
   SerializeCheckerInfoCellTypeArgs,
-} from "../mol/checker_info";
+} from "../mol/cellData/checker_info";
 import {
   arrayBufferToBytes1,
   arrayBufferToChainId,
@@ -162,7 +162,7 @@ export class CheckerInfo implements CellInputType, CellOutputType {
   toCellOutputData(): string {
     const checkerInfoCell = {
       unpaid_fee: uint128ToArrayBuffer(this.unpaidFee),
-      rpcUrl: molStringToArrayBuffer(this.rpcUrl),
+      rpc_url: molStringToArrayBuffer(this.rpcUrl),
       status: bytes1ToArrayBuffer(this.status == "Relaying" ? "0x00" : "0x01"),
     };
 
