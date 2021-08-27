@@ -38,12 +38,38 @@ pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ];
 
-/*
-e.g.
-[250, 26, 248, 48, 225, 201, 73, 74, 69, 92, 24, 34, 137, 187, 204, 84, 247, 12, 200, 252, 239, 69, 32, 143, 148, 144, 46, 126, 6, 10, 198, 73]
- */
 #[cfg(gcc_typehash = "custom_gcc")]
 pub const GLOBAL_CONFIG_TYPE_HASH: [u8; 32] = include!("../global_config_type_hash");
+
+#[cfg(sudt_typehash = "test_sudt")]
+pub const SUDT_CODEHASH: [u8; 32] = [
+    102, 2, 235, 138, 43, 3, 201, 143, 225, 190, 198, 89, 72, 26, 48, 200, 129, 239, 212, 37, 141, 23, 251, 183, 128, 147, 118, 98, 227,
+    43, 134, 11,
+];
+
+//=========================
+
+//waiting for calculate
+#[cfg(sudt_typehash = "dev_sudt")]
+pub const SUDT_TYPE_HASH: [u8; 32] = [
+    250, 26, 248, 48, 225, 201, 73, 74, 69, 92, 24, 34, 137, 187, 204, 84, 247, 12, 200, 252, 239, 69, 32, 143, 148, 144, 46, 126, 6, 10,
+    198, 73,
+];
+
+//https://explorer.nervos.org/transaction/0xc7813f6a415144643970c2e88e0bb6ca6a8edc5dd7c1022746f628284a9936d5
+#[cfg(sudt_typehash = "lina_sudt")]
+pub const SUDT_TYPE_HASH: [u8; 32] = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+//https://explorer.nervos.org/aggron/transaction/0xe12877ebd2c3c364dc46c5c992bcfaf4fee33fa13eebdf82c591fc9825aab769
+#[cfg(sudt_typehash = "aggron_sudt")]
+pub const SUDT_TYPE_HASH: [u8; 32] = [
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+#[cfg(sudt_typehash = "custom_sudt")]
+pub const SUDT_TYPE_HASH: [u8; 32] = include!("../sudt_type_hash");
 
 pub fn check_global_cell() -> Option<GlobalConfigCellData> {
     let global_config_data = (0..)
