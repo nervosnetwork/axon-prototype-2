@@ -34,6 +34,14 @@ export const uint32ToArrayBuffer = (input: bigint): ArrayBuffer => {
   return b;
 };
 
+export const uint32OptToArrayBuffer = (input: bigint | null): ArrayBuffer => {
+  if (input) {
+    return uint32ToArrayBuffer(input);
+  } else {
+    return new ArrayBuffer(0);
+  }
+};
+
 export const arrayBufferToUint32 = (input: ArrayBuffer): bigint => {
   const v = new DataView(input);
   return BigInt(v.getUint32(0, true));
@@ -121,6 +129,14 @@ export const bytes32ToArrayBuffer = (input: string): ArrayBuffer => {
   const b = Buffer.alloc(32);
   b.write(input, "hex");
   return b.buffer;
+};
+
+export const bytes32OptToArrayBuffer = (input: string | null): ArrayBuffer => {
+  if (input) {
+    return bytes32ToArrayBuffer(input);
+  } else {
+    return new ArrayBuffer(0);
+  }
 };
 
 export const arrayBufferToBytes32 = arrayBufferToBytesInternal;
@@ -226,6 +242,8 @@ export const randomSeedToArrayBuffer = bytes32ToArrayBuffer;
 export const arrayBufferToRandomSeed = arrayBufferToBytes32;
 
 export const committedHashToArrayBuffer = bytes32ToArrayBuffer;
+
+export const committedHashOptToArrayBuffer = bytes32OptToArrayBuffer;
 
 export const arrayBufferToCommittedHash = arrayBufferToBytes32;
 
