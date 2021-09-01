@@ -1,3 +1,5 @@
+import "reflect-metadata";
+
 export const modules: Record<string, symbol> = {
   CrossChainService: Symbol("CrossChainService"),
   EngineService: Symbol("EngineService"),
