@@ -36,6 +36,7 @@
     "@nervosnetwork/ckb-sdk-utils": "0.39",
     "@types/json-bigint": "^1.0.0",
     "@types/lodash": "^4.14.168",
+    "axon-client-common": "0.1.0",
     "class-validator": "0.12.2",
     "cron": "1.8.2",
     "dotenv": "8.2.0",
