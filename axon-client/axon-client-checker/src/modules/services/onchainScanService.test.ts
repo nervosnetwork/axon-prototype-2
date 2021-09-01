@@ -1,14 +1,14 @@
 import "reflect-metadata";
 
-import { CheckerBond } from "axon-client-common/src/modules/models/cells/checker_bond";
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
-import { Code } from "axon-client-common/src/modules/models/cells/code";
-import { GlobalConfig } from "axon-client-common/src/modules/models/cells/global_config";
-import { SidechainBond } from "axon-client-common/src/modules/models/cells/sidechain_bond";
-import { SidechainConfig } from "axon-client-common/src/modules/models/cells/sidechain_config";
-import { SidechainFee } from "axon-client-common/src/modules/models/cells/sidechain_fee";
-import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
-import { Task } from "axon-client-common/src/modules/models/cells/task";
+import { CheckerBond } from "axon-client-common/lib/modules/models/cells/checker_bond";
+import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
+import { Code } from "axon-client-common/lib/modules/models/cells/code";
+import { GlobalConfig } from "axon-client-common/lib/modules/models/cells/global_config";
+import { SidechainBond } from "axon-client-common/lib/modules/models/cells/sidechain_bond";
+import { SidechainConfig } from "axon-client-common/lib/modules/models/cells/sidechain_config";
+import { SidechainFee } from "axon-client-common/lib/modules/models/cells/sidechain_fee";
+import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
+import { Task } from "axon-client-common/lib/modules/models/cells/task";
 
 import OnchainScanService from "./onchainScanService";
 import ScanService from "./scanService";

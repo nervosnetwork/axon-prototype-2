@@ -5,24 +5,24 @@ import RpcService from "./rpcService";
 import TransactionService from "./transactionService";
 import OnchainEngineService from "./onchainEngineService";
 
-import { GlobalConfig } from "axon-client-common/src/modules/models/cells/global_config";
-import { SidechainConfig } from "axon-client-common/src/modules/models/cells/sidechain_config";
-import { Code } from "axon-client-common/src/modules/models/cells/code";
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
+import { GlobalConfig } from "axon-client-common/lib/modules/models/cells/global_config";
+import { SidechainConfig } from "axon-client-common/lib/modules/models/cells/sidechain_config";
+import { Code } from "axon-client-common/lib/modules/models/cells/code";
+import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
 
 import { createMock } from "ts-auto-mock";
 import CrossChainService from "./crossChainService";
-import { CollatorSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_task";
-import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
-import { SidechainFee } from "axon-client-common/src/modules/models/cells/sidechain_fee";
-import { CollatorSubmitTaskWitness } from "axon-client-common/src/modules/models/witnesses/collator_submit_task_witness";
-import { CollatorPublishTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_publish_task";
-import { Task } from "axon-client-common/src/modules/models/cells/task";
-import { defaultOutPoint, leHexToBigIntUint128 } from "axon-client-common/src/utils/tools";
-import { CollatorPublishTaskWitness } from "axon-client-common/src/modules/models/witnesses/collator_publish_task_witness";
-import { SidechainBond } from "axon-client-common/src/modules/models/cells/sidechain_bond";
-import { CollatorSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_challenge";
-import { Transformation } from "axon-client-common/src/modules/models/transformation/interfaces/transformation";
+import { CollatorSubmitTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_submit_task";
+import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
+import { SidechainFee } from "axon-client-common/lib/modules/models/cells/sidechain_fee";
+import { CollatorSubmitTaskWitness } from "axon-client-common/lib/modules/models/witnesses/collator_submit_task_witness";
+import { CollatorPublishTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_publish_task";
+import { Task } from "axon-client-common/lib/modules/models/cells/task";
+import { defaultOutPoint, leHexToBigIntUint128 } from "axon-client-common/lib/utils/tools";
+import { CollatorPublishTaskWitness } from "axon-client-common/lib/modules/models/witnesses/collator_publish_task_witness";
+import { SidechainBond } from "axon-client-common/lib/modules/models/cells/sidechain_bond";
+import { CollatorSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/collator_submit_challenge";
+import { Transformation } from "axon-client-common/lib/modules/models/transformation/interfaces/transformation";
 
 class Context {
   rpcService: RpcService;

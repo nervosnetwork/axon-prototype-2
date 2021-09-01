@@ -17,7 +17,7 @@ import OnchainScanService from "./modules/services/onchainScanService";
 //import OnchainTaskService from "./modules/services/onchainTaskService";
 import OnchainTransactionService from "./modules/services/onchainTransactionService";
 import Rpc from "@nervosnetwork/ckb-sdk-rpc";
-import { CKB_NODE_URL } from "axon-client-common/src/utils/environment";
+import { CKB_NODE_URL } from "axon-client-common/lib/utils/environment";
 
 class CKBRpc extends Rpc {
   constructor() {

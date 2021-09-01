@@ -1,4 +1,4 @@
-import { Transformation } from "axon-client-common/src/modules/models/transformation/interfaces/transformation";
+import { Transformation } from "axon-client-common/lib/modules/models/transformation/interfaces/transformation";
 
 /*
 this service compose tx for rpc

@@ -3,9 +3,9 @@ import { modules } from "../../container";
 import CKB from "@nervosnetwork/ckb-sdk-core";
 import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
 import JSONbig from "json-bigint";
-import { logger } from "axon-client-common/src/utils/logger";
-import { CELL_DEPS, SELF_PRIVATE_KEY } from "axon-client-common/src/utils/environment";
-import { Transformation } from "axon-client-common/src/modules/models/transformation/interfaces/transformation";
+import { logger } from "axon-client-common/lib/utils/logger";
+import { CELL_DEPS, SELF_PRIVATE_KEY } from "axon-client-common/lib/utils/environment";
+import { Transformation } from "axon-client-common/lib/modules/models/transformation/interfaces/transformation";
 import TransactionService from "./transactionService";
 
 /*

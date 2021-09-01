@@ -1,6 +1,6 @@
 import { CellCollector, Indexer } from "@ckb-lumos/sql-indexer";
 import knex from "knex";
-import { logger } from "axon-client-common/src/utils/logger";
+import { logger } from "axon-client-common/lib/utils/logger";
 
 import { injectable } from "inversify";
 
@@ -19,15 +19,15 @@ import {
   SIDECHAIN_FEE_QUERY_OPTION,
   SIDECHAIN_STATE_QUERY_OPTION,
   TASK_QUERY_OPTION,
-} from "axon-client-common/src/utils/environment";
-import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
-import { Code } from "axon-client-common/src/modules/models/cells/code";
-import { SidechainConfig } from "axon-client-common/src/modules/models/cells/sidechain_config";
-import { SidechainBond } from "axon-client-common/src/modules/models/cells/sidechain_bond";
-import { SidechainFee } from "axon-client-common/src/modules/models/cells/sidechain_fee";
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
-import { GlobalConfig } from "axon-client-common/src/modules/models/cells/global_config";
-import { Task } from "axon-client-common/src/modules/models/cells/task";
+} from "axon-client-common/lib/utils/environment";
+import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
+import { Code } from "axon-client-common/lib/modules/models/cells/code";
+import { SidechainConfig } from "axon-client-common/lib/modules/models/cells/sidechain_config";
+import { SidechainBond } from "axon-client-common/lib/modules/models/cells/sidechain_bond";
+import { SidechainFee } from "axon-client-common/lib/modules/models/cells/sidechain_fee";
+import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
+import { GlobalConfig } from "axon-client-common/lib/modules/models/cells/global_config";
+import { Task } from "axon-client-common/lib/modules/models/cells/task";
 import ScanService from "./scanService";
 import { QueryOptions } from "@ckb-lumos/base";
 
