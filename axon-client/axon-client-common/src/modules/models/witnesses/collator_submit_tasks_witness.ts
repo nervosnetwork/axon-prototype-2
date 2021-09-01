@@ -1,12 +1,10 @@
 import {
   committedHashOptToArrayBuffer,
-  committedHashToArrayBuffer,
   publicKeyHashToArrayBuffer,
   randomSeedToArrayBuffer,
   uint128ToArrayBuffer,
   uint32OptToArrayBuffer,
   uint32ToArrayBuffer,
-  uint8ToArrayBuffer,
 } from "../../../utils/mol";
 import { arrayBufferToHex, remove0xPrefix, Uint8BigIntToLeHex } from "../../../utils/tools";
 import { SerializeCollatorSubmitTasksWitness } from "../mol/witness/collator_submit_tasks";
