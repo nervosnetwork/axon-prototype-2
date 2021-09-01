@@ -22,7 +22,10 @@
     "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
-    "allowJs": true
+    "allowJs": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
   },
   "exclude": ["**/*.spec.ts", "./jest.config.ts" ,"**/*.mol", "./lib/**/*"]
 }
