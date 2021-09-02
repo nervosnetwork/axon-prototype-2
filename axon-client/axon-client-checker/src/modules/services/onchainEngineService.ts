@@ -8,7 +8,6 @@ import { CheckerVoteTransformation } from "axon-client-common/src/modules/models
 import { CheckerVoteWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_task_witness";
 //import { CheckerSubmitChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_challenge_witness";
 //import { CheckerPublishChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_public_challenge_witness";
-import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
 import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
 import EngineService from "./engineService";
 import { DeployCodeTransformation } from "axon-client-common/src/modules/models/transformation/deploy_code_transformation";
@@ -55,25 +54,6 @@ export default class OnchainEngineService implements EngineService {
       xfer.depConfig.chainId /*xfer.depConfig.chainId*/,
       xfer.inputCheckerInfo.checkerLockArg /*xfer.inputCheckerInfo.chainLockArg*/,
     );
-
-    //compose tx
-
-    await this.#transactionService.composeTransaction(xfer);
-
-    await this.#rpcService.sendTransaction(xfer.composedTx!);
-  };
-
-  checkerSubmitChallenge = async (xfer: CheckerSubmitChallengeTransformation): Promise<void> => {
-    //assume all cell is genuine
-
-    //do state transfer work
-    if (xfer.depConfig.checkerTotalCount < xfer.depConfig.checkerThreshold) {
-      return;
-    }
-
-    //ToDo fix the logic while witness is fine
-    //xfer.inputCheckerInfo.status = CheckerInfo.CHALLENGE_PASSED;
-    //xfer.patternTypeWitness = new CheckerSubmitChallengeWitness(xfer.depConfig.chainId, xfer.inputCheckerInfo.checkId);
 
     //compose tx
 
