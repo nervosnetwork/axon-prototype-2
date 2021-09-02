@@ -2,14 +2,14 @@ import { inject, injectable } from "inversify";
 import { modules } from "../../container";
 import TransactionService from "./transactionService";
 import RpcService from "./rpcService";
-import { logger } from "axon-client-common/src/utils/logger";
-import { CheckerSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_task";
-//import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
-import { CheckerSubmitTaskWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_task_witness";
-//import { CheckerSubmitChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_submit_challenge_witness";
-//import { CheckerPublishChallengeWitness } from "axon-client-common/src/modules/models/witnesses/checker_public_challenge_witness";
-import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
-import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
+import { logger } from "axon-client-common/lib/utils/logger";
+import { CheckerSubmitTaskTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_task";
+//import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
+import { CheckerSubmitTaskWitness } from "axon-client-common/lib/modules/models/witnesses/checker_submit_task_witness";
+//import { CheckerSubmitChallengeWitness } from "axon-client-common/lib/modules/models/witnesses/checker_submit_challenge_witness";
+//import { CheckerPublishChallengeWitness } from "axon-client-common/lib/modules/models/witnesses/checker_public_challenge_witness";
+import { CheckerSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_challenge";
+import { CheckerPublishChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_publish_challenge";
 import EngineService from "./engineService";
 
 @injectable()

@@ -2,7 +2,7 @@ import CKB from "@nervosnetwork/ckb-sdk-core";
 import { Indexer, CellCollector } from "@ckb-lumos/indexer";
 import assert from "assert";
 
-import { CKB_NODE_URL, SELF_PRIVATE_KEY, INDEXER_URL, INDEXER_DB_PATH } from "axon-client-common/src/utils/environment";
+import { CKB_NODE_URL, SELF_PRIVATE_KEY, INDEXER_URL, INDEXER_DB_PATH } from "axon-client-common/lib/utils/environment";
 
 export const CONFIGS = {
   INDEXER_URL,

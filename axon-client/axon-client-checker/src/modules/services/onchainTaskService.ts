@@ -1,13 +1,13 @@
 import { CronJob } from "cron";
 import { modules } from "../../container";
 import { inject, injectable } from "inversify";
-import { logger } from "axon-client-common/src/utils/logger";
+import { logger } from "axon-client-common/lib/utils/logger";
 import ScanService from "./scanService";
 import EngineService from "./engineService";
-import { CheckerSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_task";
-import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
-import { Task } from "axon-client-common/src/modules/models/cells/task";
-import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
+import { CheckerSubmitTaskTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_task";
+import { CheckerPublishChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_publish_challenge";
+import { Task } from "axon-client-common/lib/modules/models/cells/task";
+import { CheckerSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_challenge";
 import TaskService from "./taskService";
 
 @injectable()

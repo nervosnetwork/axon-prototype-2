@@ -8,8 +8,8 @@
   },
   "scripts": {
     "start": "cross-env NODE_ENV=development ts-node src/index",
-    "build:dev": "cross-env NODE_ENV=development yarn run tsc",
-    "build:prod": "cross-env NODE_ENV=production yarn run tsc",
+    "build:dev": "cross-env NODE_ENV=development yarn run tsc -b",
+    "build:prod": "cross-env NODE_ENV=production yarn run tsc -b",
     "clean": "npx rimraf lib && npx rimraf tsconfig.tsbuildinfo"
   },
   "keywords": [],
@@ -36,6 +36,7 @@
     "@nervosnetwork/ckb-sdk-utils": "0.39",
     "@types/json-bigint": "^1.0.0",
     "@types/lodash": "^4.14.168",
+    "axon-client-common": "0.1.0",
     "class-validator": "0.12.2",
     "cron": "1.8.2",
     "dotenv": "8.2.0",

@@ -1,5 +1,5 @@
 import { injectable } from "inversify";
-import { logger } from "axon-client-common/src/utils/logger";
+import { logger } from "axon-client-common/lib/utils/logger";
 import CrossChainService from "./crossChainService";
 
 @injectable()

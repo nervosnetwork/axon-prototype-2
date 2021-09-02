@@ -5,8 +5,8 @@ import CKB from "@nervosnetwork/ckb-sdk-core";
 import TransactionService from "./transactionService";
 import OnchainTransactionService from "./onchainTransactionService";
 
-import { Transformation } from "axon-client-common/src/modules/models/transformation/interfaces/transformation";
-import { CELL_DEPS, SELF_PRIVATE_KEY } from "axon-client-common/src/utils/environment";
+import { Transformation } from "axon-client-common/lib/modules/models/transformation/interfaces/transformation";
+import { CELL_DEPS, SELF_PRIVATE_KEY } from "axon-client-common/lib/utils/environment";
 
 import { createMock } from "ts-auto-mock";
 

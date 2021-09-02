@@ -3,7 +3,7 @@ import fs from "fs";
 import { Indexer } from "@ckb-lumos/indexer";
 import assert from "assert";
 
-import { GlobalConfig } from "axon-client-common/src/modules/models/cells/global_config";
+import { GlobalConfig } from "axon-client-common/lib/modules/models/cells/global_config";
 
 import { toHex, addHexPrefix, ckbToShannon, loadCellsFromIndexer, prepare, CONFIGS } from "./common";
 

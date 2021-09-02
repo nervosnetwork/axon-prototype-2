@@ -1,22 +1,22 @@
 import { inject, injectable } from "inversify";
-import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
+import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
 import CrossChainService from "./crossChainService";
 import { modules } from "../../container";
-import { Task } from "axon-client-common/src/modules/models/cells/task";
-import { CollatorPublishTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_publish_task";
-import { CollatorPublishTaskWitness } from "axon-client-common/src/modules/models/witnesses/collator_publish_task_witness";
+import { Task } from "axon-client-common/lib/modules/models/cells/task";
+import { CollatorPublishTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_publish_task";
+import { CollatorPublishTaskWitness } from "axon-client-common/lib/modules/models/witnesses/collator_publish_task_witness";
 import TransactionService from "./transactionService";
 import RpcService from "./rpcService";
-import { CollatorSubmitTaskWitness } from "axon-client-common/src/modules/models/witnesses/collator_submit_task_witness";
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
-import { CollatorSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_task";
-import { CollatorSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_challenge";
-import { CollatorSubmitChallengeWitness } from "axon-client-common/src/modules/models/witnesses/collator_submit_challenge_witness";
-import { CollatorRefreshTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_refresh_task";
-import { CollatorRefreshTaskWitness } from "axon-client-common/src/modules/models/witnesses/collator_refresh_task_witness";
-import { logger } from "axon-client-common/src/utils/logger";
+import { CollatorSubmitTaskWitness } from "axon-client-common/lib/modules/models/witnesses/collator_submit_task_witness";
+import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
+import { CollatorSubmitTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_submit_task";
+import { CollatorSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/collator_submit_challenge";
+import { CollatorSubmitChallengeWitness } from "axon-client-common/lib/modules/models/witnesses/collator_submit_challenge_witness";
+import { CollatorRefreshTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_refresh_task";
+import { CollatorRefreshTaskWitness } from "axon-client-common/lib/modules/models/witnesses/collator_refresh_task_witness";
+import { logger } from "axon-client-common/lib/utils/logger";
 import EngineService from "./engineService";
-import { defaultOutPoint, Uint128BigIntToLeHex } from "axon-client-common/src/utils/tools";
+import { defaultOutPoint, Uint128BigIntToLeHex } from "axon-client-common/lib/utils/tools";
 
 @injectable()
 export default class OnchainEngineService implements EngineService {

@@ -24,5 +24,6 @@
     "sourceMap": true,
     "allowJs": true
   },
-  "exclude": ["**/*.spec.ts", "./jest.config.ts" ,"**/*.mol", "./lib/**/*"]
+  "exclude": ["**/*.spec.ts", "./jest.config.ts" ,"**/*.mol", "./lib/**/*"],
+  "references": [{ "path": "../axon-client-common/" }]
 }

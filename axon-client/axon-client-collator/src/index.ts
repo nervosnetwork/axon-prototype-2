@@ -1,6 +1,6 @@
 import { container, modules, bootstrap } from "./container";
 import TaskService from "./modules/services/taskService";
-import { logger } from "axon-client-common/src/utils/logger";
+import { logger } from "axon-client-common/lib/utils/logger";
 
 export default class AxonCollator {
   #ready = false;

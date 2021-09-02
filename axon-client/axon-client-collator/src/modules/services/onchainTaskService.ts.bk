@@ -1,15 +1,15 @@
 import { CronJob } from "cron";
 import { modules } from "../../container";
 import { inject, injectable } from "inversify";
-import { logger } from "axon-client-common/src/utils/logger";
+import { logger } from "axon-client-common/lib/utils/logger";
 import ScanService from "./scanService";
-import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
-import { CollatorPublishTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_publish_task";
+import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
+import { CollatorPublishTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_publish_task";
 import EngineService from "./engineService";
-import { CollatorSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_challenge";
-import { CollatorSubmitTaskTransformation } from "axon-client-common/src/modules/models/transformation/collator_submit_task";
+import { CollatorSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/collator_submit_challenge";
+import { CollatorSubmitTaskTransformation } from "axon-client-common/lib/modules/models/transformation/collator_submit_task";
 import TaskService from "./taskService";
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
+import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
 
 @injectable()
 export default class OnchainTaskService implements TaskService {

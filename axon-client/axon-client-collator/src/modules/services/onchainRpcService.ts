@@ -2,7 +2,7 @@ import { inject, injectable } from "inversify";
 import { modules } from "../../container";
 import Rpc from "@nervosnetwork/ckb-sdk-rpc";
 import JSONbig from "json-bigint";
-import { logger } from "axon-client-common/src/utils/logger";
+import { logger } from "axon-client-common/lib/utils/logger";
 import RpcService from "./rpcService";
 
 @injectable()

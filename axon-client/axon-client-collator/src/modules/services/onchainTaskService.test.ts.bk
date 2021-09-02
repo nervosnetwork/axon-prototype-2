@@ -1,5 +1,5 @@
-import { CheckerInfo } from "axon-client-common/src/modules/models/cells/checker_info";
-import { SidechainState } from "axon-client-common/src/modules/models/cells/sidechain_state";
+import { CheckerInfo } from "axon-client-common/lib/modules/models/cells/checker_info";
+import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
 import "reflect-metadata";
 import { createMock } from "ts-auto-mock";
 import EngineService from "./engineService";
