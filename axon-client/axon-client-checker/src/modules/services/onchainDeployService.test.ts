@@ -1,4 +1,5 @@
 import ScanService from "./scanService";
+import EngineService from "./engineService";
 
 import OnchainDeployService from "./onchainDeployService";
 
@@ -9,7 +10,7 @@ describe("OnchainDeployService", () => {
     const scanService = createMock<ScanService>();
     scanService.scanCode = () => Promise.reject();
 
-    const service = new OnchainDeployService(scanService);
+    const service = new OnchainDeployService(scanService, createMock<EngineService>());
     service.deployCodeCell = jest.fn(() => Promise.resolve());
 
     await service.bootstrap();
@@ -22,7 +23,7 @@ describe("OnchainDeployService", () => {
     const scanService = createMock<ScanService>();
     scanService.scanGlobalConfig = () => Promise.reject(errorMessage);
 
-    const service = new OnchainDeployService(scanService);
+    const service = new OnchainDeployService(scanService, createMock<EngineService>());
 
     await expect(service.bootstrap()).rejects.toBe(errorMessage);
   });
@@ -32,7 +33,7 @@ describe("OnchainDeployService", () => {
     const scanService = createMock<ScanService>();
     scanService.scanSidechainConfig = () => Promise.reject(errorMessage);
 
-    const service = new OnchainDeployService(scanService);
+    const service = new OnchainDeployService(scanService, createMock<EngineService>());
 
     await expect(service.bootstrap()).rejects.toBe(errorMessage);
   });
@@ -40,7 +41,7 @@ describe("OnchainDeployService", () => {
   test("bootstrap should does nothing if everything is good", async () => {
     const scanService = createMock<ScanService>();
 
-    const service = new OnchainDeployService(scanService);
+    const service = new OnchainDeployService(scanService, createMock<EngineService>());
     service.deployCodeCell = jest.fn(() => Promise.resolve());
 
     await service.bootstrap();

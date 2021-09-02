@@ -10,6 +10,7 @@ import { CheckerSubmitTaskWitness } from "axon-client-common/lib/modules/models/
 //import { CheckerPublishChallengeWitness } from "axon-client-common/lib/modules/models/witnesses/checker_public_challenge_witness";
 import { CheckerSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_challenge";
 import { CheckerPublishChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_publish_challenge";
+import { DeployCodeTransformation } from "axon-client-common/lib/modules/models/transformation/deploy_code_transformation";
 import EngineService from "./engineService";
 
 @injectable()
@@ -19,14 +20,13 @@ export default class OnchainEngineService implements EngineService {
 
   // @ts-expect-error Unused
   // istanbul ignore next
-  #info = (outpoint: string, msg: string) => {
+  private info(msg: string) {
     logger.info(`EngineService: ${msg}`);
-  };
-  // @ts-expect-error Unused
-  // istanbul ignore next
-  #error = (outpoint: string, msg: string) => {
+  }
+
+  private error(msg: string) {
     logger.error(`EngineService: ${msg}`);
-  };
+  }
 
   constructor(
     @inject(modules.TransactionService) transactionService: TransactionService,
@@ -95,4 +95,16 @@ export default class OnchainEngineService implements EngineService {
 
     await this.#rpcService.sendTransaction(xfer.composedTx!);
   };
+
+  async checkerDeployCodeCell(transformation: DeployCodeTransformation): Promise<void> {
+    try {
+      await this.#transactionService.composeTransactionFromGeneric(transformation);
+
+      await this.#rpcService.sendTransaction(transformation.composedTx!);
+    } catch (e) {
+      this.error(e);
+      throw "OnchainEngineService.checkerDeployCodeCell";
+    }
+    return;
+  }
 }
