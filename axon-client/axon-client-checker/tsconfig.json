@@ -24,6 +24,11 @@
     "sourceMap": true,
     "allowJs": true
   },
+  "ts-node": {
+    "compilerOptions": {
+      "rootDir": ".."
+    }
+  },
   "exclude": ["**/*.spec.ts", "./jest.config.ts" ,"**/*.mol", "./lib/**/*"],
   "references": [{ "path": "../axon-client-common/" }]
 }
