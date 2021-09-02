@@ -15,4 +15,5 @@ module.exports = {
     "axon-client-collator/**/*.ts",
     "axon-client-common/**/*.ts",
   ],
+  testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
 };
