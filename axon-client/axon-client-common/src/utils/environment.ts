@@ -244,7 +244,7 @@ export const CHECKER_INFO_TYPE_SCRIPT: CKBComponents.Script = {
 export const CHECKER_INFO_LOCK_SCRIPT: CKBComponents.Script = {
   codeHash: ALWAYS_SUCCESS_CODE_HASH,
   hashType: ALWAYS_SUCCESS_HASH_TYPE,
-  args: ``,
+  args: "0x",
 };
 
 export const CHECKER_INFO_QUERY_OPTION: QueryOptions = {
@@ -380,7 +380,7 @@ export const SIDECHAIN_CONFIG_TYPE_SCRIPT: CKBComponents.Script = {
 export const SIDECHAIN_CONFIG_LOCK_SCRIPT: CKBComponents.Script = {
   codeHash: ALWAYS_SUCCESS_CODE_HASH,
   hashType: ALWAYS_SUCCESS_HASH_TYPE,
-  args: ``,
+  args: "0x",
 };
 
 export const SIDECHAIN_CONFIG_QUERY_OPTION: QueryOptions = {
@@ -470,7 +470,7 @@ export const SIDECHAIN_STATE_TYPE_SCRIPT: CKBComponents.Script = {
 export const SIDECHAIN_STATE_LOCK_SCRIPT: CKBComponents.Script = {
   codeHash: ALWAYS_SUCCESS_CODE_HASH,
   hashType: ALWAYS_SUCCESS_HASH_TYPE,
-  args: ``,
+  args: "0x",
 };
 
 export const SIDECHAIN_STATE_QUERY_OPTION: QueryOptions = {
@@ -512,7 +512,7 @@ export const TASK_TYPE_SCRIPT: CKBComponents.Script = {
 export const TASK_STATE_LOCK_SCRIPT: CKBComponents.Script = {
   codeHash: ALWAYS_SUCCESS_CODE_HASH,
   hashType: ALWAYS_SUCCESS_HASH_TYPE,
-  args: ``,
+  args: "0x",
 };
 
 export const TASK_QUERY_OPTION: QueryOptions = {
