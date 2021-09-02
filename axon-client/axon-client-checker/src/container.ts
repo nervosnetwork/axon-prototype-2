@@ -2,6 +2,7 @@ import "reflect-metadata";
 
 export const modules: Record<string, symbol> = {
   CrossChainService: Symbol("CrossChainService"),
+  DeployService: Symbol("DeployService"),
   EngineService: Symbol("EngineService"),
   RpcService: Symbol("RpcService"),
   ScanService: Symbol("ScanService"),
@@ -15,6 +16,7 @@ export const modules: Record<string, symbol> = {
 import { injectable, Container } from "inversify";
 
 import OnchainCrossChainService from "./modules/services/onchainCrossChainService";
+import OnchainDeployService from "./modules/services/onchainDeployService";
 import OnchainEngineService from "./modules/services/onchainEngineService";
 import OnchainRpcService from "./modules/services/onchainRpcService";
 import OnchainScanService from "./modules/services/onchainScanService";
@@ -60,6 +62,7 @@ export const container = new Container({ defaultScope: "Singleton" });
 
 export function bootstrap(): void {
   container.bind(modules.CrossChainService).to(OnchainCrossChainService);
+  container.bind(modules.DeployService).to(OnchainDeployService);
   container.bind(modules.EngineService).to(OnchainEngineService);
   container.bind(modules.RpcService).to(OnchainRpcService);
   container.bind(modules.ScanService).to(OnchainScanService);
