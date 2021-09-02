@@ -35,9 +35,8 @@ interface FromCell<T> {
 @injectable()
 export default class OnchainScanService implements ScanService {
   private readonly _indexer!: Indexer;
+  private _is_indexer_syncing?: Promise<void> = undefined;
 
-  // @ts-expect-error Unused
-  // istanbul ignore next
   private info(msg: string) {
     logger.info(`ScanService: ${msg}`);
   }
@@ -65,9 +64,26 @@ export default class OnchainScanService implements ScanService {
     return BigInt((await this._indexer.tip()).block_number);
   };
 
+  private async waitIndexerForSync(): Promise<void> {
+    if (this._is_indexer_syncing) {
+      await this._is_indexer_syncing;
+      return;
+    }
+
+    this.info("Waiting for indexer syncing...");
+    this._is_indexer_syncing = this._indexer.waitForSync();
+    await this._is_indexer_syncing;
+    this.info("Indexer synced");
+    this.info("");
+
+    this._is_indexer_syncing = undefined;
+  }
+
   // be careful that the tip is hexicalDecimal
   private static generateScanOneCell<T>(name: string, t: FromCell<T>, options: QueryOptions) {
     return async function (this: OnchainScanService, tip?: string): Promise<T> {
+      await this.waitIndexerForSync();
+
       const collector = this.createCollector(options, tip);
 
       let result: T | null = null;
@@ -133,6 +149,8 @@ export default class OnchainScanService implements ScanService {
   // be careful that the tip is hexicalDecimal
   private static generateScanCells<T>(t: FromCell<T>, options: QueryOptions) {
     return async function (this: OnchainScanService, tip?: string): Promise<Array<T>> {
+      await this.waitIndexerForSync();
+
       const collector = this.createCollector(options, tip);
 
       const resultList: Array<T> = [];
