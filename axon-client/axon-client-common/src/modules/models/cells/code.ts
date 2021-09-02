@@ -6,6 +6,8 @@ import { CODE_LOCK_SCRIPT, CODE_TYPE_SCRIPT } from "../../../utils/environment";
 import { CodeCellLockArgs } from "../mol/cellData/code";
 import { arrayBufferToPublicKeyHash } from "../../../utils/mol";
 
+import assert from "assert";
+
 /*
 code
 
@@ -28,9 +30,9 @@ export class Code implements CellInputType, CellOutputType {
   // lock args
   lockArg: string;
 
-  outPoint: OutPoint;
+  outPoint?: OutPoint;
 
-  constructor(capacity: bigint, lockArg: string, outPoint: OutPoint) {
+  constructor(capacity: bigint, lockArg: string, outPoint?: OutPoint) {
     this.capacity = capacity;
     this.lockArg = lockArg;
     this.outPoint = outPoint;
@@ -54,7 +56,8 @@ export class Code implements CellInputType, CellOutputType {
 
     const lockArg = arrayBufferToPublicKeyHash(lockArgs.getLockArg().raw());
 
-    const outPoint = cell.out_point!;
+    const outPoint = cell.out_point;
+    assert(outPoint);
 
     return new Code(capacity, lockArg, outPoint);
   }
@@ -64,6 +67,8 @@ export class Code implements CellInputType, CellOutputType {
   }
 
   toCellInput(): CKBComponents.CellInput {
+    assert(this.outPoint);
+
     return {
       previousOutput: {
         txHash: this.outPoint.tx_hash,
@@ -78,7 +83,10 @@ export class Code implements CellInputType, CellOutputType {
     return {
       capacity: Uint64BigIntToLeHex(this.capacity),
       type: CODE_TYPE_SCRIPT,
-      lock: CODE_LOCK_SCRIPT,
+      lock: {
+        ...CODE_LOCK_SCRIPT,
+        args: this.lockArg,
+      },
     };
   }
 
@@ -87,6 +95,7 @@ export class Code implements CellInputType, CellOutputType {
   }
 
   getOutPoint(): string {
+    assert(this.outPoint);
     return `${this.outPoint.tx_hash}-${this.outPoint.index}`;
   }
 
