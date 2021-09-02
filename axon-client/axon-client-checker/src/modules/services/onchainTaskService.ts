@@ -4,10 +4,10 @@ import { inject, injectable } from "inversify";
 import { logger } from "axon-client-common/lib/utils/logger";
 import ScanService from "./scanService";
 import EngineService from "./engineService";
-import { CheckerSubmitTaskTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_task";
-import { CheckerPublishChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_publish_challenge";
-import { Task } from "axon-client-common/lib/modules/models/cells/task";
-import { CheckerSubmitChallengeTransformation } from "axon-client-common/lib/modules/models/transformation/checker_submit_challenge";
+import { CheckerVoteTransformation } from "axon-client-common/src/modules/models/transformation/checker_vote";
+import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
+import { Task } from "axon-client-common/src/modules/models/cells/task";
+import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
 import TaskService from "./taskService";
 
 @injectable()
@@ -97,9 +97,9 @@ export default class OnchainTaskService implements TaskService {
           await this.#engineService.checkerPublishChallenge(xfer);
         } else {
           //submit task
-          const xfer = new CheckerSubmitTaskTransformation(globalConfig, config, code, checkerInfo, task);
+          const xfer = new CheckerVoteTransformation(globalConfig, config, code, checkerInfo, task);
 
-          await this.#engineService.checkerSubmitTask(xfer);
+          await this.#engineService.checkerVote(xfer);
         }
       }
     }
