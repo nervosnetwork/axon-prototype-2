@@ -35,9 +35,8 @@ interface FromCell<T> {
 @injectable()
 export default class OnchainScanService implements ScanService {
   private readonly _indexer!: Indexer;
+  private _is_indexer_syncing?: Promise<void> = undefined;
 
-  // @ts-expect-error Unused
-  // istanbul ignore next
   private info(msg: string) {
     logger.info(`ScanService: ${msg}`);
   }
@@ -65,9 +64,26 @@ export default class OnchainScanService implements ScanService {
     return BigInt((await this._indexer.tip()).block_number);
   };
 
+  private async waitIndexerForSync(): Promise<void> {
+    if (this._is_indexer_syncing) {
+      await this._is_indexer_syncing;
+      return;
+    }
+
+    this.info("Waiting for indexer syncing...");
+    this._is_indexer_syncing = this._indexer.waitForSync();
+    await this._is_indexer_syncing;
+    this.info("Indexer synced");
+    this.info("");
+
+    this._is_indexer_syncing = undefined;
+  }
+
   // be careful that the tip is hexicalDecimal
-  private static generateScanOneCell<T>(t: FromCell<T>, options: QueryOptions) {
+  private static generateScanOneCell<T>(name: string, t: FromCell<T>, options: QueryOptions) {
     return async function (this: OnchainScanService, tip?: string): Promise<T> {
+      await this.waitIndexerForSync();
+
       const collector = this.createCollector(options, tip);
 
       let result: T | null = null;
@@ -80,31 +96,61 @@ export default class OnchainScanService implements ScanService {
       }
 
       if (!result) {
-        throw new Error("info or pool not found");
+        throw new Error(`ScanOneCell: ${name} not found`);
       }
       return result;
     };
   }
 
-  public scanSidechainState = OnchainScanService.generateScanOneCell(SidechainState, SIDECHAIN_STATE_QUERY_OPTION);
+  public scanSidechainState = OnchainScanService.generateScanOneCell(
+    "Sidechain state cell",
+    SidechainState,
+    SIDECHAIN_STATE_QUERY_OPTION,
+  );
 
-  public scanCode = OnchainScanService.generateScanOneCell(Code, CODE_QUERY_OPTION);
+  public scanCode = OnchainScanService.generateScanOneCell("Code cell", Code, CODE_QUERY_OPTION);
 
-  public scanSidechainConfig = OnchainScanService.generateScanOneCell(SidechainConfig, SIDECHAIN_CONFIG_QUERY_OPTION);
+  public scanSidechainConfig = OnchainScanService.generateScanOneCell(
+    "Sidechain config cell",
+    SidechainConfig,
+    SIDECHAIN_CONFIG_QUERY_OPTION,
+  );
 
-  public scanSidechainFee = OnchainScanService.generateScanOneCell(SidechainFee, SIDECHAIN_FEE_QUERY_OPTION);
+  public scanSidechainFee = OnchainScanService.generateScanOneCell(
+    "Sidechain fee cell",
+    SidechainFee,
+    SIDECHAIN_FEE_QUERY_OPTION,
+  );
 
-  public scanSidechainBond = OnchainScanService.generateScanOneCell(SidechainBond, SIDECHAIN_BOND_QUERY_OPTION);
+  public scanSidechainBond = OnchainScanService.generateScanOneCell(
+    "Sidechain bond cell",
+    SidechainBond,
+    SIDECHAIN_BOND_QUERY_OPTION,
+  );
 
-  public scanCheckerInfoSelf = OnchainScanService.generateScanOneCell(CheckerInfo, CHECKER_INFO_QUERY_OPTION);
+  public scanCheckerInfoSelf = OnchainScanService.generateScanOneCell(
+    "Checker info cell",
+    CheckerInfo,
+    CHECKER_INFO_QUERY_OPTION,
+  );
 
-  public scanGlobalConfig = OnchainScanService.generateScanOneCell(GlobalConfig, GLOBAL_CONFIG_QUERY_OPTION);
+  public scanGlobalConfig = OnchainScanService.generateScanOneCell(
+    "Global config cell",
+    GlobalConfig,
+    GLOBAL_CONFIG_QUERY_OPTION,
+  );
 
-  public scanCheckerBond = OnchainScanService.generateScanOneCell(CheckerBond, CHECKER_BOND_QUERY_OPTION);
+  public scanCheckerBond = OnchainScanService.generateScanOneCell(
+    "Checker bond cell",
+    CheckerBond,
+    CHECKER_BOND_QUERY_OPTION,
+  );
 
   // be careful that the tip is hexicalDecimal
   private static generateScanCells<T>(t: FromCell<T>, options: QueryOptions) {
     return async function (this: OnchainScanService, tip?: string): Promise<Array<T>> {
+      await this.waitIndexerForSync();
+
       const collector = this.createCollector(options, tip);
 
       const resultList: Array<T> = [];
