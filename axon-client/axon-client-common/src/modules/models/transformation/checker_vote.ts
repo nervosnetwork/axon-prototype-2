@@ -4,7 +4,7 @@ import { SidechainConfig } from "../cells/sidechain_config";
 import { Code } from "../cells/code";
 import { CheckerInfo } from "../cells/checker_info";
 import { Task } from "../cells/task";
-import { CheckerSubmitTaskWitness } from "../witnesses/checker_submit_task_witness";
+import { CheckerVoteWitness } from "../witnesses/checker_submit_task_witness";
 
 /*
 CheckerSubmitTask,
@@ -12,12 +12,12 @@ CheckerSubmitTask,
 Dep:    0 Global Config Cell
 Dep:    1 Sidechain Config Cell
 
-Code Cell                   ->         Code Cell
+Code Cell                   ->          Code Cell
 Checker Info Cell           ->          Checker Info Cell
-Task Cell                   ->          Null
+Task Cell                   ->          Task Cell
 
 */
-export class CheckerSubmitTaskTransformation implements Transformation {
+export class CheckerVoteTransformation implements Transformation {
   depGlobalConfig: GlobalConfig;
   depConfig: SidechainConfig;
 
@@ -27,7 +27,7 @@ export class CheckerSubmitTaskTransformation implements Transformation {
   inputCheckerInfo: CheckerInfo;
   inputTask: Task;
 
-  patternTypeWitness: CheckerSubmitTaskWitness | null = null;
+  patternTypeWitness: CheckerVoteWitness | null = null;
 
   processed = false;
   skip = false;
@@ -57,11 +57,15 @@ export class CheckerSubmitTaskTransformation implements Transformation {
   }
 
   toCellOutput(): Array<CKBComponents.CellOutput> {
-    return [this.inputCode.toCellOutput(), this.inputCheckerInfo.toCellOutput()];
+    return [this.inputCode.toCellOutput(), this.inputCheckerInfo.toCellOutput(), this.inputTask.toCellOutput()];
   }
 
   toCellOutputData(): Array<string> {
-    return [this.inputCode.toCellOutputData(), this.inputCheckerInfo.toCellOutputData()];
+    return [
+      this.inputCode.toCellOutputData(),
+      this.inputCheckerInfo.toCellOutputData(),
+      this.inputTask.toCellOutputData(),
+    ];
   }
 
   toWitness(): Array<CKBComponents.WitnessArgs> {

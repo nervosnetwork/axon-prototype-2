@@ -6,8 +6,9 @@ use ckb_tool::{
 
 use common_raw::{
     cell::{
+        checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
+        sidechain_state::{CheckerLastAcceptTaskHeight, SidechainStateCell, SidechainStateCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
@@ -50,6 +51,13 @@ fn test_success() {
         .build_script(&always_success_code, state_type_args.serialize())
         .expect("script");
 
+    let mut checker_info_type_args = CheckerInfoCellTypeArgs::default();
+    checker_info_type_args.checker_lock_arg = pubkey_hash;
+    let checker_info_script = builder
+        .context
+        .build_script(&always_success_code, checker_info_type_args.serialize())
+        .expect("script");
+
     let mut task_type_args = TaskCellTypeArgs::default();
     task_type_args.checker_lock_arg = pubkey_hash;
     let task_script = builder
@@ -70,10 +78,20 @@ fn test_success() {
     let mut builder = builder.cell_dep(config_dep);
 
     // prepare inputs
-    let state_input_date = SidechainStateCell::default();
+    let mut state_input_date = SidechainStateCell::default();
+    let mut info = CheckerLastAcceptTaskHeight::default();
+    info.height = 2;
+    state_input_date.checker_last_task_sidechain_heights.push(info);
+
     let state_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &state_script),
         state_input_date.serialize(),
+    );
+
+    let checker_info_input_data = CheckerInfoCell::default();
+    let checker_info_input = builder.create_input(
+        new_type_cell_output(1000, &always_success, &checker_info_script),
+        checker_info_input_data.serialize(),
     );
 
     let task_input_data = TaskCell::default();
@@ -82,11 +100,14 @@ fn test_success() {
         task_input_data.serialize(),
     );
 
-    let builder = builder.input(state_input).input(task_input);
+    let builder = builder.input(state_input).input(checker_info_input).input(task_input);
 
     //prepare output
-    let mut state_output = state_input_date.clone();
-    state_output.random_offset += 1;
+    let mut state_output_data = state_input_date.clone();
+    state_output_data.random_offset += 1;
+
+    let mut checker_info_output_data = checker_info_input_data.clone();
+    checker_info_output_data.unpaid_fee = 0;
 
     let mut task_output_data = TaskCell::default();
     task_output_data.mode = TaskMode::Challenge;
@@ -95,9 +116,15 @@ fn test_success() {
     let outputs = vec![
         new_type_cell_output(1000, &always_success, &code_cell_script),
         new_type_cell_output(1000, &always_success, &state_script),
+        new_type_cell_output(1000, &always_success, &checker_info_script),
         new_type_cell_output(1000, &always_success, &task_script),
     ];
-    let outputs_data = vec![Bytes::new(), state_output.serialize(), task_output_data.serialize()];
+    let outputs_data = vec![
+        Bytes::new(),
+        state_output_data.serialize(),
+        checker_info_output_data.serialize(),
+        task_output_data.serialize(),
+    ];
 
     let mut witness = CheckerPublishChallengeWitness::default();
     witness.challenge_count = 1;

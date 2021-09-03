@@ -6,6 +6,7 @@ use ckb_tool::ckb_types::prelude::*;
 use common_raw::cell::muse_token::MuseTokenCell;
 use common_raw::cell::sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs};
 use common_raw::cell::sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs};
+use common_raw::cell::sidechain_state::CheckerLastAcceptTaskHeight;
 use common_raw::cell::task::{TaskCell, TaskCellTypeArgs};
 use common_raw::cell::{
     sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs},
@@ -98,7 +99,11 @@ fn test_success() {
     let mut builder = builder.cell_dep(sidechain_bond_dep);
 
     //prepare input
-    let sidechain_state_data_input = SidechainStateCell::default();
+    let mut sidechain_state_data_input = SidechainStateCell::default();
+    let mut info = CheckerLastAcceptTaskHeight::default();
+    info.height = 2;
+    sidechain_state_data_input.checker_last_task_sidechain_heights.push(info);
+
     let output = new_type_cell_output(1000, &always_success, &sidechain_state_type_script);
     let sidechain_state_input_outpoint = builder.context.create_cell(output, sidechain_state_data_input.serialize());
     let sidechain_state_input = CellInput::new_builder()

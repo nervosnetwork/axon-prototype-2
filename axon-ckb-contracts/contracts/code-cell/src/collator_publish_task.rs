@@ -6,7 +6,7 @@ use common_raw::cell::muse_token::MuseTokenCell;
 use common_raw::cell::sidechain_bond::{SidechainBondCell, SidechainBondCellLockArgs};
 use common_raw::cell::sidechain_config::SidechainConfigCellTypeArgs;
 use common_raw::cell::sidechain_fee::{SidechainFeeCell, SidechainFeeCellLockArgs};
-use common_raw::cell::sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs};
+use common_raw::cell::sidechain_state::{CheckerLastAcceptTaskHeight, SidechainStateCell, SidechainStateCellTypeArgs};
 use common_raw::cell::task::TaskCellTypeArgs;
 use common_raw::common::BlockSlice;
 use common_raw::{
@@ -133,13 +133,6 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         None => {}
     }
 
-    if sidechain_state_input_type_args != sidechain_state_output_type_args
-        || sidechain_state_res != sidechain_state_output
-        || sidechain_state_input_type_args.chain_id != u32::try_from(witness.chain_id).or(Err(Error::Encoding))?
-    {
-        return Err(Error::SidechainStateMismatch);
-    }
-
     if signer != sidechain_bond_dep_lock_args.collator_lock_arg
         || sidechain_bond_dep_lock_args.chain_id != witness.chain_id
         || sidechain_bond_dep_lock_args.unlock_sidechain_height < witness.to_height
@@ -196,6 +189,31 @@ pub fn collator_publish_task(raw_witness: &[u8], signer: [u8; 20]) -> Result<(),
         {
             return Err(Error::TaskMismatch);
         }
+
+        match sidechain_state_res
+            .checker_last_task_sidechain_heights
+            .iter_mut()
+            .find(|info| &info.checker_lock_arg == checker_lock_arg)
+        {
+            Some(info) => {
+                info.height = task_output.sidechain_block_height_to;
+            }
+            None => {
+                sidechain_state_res
+                    .checker_last_task_sidechain_heights
+                    .push(CheckerLastAcceptTaskHeight {
+                        checker_lock_arg: *checker_lock_arg,
+                        height:           task_output.sidechain_block_height_to,
+                    });
+            }
+        }
+    }
+
+    if sidechain_state_input_type_args != sidechain_state_output_type_args
+        || sidechain_state_res != sidechain_state_output
+        || sidechain_state_input_type_args.chain_id != u32::try_from(witness.chain_id).or(Err(Error::Encoding))?
+    {
+        return Err(Error::SidechainStateMismatch);
     }
 
     Ok(())

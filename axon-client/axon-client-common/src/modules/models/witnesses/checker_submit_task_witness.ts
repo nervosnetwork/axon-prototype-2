@@ -1,32 +1,33 @@
 import { WitnessInputType } from "./interfaces/witness_input_type";
-import { remove0xPrefix, Uint8BigIntToLeHex } from "../../../utils/tools";
+import { arrayBufferToHex, remove0xPrefix, Uint8BigIntToLeHex } from "../../../utils/tools";
+import { publicKeyHashToArrayBuffer } from "../../../utils/mol";
 
 /*
     pub pattern:    u8,
     pub chain_id:   u8,
-    pub checker_id: u8,
+    pub checker_lock_arg: string,
 */
-export class CheckerSubmitTaskWitness implements WitnessInputType {
-  static CHECKER_SUBMIT_TASK_WITNESS = 7n;
+export class CheckerVoteWitness implements WitnessInputType {
+  static CHECKER_VOTE_WITNESS = 4n;
 
   pattern: bigint;
   chainId: bigint;
-  checkerId: bigint;
+  checkerLockArg: string;
 
-  constructor(chainId: bigint, checkerId: bigint) {
-    this.pattern = CheckerSubmitTaskWitness.CHECKER_SUBMIT_TASK_WITNESS;
+  constructor(chainId: bigint, checkerLockArg: string) {
+    this.pattern = CheckerVoteWitness.CHECKER_VOTE_WITNESS;
     this.chainId = chainId;
-    this.checkerId = checkerId;
+    this.checkerLockArg = checkerLockArg;
   }
 
-  static default(): CheckerSubmitTaskWitness {
-    return new CheckerSubmitTaskWitness(0n, 0n);
+  static default(): CheckerVoteWitness {
+    return new CheckerVoteWitness(0n, ``);
   }
 
   toWitness(): CKBComponents.WitnessArgs {
     const data = `0x${remove0xPrefix(Uint8BigIntToLeHex(this.pattern))}${remove0xPrefix(
       Uint8BigIntToLeHex(this.chainId),
-    )}${remove0xPrefix(Uint8BigIntToLeHex(this.checkerId))}`;
+    )}${remove0xPrefix(arrayBufferToHex(publicKeyHashToArrayBuffer(this.checkerLockArg)))}`;
 
     return { lock: "", inputType: data, outputType: "" };
   }

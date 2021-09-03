@@ -5,7 +5,7 @@ import { Code } from "../cells/code";
 import { SidechainState } from "../cells/sidechain_state";
 import { SidechainFee } from "../cells/sidechain_fee";
 import { CheckerInfo } from "../cells/checker_info";
-import { CollatorSubmitTaskWitness } from "../witnesses/collator_submit_task_witness";
+import { CollatorSubmitTasksWitness } from "../witnesses/collator_submit_tasks_witness";
 
 /*
 CollatorSubmitTask,
@@ -20,7 +20,7 @@ Sidechain Fee Cell          ->          Sidechain Fee Cell
 
 */
 
-export class CollatorSubmitTaskTransformation implements Transformation {
+export class CollatorSubmitTasksTransformation implements Transformation {
   depGlobalConfig: GlobalConfig;
   depConfig: SidechainConfig;
 
@@ -31,7 +31,7 @@ export class CollatorSubmitTaskTransformation implements Transformation {
   inputFee: SidechainFee;
   inputCheckInfos: Array<CheckerInfo>;
 
-  patternTypeWitness: CollatorSubmitTaskWitness | null;
+  patternTypeWitness: CollatorSubmitTasksWitness | null;
 
   processed = false;
   skip = false;
