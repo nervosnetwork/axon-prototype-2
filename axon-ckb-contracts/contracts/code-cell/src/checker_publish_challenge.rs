@@ -7,7 +7,7 @@ use common_raw::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         code::CodeCell,
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
+        sidechain_state::{CheckerLastAcceptTaskHeight, SidechainStateCell, SidechainStateCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
@@ -100,6 +100,8 @@ pub fn checker_publish_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result
     let output_count = usize::try_from(witness.challenge_count).or(Err(Error::Encoding))? + 3;
     // 2 + challenge_count - 1  * Since this checker already voted
 
+    let mut state_res = state_input.clone();
+
     let mut checker_info_res = checker_info_input.clone();
     checker_info_res.unpaid_fee += task_res.check_data_size * u128::try_from(config_dep.check_fee_rate).or(Err(Error::Encoding))?;
     if checker_info_res != checker_info_output
@@ -130,11 +132,29 @@ pub fn checker_publish_challenge(raw_witness: &[u8], signer: [u8; 20]) -> Result
         if task_res != task_output || task_res_type_args != task_output_type_args {
             return Err(Error::TaskMismatch);
         }
+
+        match state_res
+            .checker_last_task_sidechain_heights
+            .iter_mut()
+            .find(|info| &info.checker_lock_arg == checker_lock_arg)
+        {
+            Some(info) => {
+                info.height = task_res.sidechain_block_height_to;
+            }
+            None => {
+                state_res.checker_last_task_sidechain_heights.push(CheckerLastAcceptTaskHeight {
+                    checker_lock_arg: *checker_lock_arg,
+                    height:           task_res.sidechain_block_height_to,
+                });
+                ckb_std::debug!("-----");
+            }
+        }
     }
-    let mut state_res = state_input.clone();
+
     state_res.random_offset += 1;
 
     if state_res != state_output || state_input_type_args.chain_id != witness.chain_id || state_input_type_args != state_output_type_args {
+        ckb_std::debug!("{:?}, {:?}", state_res, state_output);
         return Err(Error::SidechainStateMismatch);
     }
 

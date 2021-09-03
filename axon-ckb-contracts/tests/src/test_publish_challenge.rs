@@ -8,7 +8,7 @@ use common_raw::{
     cell::{
         checker_info::{CheckerInfoCell, CheckerInfoCellTypeArgs},
         sidechain_config::{SidechainConfigCell, SidechainConfigCellTypeArgs},
-        sidechain_state::{SidechainStateCell, SidechainStateCellTypeArgs},
+        sidechain_state::{CheckerLastAcceptTaskHeight, SidechainStateCell, SidechainStateCellTypeArgs},
         task::{TaskCell, TaskCellTypeArgs, TaskMode, TaskStatus},
     },
     witness::checker_publish_challenge::CheckerPublishChallengeWitness,
@@ -78,7 +78,11 @@ fn test_success() {
     let mut builder = builder.cell_dep(config_dep);
 
     // prepare inputs
-    let state_input_date = SidechainStateCell::default();
+    let mut state_input_date = SidechainStateCell::default();
+    let mut info = CheckerLastAcceptTaskHeight::default();
+    info.height = 2;
+    state_input_date.checker_last_task_sidechain_heights.push(info);
+
     let state_input = builder.create_input(
         new_type_cell_output(1000, &always_success, &state_script),
         state_input_date.serialize(),
