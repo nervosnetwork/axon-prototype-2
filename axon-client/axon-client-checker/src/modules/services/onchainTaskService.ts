@@ -7,7 +7,6 @@ import EngineService from "./engineService";
 import { CheckerVoteTransformation } from "axon-client-common/src/modules/models/transformation/checker_vote";
 import { CheckerPublishChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_publish_challenge";
 import { Task } from "axon-client-common/src/modules/models/cells/task";
-import { CheckerSubmitChallengeTransformation } from "axon-client-common/src/modules/models/transformation/checker_submit_challenge";
 import TaskService from "./taskService";
 
 @injectable()
@@ -83,9 +82,9 @@ export default class OnchainTaskService implements TaskService {
       const challenge = task.mode === Task.CHALLENGE;
       if (challenge) {
         //submit challenge
-        const xfer = new CheckerSubmitChallengeTransformation(globalConfig, config, code, checkerInfo, task);
+        const xfer = new CheckerVoteTransformation(globalConfig, config, code, checkerInfo, task);
 
-        await this.#engineService.checkerSubmitChallenge(xfer);
+        await this.#engineService.checkerVote(xfer);
       } else {
         //submit task, or publish challenge
 
