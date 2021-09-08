@@ -1,5 +1,5 @@
 import { Cell, OutPoint } from "@ckb-lumos/base";
-import { defaultOutPoint, scriptArgToArrayBuff, Uint64BigIntToLeHex } from "../../../utils/tools";
+import { defaultOutPoint, scriptArgToArrayBuff, bigIntToHex } from "../../../utils/tools";
 import { CellOutputType } from "./interfaces/cell_output_type";
 import { CellInputType } from "./interfaces/cell_input_type";
 import { CODE_LOCK_SCRIPT, CODE_TYPE_SCRIPT } from "../../../utils/environment";
@@ -81,7 +81,7 @@ export class Code implements CellInputType, CellOutputType {
   toCellOutput(): CKBComponents.CellOutput {
     //skip refresh reset lock args
     return {
-      capacity: Uint64BigIntToLeHex(this.capacity),
+      capacity: bigIntToHex(this.capacity),
       type: CODE_TYPE_SCRIPT,
       lock: {
         ...CODE_LOCK_SCRIPT,
