@@ -34,8 +34,7 @@ export default class OnchainDeployService implements DeployService {
   }
 
   async deployCodeCell(): Promise<void> {
-    // TODO: Deploy code cell
-    const transformation = new DeployCodeTransformation({ cellOutputs: [new Code(1000n, SECP256K1_ARG)] });
+    const transformation = new DeployCodeTransformation({ cellOutputs: [new Code(1000n * 100000000n, SECP256K1_ARG)] });
 
     await this.engineService.checkerDeployCodeCell(transformation);
 
