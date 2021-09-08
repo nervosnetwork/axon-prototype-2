@@ -16,6 +16,7 @@ import {
   SIDECHAIN_FEE_QUERY_OPTION,
   SIDECHAIN_STATE_QUERY_OPTION,
   TASK_QUERY_OPTION,
+  CKB_QUERY_OPTION,
 } from "axon-client-common/lib/utils/environment";
 import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
 import { Code } from "axon-client-common/lib/modules/models/cells/code";
@@ -35,7 +36,7 @@ interface FromCell<T> {
 @injectable()
 export default class OnchainScanService implements ScanService {
   private readonly _indexer!: Indexer;
-  private _is_indexer_syncing?: Promise<void> = undefined;
+  private _isIndexerSynced = false;
 
   private info(msg: string) {
     logger.info(`ScanService: ${msg}`);
@@ -65,18 +66,15 @@ export default class OnchainScanService implements ScanService {
   };
 
   private async waitIndexerForSync(): Promise<void> {
-    if (this._is_indexer_syncing) {
-      await this._is_indexer_syncing;
+    if (this._isIndexerSynced) {
       return;
     }
+    this._isIndexerSynced = true;
 
     this.info("Waiting for indexer syncing...");
-    this._is_indexer_syncing = this._indexer.waitForSync();
-    await this._is_indexer_syncing;
+    await this._indexer.waitForSync();
     this.info("Indexer synced");
     this.info("");
-
-    this._is_indexer_syncing = undefined;
   }
 
   // be careful that the tip is hexicalDecimal
@@ -171,4 +169,18 @@ export default class OnchainScanService implements ScanService {
   public scanCheckerInfo = OnchainScanService.generateScanCells(CheckerInfo, CHECKER_INFO_QUERY_OPTION);
 
   public scanTask = OnchainScanService.generateScanCells(Task, TASK_QUERY_OPTION);
+
+  public async scanUnspentCells(tip?: string): Promise<Array<Cell>> {
+    await this.waitIndexerForSync();
+
+    const collector = this.createCollector(CKB_QUERY_OPTION, tip);
+
+    const resultList: Array<Cell> = [];
+
+    for await (const cell of collector.collect()) {
+      resultList.push(cell);
+    }
+
+    return resultList;
+  }
 }
