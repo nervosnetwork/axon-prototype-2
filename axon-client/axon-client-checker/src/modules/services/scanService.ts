@@ -1,3 +1,5 @@
+import { Cell } from "@ckb-lumos/base";
+
 import { SidechainState } from "axon-client-common/lib/modules/models/cells/sidechain_state";
 import { Code } from "axon-client-common/lib/modules/models/cells/code";
 import { SidechainConfig } from "axon-client-common/lib/modules/models/cells/sidechain_config";
@@ -30,4 +32,6 @@ export default interface ScanService {
   scanTask(tip?: string): Promise<Array<Task>>;
 
   scanCheckerBond(tip?: string): Promise<CheckerBond>;
+
+  scanUnspentCells(tip?: string): Promise<Array<Cell>>;
 }

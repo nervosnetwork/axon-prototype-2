@@ -526,6 +526,20 @@ export const TASK_QUERY_OPTION: QueryOptions = {
   },
 };
 
+export const CKB_LOCK_SCRIPT: CKBComponents.Script = {
+  codeHash: SECP256K1_CODE_HASH,
+  hashType: SECP256K1_HASH_TYPE,
+  args: SECP256K1_ARG,
+};
+
+export const CKB_QUERY_OPTION: QueryOptions = {
+  type: "empty",
+  lock: {
+    argsLen: 20,
+    script: scriptCamelToSnake(CKB_LOCK_SCRIPT),
+  },
+};
+
 export const INSTANCE_NAME: string = process.env.INSTANCE_NAME!;
 log(`INSTANCE_NAME:${INSTANCE_NAME}`);
 
@@ -540,6 +554,7 @@ log("SIDECHAIN_CONFIG_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_CONFIG_QUERY
 log("SIDECHAIN_FEE_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_FEE_QUERY_OPTION, null, 2));
 log("SIDECHAIN_STATE_QUERY_OPTION: " + jsonbig.stringify(SIDECHAIN_STATE_QUERY_OPTION, null, 2));
 log("TASK_QUERY_OPTION: " + jsonbig.stringify(TASK_QUERY_OPTION, null, 2));
+log("CKB_QUERY_OPTION: " + jsonbig.stringify(CKB_QUERY_OPTION, null, 2));
 
 export const CELL_DEPS = [
   {

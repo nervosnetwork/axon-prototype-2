@@ -9,8 +9,6 @@ import RpcService from "./rpcService";
 export default class OnchainRpcService implements RpcService {
   #client: Rpc;
 
-  // @ts-expect-error Unused
-  // istanbul ignore next
   private info(msg: string): void {
     logger.info(`RpcService: ${msg}`);
   }
@@ -26,7 +24,8 @@ export default class OnchainRpcService implements RpcService {
   sendTransaction = async (rawTx: CKBComponents.RawTransaction): Promise<boolean> => {
     try {
       //this.#info('sendTransaction : ' + JSONbig.stringify(rawTx, null, 2))
-      await this.#client.sendTransaction(rawTx);
+      const txHash = await this.#client.sendTransaction(rawTx);
+      this.info(`Transaction sent: ${txHash}`);
       return true;
     } catch (e) {
       this.error("sendTransaction error: " + e);

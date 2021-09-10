@@ -4,7 +4,8 @@ import CKB from "@nervosnetwork/ckb-sdk-core";
 import { serializeWitnessArgs } from "@nervosnetwork/ckb-sdk-utils";
 import JSONbig from "json-bigint";
 import { logger } from "axon-client-common/lib/utils/logger";
-import { SELF_PRIVATE_KEY } from "axon-client-common/lib/utils/environment";
+import { CKB_LOCK_SCRIPT, BLOCK_MINER_FEE, SELF_PRIVATE_KEY } from "axon-client-common/lib/utils/environment";
+import { bigIntToHex } from "axon-client-common/lib/utils/tools";
 
 import { Transformation } from "axon-client-common/lib/modules/models/transformation/interfaces/transformation";
 
@@ -15,6 +16,7 @@ import { WitnessInputType } from "axon-client-common/lib/modules/models/witnesse
 import { GenericTransformation } from "axon-client-common/lib/modules/models/transformation/generic_transformation";
 
 import TransactionService from "./transactionService";
+import ScanService from "./scanService";
 
 import assert from "assert";
 
@@ -24,7 +26,9 @@ this service compose tx for rpc
 @injectable()
 export default class OnchainTransactionService implements TransactionService {
   private readonly _ckb: CKB;
-  private _is_ckb_loaded_deps?: Promise<unknown>;
+  private _isCkbLoadedDeps?: Promise<unknown>;
+
+  private readonly _scanService: ScanService;
 
   private info(msg: string): void {
     logger.info(`TransactionService: ${msg}`);
@@ -36,9 +40,11 @@ export default class OnchainTransactionService implements TransactionService {
     logger.error(`TransactionService: ${msg}`);
   }
 
-  constructor(@inject(modules.CKBCKB) { ckb }: { ckb: CKB }) {
+  constructor(@inject(modules.CKBCKB) { ckb }: { ckb: CKB }, @inject(modules.ScanService) scanService: ScanService) {
     this._ckb = ckb;
-    this._is_ckb_loaded_deps = this._ckb.loadDeps();
+    this._isCkbLoadedDeps = this._ckb.loadDeps();
+
+    this._scanService = scanService;
   }
 
   async composeTransaction(xfer: Transformation): Promise<void> {
@@ -57,10 +63,9 @@ export default class OnchainTransactionService implements TransactionService {
     outputs.push(...xfer.toCellOutput());
     outputsData.push(...xfer.toCellOutputData());
     witness.push(...xfer.toWitness());
-    witness.push({ inputType: "0x", outputType: "0x", lock: "0x" });
 
     // the secp sig shoul be signed at input-0
-    const [signedTx, txHash] = await this.composeTxAndSign(deps, inputs, outputs, outputsData, witness);
+    const [signedTx, txHash] = await this.composeTxAndSign(deps, inputs, outputs, outputsData, witness, 0n);
 
     this.info("composed tx: " + JSONbig.stringify(signedTx, null, 2));
     this.info("composed txHash: " + txHash);
@@ -92,17 +97,20 @@ export default class OnchainTransactionService implements TransactionService {
     outputs.push(...xfer.toCellOutput());
     outputsData.push(...xfer.toCellOutputData());
     witness.push(...xfer.toWitness());
-    witness.push({ inputType: "0x", outputType: "0x", lock: "0x" });
 
     const inputsSize = xfer.cellInputs.map((input) => input.capacity).reduce((a, b) => a + b, 0n);
     assert(xfer.cellOutputs);
     const outputsSize = xfer.cellOutputs.map((output) => output.capacity).reduce((a, b) => a + b, 0n);
 
-    this.info(`${inputsSize} ${outputsSize}`);
-    // TODO: use these sizes to generate inputs
-
     // the secp sig shoul be signed at input-0
-    const [signedTx, txHash] = await this.composeTxAndSign(deps, inputs, outputs, outputsData, witness);
+    const [signedTx, txHash] = await this.composeTxAndSign(
+      deps,
+      inputs,
+      outputs,
+      outputsData,
+      witness,
+      outputsSize + BLOCK_MINER_FEE - inputsSize,
+    );
 
     this.info("composed tx: " + JSONbig.stringify(signedTx, null, 2));
     this.info("composed txHash: " + txHash);
@@ -119,11 +127,56 @@ export default class OnchainTransactionService implements TransactionService {
     outputs: Array<CKBComponents.CellOutput>,
     outputsData: Array<string>,
     witness: Array<CKBComponents.WitnessArgs>,
+    unsatisfiedCapacity: bigint,
   ): Promise<[CKBComponents.RawTransaction, string]> {
-    await this._is_ckb_loaded_deps;
+    await this._isCkbLoadedDeps;
     assert(this._ckb.config.secp256k1Dep);
 
-    deps.push(this._ckb.config.secp256k1Dep);
+    deps.push({
+      depType: this._ckb.config.secp256k1Dep.depType,
+      outPoint: this._ckb.config.secp256k1Dep.outPoint,
+    });
+
+    const unspentCells = await this._scanService.scanUnspentCells();
+    unspentCells.sort((a, b) => {
+      const res = BigInt(a.cell_output.capacity) - BigInt(b.cell_output.capacity);
+
+      if (res > 0) {
+        return 1;
+      }
+      if (res === 0n) {
+        return 0;
+      }
+      return -1;
+    });
+
+    let acquiredCapacity = 0n;
+    unspentCells.every((cell) => {
+      if (acquiredCapacity === unsatisfiedCapacity || acquiredCapacity - unsatisfiedCapacity >= 61n * 100000000n) {
+        return false;
+      }
+
+      assert(cell.out_point);
+      inputs.push({
+        previousOutput: {
+          txHash: cell.out_point.tx_hash,
+          index: cell.out_point.index,
+        },
+        since: "0x0",
+      });
+
+      acquiredCapacity += BigInt(cell.cell_output.capacity);
+      return true;
+    });
+
+    if (acquiredCapacity > unsatisfiedCapacity) {
+      outputs.push({
+        capacity: bigIntToHex(acquiredCapacity - unsatisfiedCapacity),
+        lock: CKB_LOCK_SCRIPT,
+      });
+      outputsData.push("0x");
+      witness.push({ lock: "0x", inputType: "0x", outputType: "0x" });
+    }
 
     const rawTx: CKBComponents.RawTransaction = {
       version: "0x0",

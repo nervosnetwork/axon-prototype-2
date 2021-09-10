@@ -5,6 +5,8 @@ import OnchainDeployService from "./onchainDeployService";
 
 import { createMock } from "ts-auto-mock";
 
+const ERROR_MESSAGE = "OnchainDeployService.bootstrap";
+
 describe("OnchainDeployService", () => {
   test("bootstrap should deploy code cell if it's not exist", async () => {
     const scanService = createMock<ScanService>();
@@ -19,23 +21,21 @@ describe("OnchainDeployService", () => {
   });
 
   test("bootstrap should report error if global config cell is not exist", async () => {
-    const errorMessage = "Global config cell not found";
     const scanService = createMock<ScanService>();
-    scanService.scanGlobalConfig = () => Promise.reject(errorMessage);
+    scanService.scanGlobalConfig = () => Promise.reject("Global config cell not found");
 
     const service = new OnchainDeployService(scanService, createMock<EngineService>());
 
-    await expect(service.bootstrap()).rejects.toBe(errorMessage);
+    await expect(service.bootstrap()).rejects.toBe(ERROR_MESSAGE);
   });
 
   test("bootstrap should report error if sidechain config cell is not exist", async () => {
-    const errorMessage = "Sidechain config cell not found";
     const scanService = createMock<ScanService>();
-    scanService.scanSidechainConfig = () => Promise.reject(errorMessage);
+    scanService.scanSidechainConfig = () => Promise.reject("Sidechain config cell not found");
 
     const service = new OnchainDeployService(scanService, createMock<EngineService>());
 
-    await expect(service.bootstrap()).rejects.toBe(errorMessage);
+    await expect(service.bootstrap()).rejects.toBe(ERROR_MESSAGE);
   });
 
   test("bootstrap should does nothing if everything is good", async () => {

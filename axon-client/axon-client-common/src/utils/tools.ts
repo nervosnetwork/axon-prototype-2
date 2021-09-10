@@ -160,19 +160,11 @@ export function prepare0xPrefix(input: string): string {
 }
 
 export function bigIntToHex(bn: bigint): string {
-  let hex = bn.toString(16);
-  if (hex.length % 2) {
-    hex = "0" + hex;
-  }
-  return "0x" + hex;
+  return `0x${bn.toString(16)}`;
 }
 
 export function numberToHex(numero: number): string {
-  let hex = numero.toString(16);
-  if (hex.length % 2) {
-    hex = "0" + hex;
-  }
-  return "0x" + hex;
+  return `0x${numero.toString(16)}`;
 }
 
 export function ckbBlake2b(hexStrings: Array<string>): string {
