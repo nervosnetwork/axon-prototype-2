@@ -526,6 +526,20 @@ export const TASK_QUERY_OPTION: QueryOptions = {
   },
 };
 
+export const SIDECHAIN_REGISTRT_TYPE_ARGS = process.env.SIDECHAIN_REGISTRY_TYPE_ARGS!;
+
+export const SIDECHAIN_REGISTRY_TYPE_SCRIPT: CKBComponents.Script = {
+  codeHash: TYPE_ID_CODE_HASH,
+  hashType: `type`,
+  args: SIDECHAIN_REGISTRT_TYPE_ARGS,
+};
+
+export const SIDECHAIN_REGISTRY_LOCK_SCRIPT: CKBComponents.Script = {
+  codeHash: ALWAYS_SUCCESS_CODE_HASH,
+  hashType: ALWAYS_SUCCESS_HASH_TYPE,
+  args: "0x",
+};
+
 export const CKB_LOCK_SCRIPT: CKBComponents.Script = {
   codeHash: SECP256K1_CODE_HASH,
   hashType: SECP256K1_HASH_TYPE,
